@@ -1,3 +1,9 @@
+catkin-lint (1.0.1) unstable; urgency=low
+
+  * Support find_path() and find_library() for catkin_package() depends
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 26 Nov 2013 11:33:18 +0100
+
 catkin-lint (1.0.0) unstable; urgency=low
 
   * Initial public release
