@@ -225,6 +225,14 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 cm_build_dep |= set(opts["COMPONENTS"])
             else:
                 cm_finds.add(args[0])
+                var["%s_INCLUDE_DIRS" % args[0]] = "/find-path/"
+                var["%s_LIBRARIES" % args[0]] = "/find-lib/"
+            continue
+        if cmd == "find_path":
+            var[args[0]] = "/find-path/"
+            continue
+        if cmd == "find_library":
+            var[args[0]] = "/find-lib/"
             continue
         if cmd == "add_message_files" or cmd == "add_service_files" or cmd == "add_action_files":
             has_add_msg_files = True
@@ -273,8 +281,8 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             for pkg in opts["DEPENDS"]:
                 if is_ros_package(pkg):
                     errors.append((manifest.name, "'%s' is a catkin package and must be listed in CATKIN_DEPENDS" % pkg))
-                elif not pkg in cm_finds:
-                    errors.append((manifest.name, "'%s' in DEPENDS is not find_package()'d first" % pkg))
+                elif not pkg in cm_finds and not ("%s_INCLUDE_DIRS" % pkg in var and "%s_LIBRARIES" % pkg in var):
+                    errors.append((manifest.name, "'%s' in DEPENDS is neither find_package()'d nor has '%s_INCLUDE_DIRS' and '%s_LIBRARIES' defined" % (pkg, pkg, pkg)))
             cm_run_dep |= set(opts["CATKIN_DEPENDS"])
             cm_export_libs |= set(opts["LIBRARIES"])
             cm_export_targets |= set(opts["EXPORTED_TARGETS"])
