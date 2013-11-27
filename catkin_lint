@@ -145,7 +145,7 @@ def cmargs(args, opts):
         if opttype == "+" and not result[optname]:
             raise RuntimeError("Option '%s' requires at least one argument" % optname)
         if opttype == "!" and not result[optname]:
-            raise RuntimeError("Option '%s' requires at exactly one argument" % optname)
+            raise RuntimeError("Option '%s' requires exactly one argument" % optname)
     return result, remaining
 
 def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
