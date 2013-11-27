@@ -484,7 +484,10 @@ if __name__ == "__main__":
             sys.stderr.write ("catkin_lint: no packages to check\n")
             sys.exit(nothing_to_do)
         for path, manifest in pkgs_to_check:
-            e = check_catkin_pkg(path, manifest, warnings, errors, lambda pkg: pkg in local_pkg_names)
+            try:
+                check_catkin_pkg(path, manifest, warnings, errors, lambda pkg: pkg in local_pkg_names)
+            except Exception as e:
+                errors.append((manifest.name, str(e)))
         if args.strict:
             errors = warnings + errors
             warnings = []
