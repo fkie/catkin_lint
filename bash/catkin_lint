@@ -1,0 +1,19 @@
+# *-* mode: shell-script;-*-
+
+if type rosrepo &> /dev/null; then
+
+_catkin_lint_complete()
+{
+	local arg="${COMP_WORDS[COMP_CWORD]}"
+	COMPREPLY=( $( compgen -W "-h --help --version -w --warn -s --strict" -- "$arg" ) )
+	if [ "${arg:0:1}" != "-" ]
+	then
+		compopt -o filenames 2>/dev/null
+		COMPREPLY+=( $( compgen -d -- "$arg" ) )
+	fi
+	return 0
+}
+
+complete -F _catkin_lint_complete catkin_lint
+
+fi
