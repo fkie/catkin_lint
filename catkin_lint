@@ -28,7 +28,7 @@ import re
 import os
 from catkin_pkg.packages import find_packages
 
-catkin_lint_version = "1.0.1"
+catkin_lint_version = "1.0.2"
 
 def cmresolve(s, var):
     find_var = re.compile(r'\$\{([a-z_0-9]+)\}', re.IGNORECASE).search

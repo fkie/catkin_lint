@@ -1,3 +1,11 @@
+catkin-lint (1.0.2) unstable; urgency=low
+
+  * Fix typo
+  * Treat check_catkin_pkg() exceptions as lint errors
+  * Add bash shell completion code
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 27 Nov 2013 12:53:42 +0100
+
 catkin-lint (1.0.1) unstable; urgency=low
 
   * Support find_path() and find_library() for catkin_package() depends
