@@ -1,3 +1,11 @@
+catkin-lint (1.0.3) unstable; urgency=low
+
+  * Reword rosbuild_compat_fkie warning
+  * Check plugin exports
+  * Warn about uninstalled executables
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 28 Nov 2013 14:10:35 +0100
+
 catkin-lint (1.0.2) unstable; urgency=low
 
   * Fix typo
