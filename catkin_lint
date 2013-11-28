@@ -370,7 +370,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                     warnings.append((manifest.name, "install(%s ... %s) should use one of the ${CATKIN_*_DESTINATION} variables" % (install_type, dest)))
             continue
     if "rosbuild_compat_fkie" in pkg_buildtool_dep | pkg_build_dep and not uses_rosbuild_compat:
-        warnings.append((manifest.name, "'rosbuild_compat_fkie' is no longer needed"))
+        warnings.append((manifest.name, "'rosbuild_compat_fkie' is a dependency but not used"))
     if uses_rosbuild_compat and not "rosbuild_compat_fkie" in pkg_buildtool_dep:
         if not "rosbuild_compat_fkie" in pkg_build_dep:
             errors.append((manifest.name, "missing buildtool_depend 'rosbuild_compat_fkie'"))
