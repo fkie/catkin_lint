@@ -163,6 +163,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     cm_export_targets = set([])
     cm_targets = set([])
     cm_installs = set([])
+    cm_install_files = set([])
     cm_internal_deps = {}
     has_install = False
     has_project = False
@@ -180,19 +181,19 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     var = {
       "CMAKE_CURRENT_SOURCE_DIR" : path,
       "CMAKE_CURRENT_BINARY_DIR" : "/catkin-build/",
-      "CATKIN_PACKAGE_BIN_DESTINATION" : "/catkin-target/",
-      "CATKIN_PACKAGE_ETC_DESTINATION" : "/catkin-target/",
-      "CATKIN_PACKAGE_INCLUDE_DESTINATION" : "/catkin-target/",
-      "CATKIN_PACKAGE_LIB_DESTINATION" : "/catkin-target/",
-      "CATKIN_PACKAGE_PYTHON_DESTINATION" : "/catkin-target/",
-      "CATKIN_PACKAGE_SHARE_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_BIN_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_ETC_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_INCLUDE_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_LIB_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_LIBEXEC_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/",
-      "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/",
+      "CATKIN_PACKAGE_BIN_DESTINATION" : "/catkin-target/lib/%s/" % manifest.name,
+      "CATKIN_PACKAGE_ETC_DESTINATION" : "/catkin-target/etc/%s/" % manifest.name,
+      "CATKIN_PACKAGE_INCLUDE_DESTINATION" : "/catkin-target/include/%s/" % manifest.name,
+      "CATKIN_PACKAGE_LIB_DESTINATION" : "/catkin-target/lib/%s/" % manifest.name,
+      "CATKIN_PACKAGE_PYTHON_DESTINATION" : "/catkin-target/share/python/%s/" % manifest.name,
+      "CATKIN_PACKAGE_SHARE_DESTINATION" : "/catkin-target/share/%s/" % manifest.name,
+      "CATKIN_GLOBAL_BIN_DESTINATION" : "/catkin-target/bin/",
+      "CATKIN_GLOBAL_ETC_DESTINATION" : "/catkin-target/etc/",
+      "CATKIN_GLOBAL_INCLUDE_DESTINATION" : "/catkin-target/include/",
+      "CATKIN_GLOBAL_LIB_DESTINATION" : "/catkin-target/lib/",
+      "CATKIN_GLOBAL_LIBEXEC_DESTINATION" : "/catkin-target/lib/",
+      "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/python/",
+      "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/share/",
       "catkin_INCLUDE_DIRS" : "/catkin-includes/",
       "catkin_LIBRARIES" : "/catkin-libs/",
     }
@@ -364,6 +365,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 cm_installs |= set(opts["TARGETS"])
             if opts["FILES"]:
                 install_type = "FILES"
+                cm_install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], f)) for f in opts["FILES"] ])
             for dest in [ "DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION" ]:
                 if not opts[dest]: continue
                 if not opts[dest].startswith("/catkin-target/"):
@@ -443,6 +445,24 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 errors.append((manifest.name, "library '%s' is linked by installed target '%s' but not installed itself" % (lib, target)))
     if manifest.is_metapackage() and (len(cm_build_dep) > 0 or len(pkg_build_dep) > 0):
         errors.append((manifest.name, "meta packages must not have build_depends"))
+    cm_plugin_dep = set([])
+    for export in manifest.exports:
+        if "plugin" in export.attributes.keys():
+            plugin = export.attributes["plugin"]
+            cm_plugin_dep.add(export.tagname)
+            if not plugin.startswith("${prefix}/"):
+                errors.append((manifest.name, "%s plugin export must start with '${prefix}/'" % export.tagname))
+            else:
+                if not os.path.exists(os.path.join(path, plugin[10:])):
+                    errors.append((manifest.name, "%s plugin export '%s' refers to missing file" % (export.tagname, plugin)))
+                if not os.path.normpath("/catkin-target/share/%s/%s" % (manifest.name, plugin[10:])) in cm_install_files:
+                    msg = (manifest.name, "%s plugin export '%s' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}" % (export.tagname, plugin[10:]))
+                    if has_install:
+                        errors.append(msg)
+                    else:
+                        warnings.append(msg)
+    for dep in cm_plugin_dep - pkg_run_dep:
+        warnings.append((manifest.name, "package exports %s plugin but does not run_depend on '%s'" % (dep, dep)))
 
 if __name__ == "__main__":
     try:
