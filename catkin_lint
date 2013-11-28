@@ -338,7 +338,10 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 var[args[0]] = ';'.join(args[1:])
             continue
         if cmd == "unset":
-            var[args[0]] = ""
+            if args[0] in [ "CMAKE_C_FLAGS", "CMAKE_CXX_FLAGS", "CMAKE_FIND_ROOT_PATH", "CMAKE_MODULE_PATH" ]:
+                errors.append((manifest.name, "variable %s must not be unset" % args[0]))
+            else:
+                var[args[0]] = ""
             continue
         if cmd == "catkin_python_setup":
             if has_catkin_python_setup:
