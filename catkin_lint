@@ -464,6 +464,14 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                         warnings.append(msg)
     for dep in cm_plugin_dep - pkg_run_dep:
         warnings.append((manifest.name, "package exports %s plugin but does not run_depend on '%s'" % (dep, dep)))
+    if manifest.description.strip() == manifest.name:
+        warnings.append((manifest.name, "package description is just the package name"))
+    else:
+        chatter = re.match(r"((\s|[.,!?;()])*\b(%s|the|an?|packages?|contain(s|ed)?|provide(s|ed)?|offer(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|this|these|those|that|which|(ros\s+)?nodes?|to|for|of|purpose|multiple|several|one|two|three|programs?|executables?|library|libraries)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
+        if chatter is not None:
+            s = chatter.group(0).replace("\n", " ").strip()
+            if s != manifest.name:
+                warnings.append((manifest.name, "package description starts with filler words '%s'" % s))
 
 if __name__ == "__main__":
     try:
