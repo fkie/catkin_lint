@@ -361,7 +361,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 install_type = "PROGRAMS"
             if opts["DIRECTORY"]:
                 install_type = "DIRECTORY"
-                if not os.path.isabs(opts["DIRECTORY"]) or opts["DIRECTORY"].startswith(path):
+                if (not os.path.isabs(opts["DIRECTORY"]) or opts["DIRECTORY"].startswith(path)) and opts["DESTINATION"].startswith("/catkin-target/include/"):
                     has_install_includes = True
             if opts["TARGETS"]:
                 install_type = "TARGETS"
