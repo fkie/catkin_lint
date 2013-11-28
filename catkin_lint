@@ -406,8 +406,6 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             warnings.append(msg)
     if os.path.exists(os.path.join(path, "setup.py")) and not has_catkin_python_setup:
         errors.append((manifest.name, "setup.py in package folder but no call to catkin_python_setup()"))
-    if cm_targets and not cm_installs and not cm_export_libs and not has_install_includes:
-        warnings.append((manifest.name, "no build target is marked for installation"))
     if has_catkin_includes and cm_build_libs and not cm_export_libs:
         warnings.append((manifest.name, "catkin_package() exports include path but no library"))
     for pkg in cm_msg_dep - cm_build_dep - cm_finds:
@@ -424,6 +422,9 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             errors.append(msg)
         else:
             warnings.append(msg)
+    for tgt in cm_build_bins - cm_installs:
+        if "test" in tgt: continue
+        warnings.append((manifest.name, "target '%s' is not installed" % tgt))
     for pkg in cm_build_dep - cm_run_dep:
         if re.match(r"_msgs(_|$)", pkg) and is_ros_package(pkg):
             warnings.append((manifest.name, "'%s' should probably be in CATKIN_DEPENDS in catkin_package()" % pkg))
