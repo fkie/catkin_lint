@@ -497,6 +497,12 @@ if __name__ == "__main__":
             for path in os.environ["ROS_PACKAGE_PATH"].split(":"):
                 pkgs = find_packages(path)
                 local_pkg_names |= set([m.name for m in pkgs.values() ])
+                h, t = os.path.split(path)
+                if t == "src":
+                    repodir = os.path.join(h, "repos")
+                    if os.path.isdir(repodir):
+                        pkgs = find_packages(repodir)
+                        local_pkg_names |= set([m.name for m in pkgs.values() ])
         if not args.path:
             if os.path.exists("package.xml"):
                 args.path += [ "." ]
