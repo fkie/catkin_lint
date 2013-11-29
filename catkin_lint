@@ -470,7 +470,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     if manifest.description.strip() == manifest.name:
         warnings.append((manifest.name, "package description is just the package name"))
     else:
-        chatter = re.match(r"((\s|[.,!?;()])*\b(%s|the|an?|packages?|contain(s|ed)?|provide(s|ed)?|offer(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|this|these|those|that|which|(ros\s+)?nodes?|to|for|of|purpose|multiple|several|one|two|three|programs?|executables?|library|libraries)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
+        chatter = re.match(r"((\s|[.,!?;()])*\b(%s|the|an?|packages?|contain(s|ed)?|provide(s|ed)?|offer(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|this|these|those|that|which|(ros\s+)?nodes?|to|for|of|purpose|multiple|several|one|two|three|both|all|programs?|executables?|library|libraries)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
         if chatter is not None:
             s = chatter.group(0).replace("\n", " ").strip()
             if s != manifest.name:
