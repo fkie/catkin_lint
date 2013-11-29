@@ -1,3 +1,12 @@
+catkin-lint (1.0.4) unstable; urgency=low
+
+  * Check package descriptions for typical filler words
+  * Forbid unset() of critical variables
+  * Refine header installation test
+  * Tweak filler word list
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Fri, 29 Nov 2013 09:17:14 +0100
+
 catkin-lint (1.0.3) unstable; urgency=low
 
   * Reword rosbuild_compat_fkie warning
