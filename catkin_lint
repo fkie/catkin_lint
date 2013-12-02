@@ -467,14 +467,15 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                         warnings.append(msg)
     for dep in cm_plugin_dep - pkg_run_dep:
         warnings.append((manifest.name, "package exports %s plugin but does not run_depend on '%s'" % (dep, dep)))
-    if manifest.description.strip() == manifest.name:
-        warnings.append((manifest.name, "package description is just the package name"))
-    else:
-        chatter = re.match(r"((\s|[.,!?;()])*\b(%s|the|an?|packages?|contain(s|ed)?|provide(s|ed)?|offer(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|this|these|those|that|which|(ros\s+)?nodes?|to|for|of|purpose|multiple|several|one|two|three|both|all|programs?|executables?|library|libraries)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
-        if chatter is not None:
-            s = chatter.group(0).replace("\n", " ").strip()
-            if s != manifest.name:
-                warnings.append((manifest.name, "package description starts with filler words '%s'" % s))
+    chatter = re.match(r"((\s|[.,!?;()])*\b(%s|a\s+few|the|an?|packages?|contain(s|ed)?|comprise(d|s)?|include(s|d)?|provide(s|ed)?|suppl(y|ies|ied)?|offer(s|ed)?|add(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|do(es)?|did|this|these|those|that|which|(ros\s+)?nodes?|from|in|to|for|of|with|and|or|purpose|multiple|several|(an)?other|one|two|three|both|some|all|no(thing|ne|t)?|various|different|miscellaneous|routines?|(python\s+|c(\+\+)?\s+|java\s+)?code(\s+snippets?)?|useful|examples?|boilerplate|meaningless|programs?|executables?|versions?|work\s+in\s+progress|todo|descriptions?|interfaces?|implementations?|librar(y|ies)|functionalit(y|ies)|\d+)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
+    if chatter is not None:
+        s = chatter.group(0).replace("\n", " ").strip()
+        if manifest.description[chatter.end(0):].strip():
+            if len(s.split()) > 1:
+                warnings.append((manifest.name, "package description starts with boilerplate '%s'" % s))
+        else:
+            warnings.append((manifest.name, "meaningless package description '%s'" % s))
+
 
 if __name__ == "__main__":
     try:
