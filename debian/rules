@@ -9,7 +9,7 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-DEB_VERSION:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 )
+DEB_VERSION:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 | cut -d"-" -f1 | cut -d"+" -f1 )
 PY_VERSION:=$(shell python catkin_lint --version 2>&1 )
 
 ifneq ($(DEB_VERSION),$(PY_VERSION))
