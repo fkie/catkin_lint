@@ -452,7 +452,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             errors.append(msg)
         else:
             warnings.append(msg)
-    for tgt in cm_build_bins - cm_installs:
+    for tgt in cm_build_bins - cm_installs - cm_export_libs:
         if "test" in tgt: continue
         warnings.append((manifest.name, "target '%s' is not installed" % tgt))
     for pkg in cm_build_dep - cm_run_dep:
