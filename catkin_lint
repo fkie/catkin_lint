@@ -206,7 +206,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
       "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/python/",
       "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/share/",
       "catkin_INCLUDE_DIRS" : "/catkin-includes/",
-      "catkin_LIBRARIES" : "/catkin-libs/",
+      "catkin_LIBRARIES" : "/catkin-libs/library.so",
     }
     for key in critical_vars:
         var[key] = "@%s@" % key
@@ -251,14 +251,14 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 cm_build_dep |= set(opts["COMPONENTS"])
             else:
                 cm_finds.add(args[0])
-                var["%s_INCLUDE_DIRS" % args[0]] = "/find-path/"
-                var["%s_LIBRARIES" % args[0]] = "/find-lib/"
+            var["%s_INCLUDE_DIRS" % args[0]] = "/find-path/"
+            var["%s_LIBRARIES" % args[0]] = "/find-lib/library.so"
             continue
         if cmd == "find_path":
             var[args[0]] = "/find-path/"
             continue
         if cmd == "find_library":
-            var[args[0]] = "/find-lib/"
+            var[args[0]] = "/find-lib/library.so"
             continue
         if cmd == "add_message_files" or cmd == "add_service_files" or cmd == "add_action_files":
             has_add_msg_files = True
