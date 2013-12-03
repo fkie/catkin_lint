@@ -509,7 +509,7 @@ if __name__ == "__main__":
         warn_suppressed = 0
         nothing_to_do = 0
         if "ROS_PACKAGE_PATH" in os.environ:
-            for path in os.environ["ROS_PACKAGE_PATH"].split(":"):
+            for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
                 pkgs = find_packages(path)
                 local_pkg_names |= set([m.name for m in pkgs.values() ])
                 h, t = os.path.split(path)
