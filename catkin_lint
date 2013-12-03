@@ -35,7 +35,7 @@ def cmresolve(s, var):
     mo = find_var(s)
     while mo is not None:
         key = mo.group(1)
-        value = var[key] if var.has_key(key) else "/%s/" % key
+        value = var[key] if var.has_key(key) else ""
         s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = find_var(s)
     return s
@@ -187,6 +187,8 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     has_install_includes = False
     uses_rosbuild_compat = False
     short_name = manifest.name[:-5] if manifest.name.endswith("_fkie") else manifest.name
+    immutable_vars = [ "CMAKE_C_COMPILER", "CMAKE_CXX_COMPILER", "PROJECT_NAME", "EXECUTABLE_OUTPUT_PATH", "LIBRARY_OUTPUT_PATH" ]
+    critical_vars = [ "CMAKE_C_FLAGS", "CMAKE_CXX_FLAGS", "CMAKE_INCLUDE_PATH", "CMAKE_LIBRARY_PATH", "CMAKE_FIND_ROOT_PATH", "CMAKE_MODULE_PATH", "CMAKE_PREFIX_PATH" ]
     var = {
       "CMAKE_CURRENT_SOURCE_DIR" : path,
       "CMAKE_CURRENT_BINARY_DIR" : "/catkin-build/",
@@ -206,6 +208,8 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
       "catkin_INCLUDE_DIRS" : "/catkin-includes/",
       "catkin_LIBRARIES" : "/catkin-libs/",
     }
+    for key in critical_vars:
+        var[key] = "@%s@" % key
     for cmd, args in cmparser(cmlist.read(), var):
         if in_macro:
             if cmd == "endmacro": in_macro = False
@@ -332,7 +336,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             continue
         if cmd == "target_link_libraries":
             if not cm_internal_deps.has_key(args[0]): cm_internal_deps[args[0]] = set([])
-            cm_internal_deps[args[0]] |= set([ a for a in args[1:] if not a.endswith("/") ])
+            cm_internal_deps[args[0]] |= set([ a for a in args[1:] if not a.startswith("/") ])
             continue
         if cmd == "add_library" or cmd == "add_executable":
             cm_targets.add(args[0])
@@ -355,17 +359,21 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             cm_targets.add(args[0])
             continue
         if cmd == "set":
-            if args[0] in [ "EXECUTABLE_OUTPUT_PATH", "LIBRARY_OUTPUT_PATH" ]:
+            if args[0] == "CMAKE_BUILD_TYPE":
+                warnings.append((manifest.name, "variable CMAKE_BUILD_TYPE should not be set"))
+            elif args[0] in immutable_vars:
                 errors.append((manifest.name, "variable %s must not be set" % args[0]))
-            elif args[0] in [ "CMAKE_C_FLAGS", "CMAKE_CXX_FLAGS", "CMAKE_FIND_ROOT_PATH", "CMAKE_MODULE_PATH" ]:
+            elif args[0] in critical_vars:
                 value = ';'.join(args[1:])
-                if not "/%s/" % args[0] in value: 
-                  errors.append((manifest.name, "variable %s must not be overridden" % args[0]))
+                if not "@%s@" % args[0] in value: 
+                    errors.append((manifest.name, "original value of variable %s is lost" % args[0]))
+                else:
+                    warnings.append((manifest.name, "variable %s should not be modified" % args[0]))
             else:
                 var[args[0]] = ';'.join(args[1:])
             continue
         if cmd == "unset":
-            if args[0] in [ "CMAKE_C_FLAGS", "CMAKE_CXX_FLAGS", "CMAKE_FIND_ROOT_PATH", "CMAKE_MODULE_PATH" ]:
+            if args[0] in critical_vars + immutable_vars + [ "CMAKE_BUILD_TYPE" ]:
                 errors.append((manifest.name, "variable %s must not be unset" % args[0]))
             else:
                 var[args[0]] = ""
