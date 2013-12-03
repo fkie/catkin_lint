@@ -109,6 +109,8 @@ def cmargs(args, opts):
             result[optname] = None
         elif opttype == "-":
             result[optname] = False
+        elif opttype == "p":
+            result[optname] = {}
         else:
             raise RuntimeError("Invalid option '%s': %s" % (optname, opttype))
     curname = None
@@ -136,6 +138,9 @@ def cmargs(args, opts):
                 result[curname] = t_args[0]
                 curname = None
                 curtype = None
+            elif curtype == "p" and len(t_args) >= 2:
+                result[curname][t_args[0]] = t_args[1]
+                del t_args[0]
             else:
                 result[curname].append(t_args[0])
         else:
@@ -163,6 +168,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     cm_build_libs = set([])
     cm_export_libs = set([])
     cm_export_targets = set([])
+    cm_target_outputs = {}
     cm_targets = set([])
     cm_installs = set([])
     cm_install_files = set([])
@@ -180,6 +186,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     has_catkin_includes = False
     has_install_includes = False
     uses_rosbuild_compat = False
+    short_name = manifest.name[:-5] if manifest.name.endswith("_fkie") else manifest.name
     var = {
       "CMAKE_CURRENT_SOURCE_DIR" : path,
       "CMAKE_CURRENT_BINARY_DIR" : "/catkin-build/",
@@ -331,12 +338,18 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             cm_targets.add(args[0])
             if cmd == "add_library": cm_build_libs.add(args[0])
             if cmd == "add_executable": cm_build_bins.add(args[0])
+            if not cm_target_outputs.has_key(args[0]): cm_target_outputs[args[0]] = args[0]
             if manifest.is_metapackage():
                 errors.append((manifest.name, "%s() is not allowed in catkin meta packages" % cmd))
             if not has_find_package_catkin:
                 errors.append((manifest.name, "%s() must not occur before find_package(catkin)" % cmd))
             if not has_catkin_package:
                 errors.append((manifest.name, "%s() must not occur before catkin_package()" % cmd))
+            continue
+        if cmd == "set_target_properties":
+            opts, args = cmargs(args, { "PROPERTIES" : "p" })
+            for target in args:
+                if opts["PROPERTIES"].has_key("OUTPUT_NAME"): cm_target_outputs[target] = opts["PROPERTIES"]["OUTPUT_NAME"]
             continue
         if cmd == "add_custom_target":
             cm_targets.add(args[0])
@@ -455,6 +468,11 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         errors.append((manifest.name, "'%s' is not a run_depend in package.xml" % pkg))
     for tgt in cm_export_targets - cm_targets:
         errors.append((manifest.name, "target '%s' is exported but not defined" % tgt))
+    for target, output in cm_target_outputs.iteritems():
+        if os.sep in output:
+            errors.append((manifest.name, "output name of target '%s' contains %s character" % (target, os.sep)))
+        if not short_name in target:
+            warnings.append((manifest.name, "target '%s' should contain package name to make it unique in any catkin workspace" % target))
     for target, depends in cm_internal_deps.iteritems():
         if not target in cm_installs: continue
         for lib in depends:
