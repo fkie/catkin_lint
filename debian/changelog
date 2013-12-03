@@ -1,3 +1,13 @@
+catkin-lint (1.0.6) unstable; urgency=low
+
+  * Relax package version check
+  * Reword warnings and add more filler words
+  * Skip macro() and function() definitions
+  * Use os.pathsep instead of hardcoded colon
+  * Check output names of targets
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 03 Dec 2013 10:44:43 +0100
+
 catkin-lint (1.0.5) unstable; urgency=low
 
   * Add support for rosrepo

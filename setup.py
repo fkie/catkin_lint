@@ -12,7 +12,7 @@ setup(
   packages      = [],
   package_dir   = {},
   scripts       = [ "catkin_lint" ],
-  version       = "1.0.5",
+  version       = "1.0.6",
   requires      = [ "catkin_pkg" ]
 )
 
