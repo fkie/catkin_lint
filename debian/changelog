@@ -1,3 +1,9 @@
+catkin-lint (1.0.7) unstable; urgency=low
+
+  * Do not warn twice about not installed export libraries
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 03 Dec 2013 15:07:35 +0100
+
 catkin-lint (1.0.6) unstable; urgency=low
 
   * Relax package version check
