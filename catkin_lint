@@ -211,6 +211,8 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     for key in critical_vars:
         var[key] = "@%s@" % key
     for cmd, args in cmparser(cmlist.read(), var):
+        if cmd.startswith("fkie_"):
+            uses_rosbuild_compat = True
         if in_macro:
             if cmd == "endmacro": in_macro = False
             continue
@@ -223,8 +225,6 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         elif cmd == "function":
             in_function = True
             continue
-        if cmd.startswith("fkie_"):
-            uses_rosbuild_compat = True
         if cmd == "project":
             if has_project:
                 errors.append((manifest.name, "duplicate call to %s()" % cmd))
