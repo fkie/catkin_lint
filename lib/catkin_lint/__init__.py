@@ -4,6 +4,6 @@
 __author__ = "Timo Röhling <timo.roehling@fkie.fraunhofer.de>"
 __copyright__ = "Copyright (c) 2013 Fraunhofer FKIE"
 __license__ = "BSD"
-__version__ = "1.0.8"
+__version__ = "1.1.0"
 __all__ = [ "cmake", "diagnostics" ]
 

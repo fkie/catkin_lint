@@ -1,3 +1,11 @@
+catkin-lint (1.1.0) unstable; urgency=low
+
+  * Refactor source code
+  * Add explanation to diagnostic messages
+  * Fix python installation path
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 04 Dec 2013 15:55:20 +0100
+
 catkin-lint (1.0.8) unstable; urgency=low
 
   * Improve check of special variables
