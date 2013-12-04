@@ -1,3 +1,10 @@
+catkin-lint (1.1.1) unstable; urgency=low
+
+  * Read version directly from module
+  * Fix packaging bug
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 04 Dec 2013 16:07:11 +0100
+
 catkin-lint (1.1.0) unstable; urgency=low
 
   * Refactor source code
