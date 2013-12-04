@@ -216,11 +216,13 @@ call find_package(%(pkg)s) first or initialize the %(pkg)s_INCLUDE_DIRS and
 %(pkg)s_LIBRARIES variables manually.
 """
 ),
-"HARDCODED_PATH" : ("catkin_package() exports hard-coded path '%(path)s'",
+"EXTERNAL_INCLUDE_PATH" : ("catkin_package() exports non-package include path",
 """\
-You listed a system path in your catkin_package() call, but you did
-not use find_package() or find_path() to ensure that it works on
-different systems.
+You listed one or more include paths in the INCLUDE_DIRS stanza of
+your catkin_package() call which are not part of your package. If you
+want to export include paths of other modules, use find_package(),
+find_path(), and/or find_library() and add the dependency to the
+DEPENDS stanza.
 """
 ),
 "MISSING_CATKIN_INCLUDE" : ("include_directories() should list ${catkin_INCLUDE_DIRS}",

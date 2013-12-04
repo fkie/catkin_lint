@@ -199,12 +199,12 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                     errors.append((manifest.name,) + msg("CATKIN_AS_SYSTEM_DEPEND", pkg=pkg))
                 elif not pkg in cm_finds and not ("%s_INCLUDE_DIRS" % pkg in var and "%s_LIBRARIES" % pkg in var):
                     errors.append((manifest.name,) + msg("UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg))
-            for d in opts["INCLUDE_DIRS"]:
-                if not os.path.isabs(d): d = "/pkg-source/%s" % d
-                if not d.startswith("/find-path/") and not d.startswith("/pkg-"):
-                    errors.append((manifest.name,) + msg("HARDCODED_PATH", path=d))
-                if d.startswith("/pkg-source/"):
-                    exports_includes = True
+            includes = [ d if os.path.isabs(d) else "/pkg-source/%s" % d for d in opts["INCLUDE_DIRS"] ]
+            ext_includes = [ d for d in includes if not d.startswith("/pkg-") ]
+            if ext_includes:
+                errors.append((manifest.name,) + msg("EXTERNAL_INCLUDE_PATH"))
+            if includes:
+                exports_includes = True
             cm_run_dep |= set(opts["CATKIN_DEPENDS"])
             cm_export_libs |= set(opts["LIBRARIES"])
             cm_export_targets |= set(opts["EXPORTED_TARGETS"])
