@@ -1,3 +1,12 @@
+catkin-lint (1.1.2) unstable; urgency=low
+
+  * Be more strict about include paths
+  * Check if exported libraries are actually libraries
+  * Check for include()s which should use find_package()
+  * Add support for upper-case prefix in find_package()
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 04 Dec 2013 17:45:31 +0100
+
 catkin-lint (1.1.1) unstable; urgency=low
 
   * Read version directly from module
