@@ -342,12 +342,18 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         errors.append((manifest.name,) + msg("MISSING_MSG_CATKIN", pkg=pkg))
     for pkg in cm_msg_dep - pkg_run_dep:
         errors.append((manifest.name,) + msg("MISSING_MSG_DEPEND", pkg=pkg, type="run"))
-    for lib in (cm_export_libs - cm_installs) & cm_targets:
-        m = (manifest.name,) + msg("UNINSTALLED_EXPORT_LIB", target=lib)
-        if "install" in cm_commands:
-            errors.append(m)
-        else:
-            warnings.append(m)
+    for lib in cm_export_libs:
+        if not lib in cm_targets: continue
+        if cm_target_outputs[lib] != lib:
+            errors.append((manifest.name,) + msg("EXPORT_LIB_RENAMED", target=lib))
+        if not lib in cm_installs:
+            m = (manifest.name,) + msg("UNINSTALLED_EXPORT_LIB", target=lib)
+            if "install" in cm_commands:
+                errors.append(m)
+            else:
+                warnings.append(m)
+        if lib in cm_build_bins:
+            errors.append((manifest.name,) + msg("EXPORT_LIB_NOT_LIB", target=lib))
     for tgt in cm_build_bins - cm_installs - cm_export_libs:
         if "test" in tgt: continue
         warnings.append((manifest.name,) + msg("MISSING_INSTALL_TARGET", target=tgt))
@@ -367,7 +373,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
     for target, output in cm_target_outputs.iteritems():
         if os.sep in output:
             errors.append((manifest.name,) + msg("INVALID_TARGET_OUTPUT", target=target))
-        if not short_name in target:
+        if not short_name in target and not target in cm_export_libs:
             warnings.append((manifest.name,) + msg("TARGET_NAME_COLLISION", target=target))
     for target, depends in cm_internal_deps.iteritems():
         if not target in cm_installs: continue

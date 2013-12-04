@@ -282,6 +282,19 @@ properly, because a library that is exported via catkin_package() will
 not be copied to the proper location.
 """
 ),
+"EXPORT_LIB_NOT_LIB" : ("exported library '%(target)s' is not a library",
+"""\
+You listed a library in the LIBRARIES stanza of your catkin_package() call,
+but it really is an executable.
+"""
+),
+"EXPORT_LIB_RENAMED" : ("exported library '%(target)s' cannot have different output name",
+"""\
+Due to a limitation of the catkin build system, the catkin_package()
+library export function will break if the logical target name is not
+equal to the actual library name.
+"""
+),
 "SUGGEST_CATKIN_DEPEND" : ("package '%(pkg)s' looks like a run_depend",
 """\
 Your package configures another package as build dependency, and its name suggests
