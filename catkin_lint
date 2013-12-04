@@ -155,7 +155,10 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
                 cm_build_dep |= set(opts["COMPONENTS"])
             else:
                 var["%s_INCLUDE_DIRS" % args[0]] = "/find-path/"
+                var["%s_INCLUDE_DIRS" % args[0].upper()] = "/find-path/"
                 var["%s_LIBRARIES" % args[0]] = "/find-lib/library.so"
+                var["%s_LIBRARIES" % args[0].upper()] = "/find-lib/library.so"
+            continue
         if cmd == "include":
             mo = re.match(r"^Find([A-Za-z0-9]+)(\.cmake)?$", args[0])
             if mo:
@@ -207,7 +210,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             for pkg in opts["DEPENDS"]:
                 if is_ros_package(pkg):
                     errors.append((manifest.name,) + msg("CATKIN_AS_SYSTEM_DEPEND", pkg=pkg))
-                elif not pkg in cm_finds and not ("%s_INCLUDE_DIRS" % pkg in var and "%s_LIBRARIES" % pkg in var):
+                elif not pkg in cm_finds and not ("%s_INCLUDE_DIRS" % pkg in var and "%s_LIBRARIES" % pkg in var) and not ("%s_INCLUDE_DIRS" % pkg.upper() in var and "%s_LIBRARIES" % pkg.upper() in var):
                     errors.append((manifest.name,) + msg("UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg))
             includes = [ d if os.path.isabs(d) else "/pkg-source/%s" % d for d in opts["INCLUDE_DIRS"] ]
             ext_includes = [ d for d in includes if not d.startswith("/pkg-") ]
