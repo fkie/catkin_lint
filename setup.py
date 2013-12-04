@@ -12,7 +12,7 @@ setup(
   author        = "Timo Röhling",
   author_email  = "timo.roehling@fkie.fraunhofer.de",
   license       = "BSD",
-  packages      = [],
+  packages      = [ "catkin_lint" ],
   package_dir   = { "" : "lib" },
   scripts       = [ "catkin_lint" ],
   version       = catkin_lint_version,
