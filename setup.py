@@ -2,6 +2,9 @@
 # coding=utf-8
 
 from distutils.core import setup
+import sys
+sys.path.insert(0, "lib")
+from catkin_lint import __version__ as catkin_lint_version
 
 setup(
   name          = "catkin_lint",
@@ -10,9 +13,9 @@ setup(
   author_email  = "timo.roehling@fkie.fraunhofer.de",
   license       = "BSD",
   packages      = [],
-  package_dir   = {},
+  package_dir   = { "" : "lib" },
   scripts       = [ "catkin_lint" ],
-  version       = "1.0.6",
+  version       = catkin_lint_version,
   requires      = [ "catkin_pkg" ]
 )
 
