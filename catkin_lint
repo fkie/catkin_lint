@@ -156,6 +156,16 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             else:
                 var["%s_INCLUDE_DIRS" % args[0]] = "/find-path/"
                 var["%s_LIBRARIES" % args[0]] = "/find-lib/library.so"
+        if cmd == "include":
+            mo = re.match(r"^Find([A-Za-z0-9]+)(\.cmake)?$", args[0])
+            if mo:
+                pkg = mo.group(1)
+                if not os.path.isfile(os.path.join(path, args[0])):
+                    errors.append((manifest.name,) + msg("FIND_BY_INCLUDE", pkg=pkg))
+                var["%s_INCLUDE_DIRS" % pkg] = "/find-path/"
+                var["%s_INCLUDE_DIRS" % pkg.upper()] = "/find-path/"
+                var["%s_LIBRARIES" % pkg] = "/find-lib/library.so"
+                var["%s_LIBRARIES" % pkg.upper()] = "/find-lib/library.so"
             continue
         if cmd == "find_path":
             var[args[0]] = "/find-path/"

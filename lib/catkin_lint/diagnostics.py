@@ -386,6 +386,12 @@ Your package description merely consists of typical filler words which
 do not actually describe the contents of your package in a meaningful way.
 """
 ),
+"FIND_BY_INCLUDE": ("use find_package(%(pkg)s) instead of include(Find%(pkg)s.cmake)",
+"""\
+The FindXXX.cmake modules are intended to be included by the find_package()
+command.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
