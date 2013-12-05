@@ -1,3 +1,9 @@
+catkin-lint (1.1.5) unstable; urgency=low
+
+  * Check include paths
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 05 Dec 2013 11:50:35 +0100
+
 catkin-lint (1.1.4) unstable; urgency=low
 
   * Be more precise about ignored diagnostics
