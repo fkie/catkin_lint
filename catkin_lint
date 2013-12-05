@@ -34,6 +34,7 @@ import re
 from catkin_pkg.packages import find_packages
 from catkin_lint import __version__ as catkin_lint_version
 import catkin_lint.cmake as cmake
+import catkin_lint.util as util
 from catkin_lint.diagnostics import msg
 import textwrap
 
@@ -99,7 +100,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
     exports_includes = False
     installs_includes = False
     uses_rosbuild_compat = False
-    short_name = manifest.name[:-5] if manifest.name.endswith("_fkie") else manifest.name
+    name_fragments = set(util.word_split(manifest.name))
     var = {
       "CMAKE_CURRENT_SOURCE_DIR" : "/pkg-source",
       "CMAKE_CURRENT_BINARY_DIR" : "/pkg-build",
@@ -397,7 +398,8 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
     for target, output in cm_target_outputs.iteritems():
         if os.sep in output:
             results.append((manifest.name, ERROR) + msg("INVALID_TARGET_OUTPUT", target=target))
-        if not short_name in target and not target in cm_export_libs:
+        nf = set(util.word_split(target))
+        if not (nf & name_fragments) and not target in cm_export_libs:
             results.append((manifest.name, NOTICE) + msg("TARGET_NAME_COLLISION", target=target))
     for target, depends in cm_internal_deps.iteritems():
         if not target in cm_installs: continue
