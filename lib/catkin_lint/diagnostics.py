@@ -216,6 +216,24 @@ call find_package(%(pkg)s) first or initialize the %(pkg)s_INCLUDE_DIRS and
 %(pkg)s_LIBRARIES variables manually.
 """
 ),
+"MISSING_BUILD_INCLUDE" : ("include path '%(path)s' is exported but not used for the build",
+"""\
+You have listed an include path in the INCLUDE_DIRS stanza of the
+catkin_package() command, but that path is not mentioned in any
+include_directories() call.
+"""
+),
+"MISSING_EXPORT_INCLUDE_PATH" : ("exported include path '%(path)s' does not exist",
+"""\
+You have listed an invalid include path in the INCLUDE_DIRS stanza of the
+catkin_package() command.
+"""
+),
+"MISSING_BUILD_INCLUDE_PATH" : ("build include path '%(path)s' does not exist",
+"""\
+You have listed an invalid include path in the include_directories() command.
+"""
+),
 "EXTERNAL_INCLUDE_PATH" : ("catkin_package() exports non-package include path",
 """\
 You listed one or more include paths in the INCLUDE_DIRS stanza of

@@ -87,6 +87,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
     cm_build_includes = set([])
     cm_export_libs = set([])
     cm_export_targets = set([])
+    cm_export_includes = set([])
     cm_target_outputs = {}
     cm_targets = set([])
     cm_installs = set([])
@@ -100,22 +101,22 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
     uses_rosbuild_compat = False
     short_name = manifest.name[:-5] if manifest.name.endswith("_fkie") else manifest.name
     var = {
-      "CMAKE_CURRENT_SOURCE_DIR" : "/pkg-source/",
-      "CMAKE_CURRENT_BINARY_DIR" : "/pkg-build/",
-      "CATKIN_PACKAGE_BIN_DESTINATION" : "/catkin-target/lib/%s/" % manifest.name,
-      "CATKIN_PACKAGE_ETC_DESTINATION" : "/catkin-target/etc/%s/" % manifest.name,
-      "CATKIN_PACKAGE_INCLUDE_DESTINATION" : "/catkin-target/include/%s/" % manifest.name,
-      "CATKIN_PACKAGE_LIB_DESTINATION" : "/catkin-target/lib/%s/" % manifest.name,
-      "CATKIN_PACKAGE_PYTHON_DESTINATION" : "/catkin-target/lib/python/%s/" % manifest.name,
-      "CATKIN_PACKAGE_SHARE_DESTINATION" : "/catkin-target/share/%s/" % manifest.name,
-      "CATKIN_GLOBAL_BIN_DESTINATION" : "/catkin-target/bin/",
-      "CATKIN_GLOBAL_ETC_DESTINATION" : "/catkin-target/etc/",
-      "CATKIN_GLOBAL_INCLUDE_DESTINATION" : "/catkin-target/include/",
-      "CATKIN_GLOBAL_LIB_DESTINATION" : "/catkin-target/lib/",
-      "CATKIN_GLOBAL_LIBEXEC_DESTINATION" : "/catkin-target/lib/",
-      "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/lib/python/",
-      "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/share/",
-      "catkin_INCLUDE_DIRS" : "/catkin-includes/",
+      "CMAKE_CURRENT_SOURCE_DIR" : "/pkg-source",
+      "CMAKE_CURRENT_BINARY_DIR" : "/pkg-build",
+      "CATKIN_PACKAGE_BIN_DESTINATION" : "/catkin-target/lib/%s" % manifest.name,
+      "CATKIN_PACKAGE_ETC_DESTINATION" : "/catkin-target/etc/%s" % manifest.name,
+      "CATKIN_PACKAGE_INCLUDE_DESTINATION" : "/catkin-target/include/%s" % manifest.name,
+      "CATKIN_PACKAGE_LIB_DESTINATION" : "/catkin-target/lib/%s" % manifest.name,
+      "CATKIN_PACKAGE_PYTHON_DESTINATION" : "/catkin-target/lib/python/%s" % manifest.name,
+      "CATKIN_PACKAGE_SHARE_DESTINATION" : "/catkin-target/share/%s" % manifest.name,
+      "CATKIN_GLOBAL_BIN_DESTINATION" : "/catkin-target/bin",
+      "CATKIN_GLOBAL_ETC_DESTINATION" : "/catkin-target/etc",
+      "CATKIN_GLOBAL_INCLUDE_DESTINATION" : "/catkin-target/include",
+      "CATKIN_GLOBAL_LIB_DESTINATION" : "/catkin-target/lib",
+      "CATKIN_GLOBAL_LIBEXEC_DESTINATION" : "/catkin-target/lib",
+      "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/lib/python",
+      "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/share",
+      "catkin_INCLUDE_DIRS" : "/catkin-includes",
       "catkin_LIBRARIES" : "/catkin-libs/library.so",
     }
     for key in critical_vars:
@@ -218,7 +219,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
                     results.append((manifest.name, ERROR) + msg("CATKIN_AS_SYSTEM_DEPEND", pkg=pkg))
                 elif not pkg in cm_finds and not ("%s_INCLUDE_DIRS" % pkg in var and "%s_LIBRARIES" % pkg in var) and not ("%s_INCLUDE_DIRS" % pkg.upper() in var and "%s_LIBRARIES" % pkg.upper() in var):
                     results.append((manifest.name, ERROR) + msg("UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg))
-            includes = [ d if os.path.isabs(d) else "/pkg-source/%s" % d for d in opts["INCLUDE_DIRS"] ]
+            includes = set([ d if os.path.isabs(d) else "/pkg-source/%s" % d for d in opts["INCLUDE_DIRS"] ])
             ext_includes = [ d for d in includes if not d.startswith("/pkg-") ]
             if ext_includes:
                 results.append((manifest.name, ERROR) + msg("EXTERNAL_INCLUDE_PATH"))
@@ -227,6 +228,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
             cm_run_dep |= set(opts["CATKIN_DEPENDS"])
             cm_export_libs |= set(opts["LIBRARIES"])
             cm_export_targets |= set(opts["EXPORTED_TARGETS"])
+            cm_export_includes |= set([os.path.normpath(d) for d in includes if d.startswith("/pkg-source") ])
             continue
         if cmd == "catkin_metapackage":
             has_catkin_stuff = True
@@ -236,7 +238,8 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
                 results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             continue
         if cmd == "include_directories":
-            cm_build_includes |= set(args)
+            opts, args = cmake.argparse(args, { "AFTER" : "-", "BEFORE" : "-", "SYSTEM" : "-" })
+            cm_build_includes |= set([ os.path.normpath(d) if os.path.isabs(d) else os.path.normpath("/pkg-source/%s" % d) for d in args])
             continue
         if cmd == "link_directories":
             externals = [ p for p in args if os.path.isabs(p) and not p.startswith("/pkg-") ]
@@ -341,7 +344,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         results.append((manifest.name, ERROR) + msg("MISSING_CATKIN_FIND", pkg="message_generation"))
     if declares_messages and not "message_runtime" in cm_run_dep and not manifest.is_metapackage():
         results.append((manifest.name, ERROR) + msg("MISSING_CATKIN_DEPEND", pkg="message_runtime"))
-    if cm_targets and cm_build_dep and not "/catkin-includes/" in cm_build_includes:
+    if cm_targets and cm_build_dep and not "/catkin-includes" in cm_build_includes:
         results.append((manifest.name, WARNING) + msg("MISSING_CATKIN_INCLUDE"))
     if exports_includes and not installs_includes:
         results.append((manifest.name, ERROR if "install" in cm_commands else NOTICE) + msg("MISSING_INSTALL_INCLUDE"))
@@ -381,6 +384,16 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="run"))
     for tgt in cm_export_targets - cm_targets:
         results.append((manifest.name, ERROR) + msg("UNDEFINED_TARGET",target=tgt))
+    for incl in cm_export_includes:
+        if not os.path.isdir(os.path.join(path, incl[12:])):
+            results.append((manifest.name, ERROR) + msg("MISSING_EXPORT_INCLUDE_PATH", path=".%s" % incl[12:]))
+    if cm_targets:
+        for incl in cm_export_includes - cm_build_includes:
+            results.append((manifest.name, WARNING) + msg("MISSING_BUILD_INCLUDE", path="./%s" % incl[12:]))
+    for incl in cm_build_includes:
+        if not incl.startswith("/pkg-source"): continue
+        if not os.path.isdir(os.path.join(path, incl[12:])):
+            results.append((manifest.name, ERROR) + msg("MISSING_BUILD_INCLUDE_PATH", path="./%s" % incl[12:]))
     for target, output in cm_target_outputs.iteritems():
         if os.sep in output:
             results.append((manifest.name, ERROR) + msg("INVALID_TARGET_OUTPUT", target=target))
@@ -465,6 +478,7 @@ if __name__ == "__main__":
             try:
                 check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names)
             except Exception as e:
+                raise
                 results.append((manifest.name, ERROR, "EXCEPTION", str(e), "catkin_lint failed to parse the package contents properly"))
         explained = set([])
         suppressed = { ERROR: 0, WARNING: 0, NOTICE: 0 }
