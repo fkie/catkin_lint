@@ -64,7 +64,13 @@ singleton_cmds = frozenset([
     "catkin_python_setup"
 ])
 
-def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
+ERROR = 0
+WARNING = 1
+NOTICE = 2
+
+diagnostic_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
+
+def check_catkin_pkg(path, manifest, results, is_ros_package):
     pkg_buildtool_dep = set([dep.name for dep in manifest.buildtool_depends])
     pkg_build_dep = set([dep.name for dep in manifest.build_depends])
     pkg_run_dep = set([dep.name for dep in manifest.run_depends])
@@ -116,7 +122,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         var[key] = "@%s@" % key
     for cmd, args in cmake.parse(cmlist.read(), var):
         if cmd in cm_commands & singleton_cmds:
-            errors.append((manifest.name,) + msg("DUPLICATE_CMD", cmd=cmd))
+            results.append((manifest.name, ERROR) + msg("DUPLICATE_CMD", cmd=cmd))
         cm_commands.add(cmd)
         if cmd.startswith("fkie_"):
             uses_rosbuild_compat = True
@@ -135,23 +141,23 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         if cmd == "project":
             var["PROJECT_NAME"] = args[0]
             if args[0] != manifest.name:
-                errors.append((manifest.name,) + msg("PROJECT_NAME", name=args[0]))
+                results.append((manifest.name, ERROR) + msg("PROJECT_NAME", name=args[0]))
         if cmd == "find_package" or cmd == "fkie_find_package":
             if not "project" in cm_commands:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="project"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="project"))
             if args[0] in cm_finds:
-                errors.append((manifest.name,) + msg("DUPLICATE_FIND", pkg=args[0]))
+                results.append((manifest.name, ERROR) + msg("DUPLICATE_FIND", pkg=args[0]))
             cm_finds.add(args[0])
             if args[0] == "catkin":
                 has_catkin_stuff = True
                 if cmd == "fkie_find_package":
-                    warnings.append((manifest.name,) + msg("DEPRECATED_ROSBUILD", cmd=cmd))
+                    results.append((manifest.name, WARNING) + msg("DEPRECATED_ROSBUILD", cmd=cmd))
                 opts, args = cmake.argparse(args, { "REQUIRED": "-", "COMPONENTS": "*" })
                 if not opts["REQUIRED"]:
-                    warnings.append((manifest.name,) + msg("MISSING_REQUIRED", pkg="catkin"))
+                    results.append((manifest.name, WARNING) + msg("MISSING_REQUIRED", pkg="catkin"))
                 for pkg in opts["COMPONENTS"]:
                     if not is_ros_package(pkg):
-                        errors.append((manifest.name,) + msg("NO_CATKIN_COMPONENT", pkg=pkg))
+                        results.append((manifest.name, ERROR) + msg("NO_CATKIN_COMPONENT", pkg=pkg))
                 cm_build_dep |= set(opts["COMPONENTS"])
             else:
                 var["%s_INCLUDE_DIRS" % args[0]] = "/find-path/"
@@ -164,7 +170,7 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             if mo:
                 pkg = mo.group(1)
                 if not os.path.isfile(os.path.join(path, args[0])):
-                    errors.append((manifest.name,) + msg("FIND_BY_INCLUDE", pkg=pkg))
+                    results.append((manifest.name, ERROR) + msg("FIND_BY_INCLUDE", pkg=pkg))
                 var["%s_INCLUDE_DIRS" % pkg] = "/find-path/"
                 var["%s_INCLUDE_DIRS" % pkg.upper()] = "/find-path/"
                 var["%s_LIBRARIES" % pkg] = "/find-lib/library.so"
@@ -180,42 +186,42 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             declares_messages = True
             has_catkin_stuff = True
             if manifest.is_metapackage():
-                errors.append((manifest.name,) + msg("INVALID_META_COMMAND", cmd=cmd))
+                results.append((manifest.name, ERROR) + msg("INVALID_META_COMMAND", cmd=cmd))
             if not "catkin" in cm_finds:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             if "generate_messages" in cm_commands:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd="generate_messages", second_cmd=cmd))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd="generate_messages", second_cmd=cmd))
             continue
         if cmd == "generate_messages":
             has_catkin_stuff = True
             if manifest.is_metapackage():
-                errors.append((manifest.name,) + msg("INVALID_META_COMMAND", cmd=cmd))
+                results.append((manifest.name, ERROR) + msg("INVALID_META_COMMAND", cmd=cmd))
             if not "catkin" in cm_finds:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             if "catkin_package" in cm_commands:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd))
             opts, args = cmake.argparse(args, { "DEPENDENCIES": "*" })
             cm_msg_dep |= set(opts["DEPENDENCIES"])
             continue
         if cmd == "catkin_package":
             has_catkin_stuff = True
             if manifest.is_metapackage():
-                errors.append((manifest.name,) + msg("CATKIN_PKG_VS_META"))
+                results.append((manifest.name, ERROR) + msg("CATKIN_PKG_VS_META"))
             if not "catkin" in cm_finds:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             opts, args = cmake.argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
             for pkg in opts["CATKIN_DEPENDS"]:
                 if not is_ros_package(pkg):
-                    errors.append((manifest.name,) + msg("SYSTEM_AS_CATKIN_DEPEND", pkg=pkg))
+                    results.append((manifest.name, ERROR) + msg("SYSTEM_AS_CATKIN_DEPEND", pkg=pkg))
             for pkg in opts["DEPENDS"]:
                 if is_ros_package(pkg):
-                    errors.append((manifest.name,) + msg("CATKIN_AS_SYSTEM_DEPEND", pkg=pkg))
+                    results.append((manifest.name, ERROR) + msg("CATKIN_AS_SYSTEM_DEPEND", pkg=pkg))
                 elif not pkg in cm_finds and not ("%s_INCLUDE_DIRS" % pkg in var and "%s_LIBRARIES" % pkg in var) and not ("%s_INCLUDE_DIRS" % pkg.upper() in var and "%s_LIBRARIES" % pkg.upper() in var):
-                    errors.append((manifest.name,) + msg("UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg))
+                    results.append((manifest.name, ERROR) + msg("UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg))
             includes = [ d if os.path.isabs(d) else "/pkg-source/%s" % d for d in opts["INCLUDE_DIRS"] ]
             ext_includes = [ d for d in includes if not d.startswith("/pkg-") ]
             if ext_includes:
-                errors.append((manifest.name,) + msg("EXTERNAL_INCLUDE_PATH"))
+                results.append((manifest.name, ERROR) + msg("EXTERNAL_INCLUDE_PATH"))
             if includes:
                 exports_includes = True
             cm_run_dep |= set(opts["CATKIN_DEPENDS"])
@@ -225,9 +231,9 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         if cmd == "catkin_metapackage":
             has_catkin_stuff = True
             if not manifest.is_metapackage():
-                errors.append((manifest.name,) + msg("CATKIN_META_VS_PKG"))
+                results.append((manifest.name, ERROR) + msg("CATKIN_META_VS_PKG"))
             if not "catkin" in cm_finds:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             continue
         if cmd == "include_directories":
             cm_build_includes |= set(args)
@@ -235,9 +241,9 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
         if cmd == "link_directories":
             externals = [ p for p in args if os.path.isabs(p) and not p.startswith("/pkg-") ]
             if externals:
-                errors.append((manifest.name,) + msg("EXTERNAL_LINK_DIRECTORY"))
+                results.append((manifest.name, ERROR) + msg("EXTERNAL_LINK_DIRECTORY"))
             else:
-                warnings.append((manifest.name,) + msg("LINK_DIRECTORY"))
+                results.append((manifest.name, WARNING) + msg("LINK_DIRECTORY"))
             continue
         if cmd == "target_link_libraries":
             if not cm_internal_deps.has_key(args[0]): cm_internal_deps[args[0]] = set([])
@@ -249,11 +255,11 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             if cmd == "add_executable": cm_build_bins.add(args[0])
             if not cm_target_outputs.has_key(args[0]): cm_target_outputs[args[0]] = args[0]
             if manifest.is_metapackage():
-                errors.append((manifest.name,) + msg("INVALID_META_COMMAND", cmd=cmd))
+                results.append((manifest.name, ERROR) + msg("INVALID_META_COMMAND", cmd=cmd))
             if not "catkin" in cm_finds:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             if not "catkin_package" in cm_commands:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="catkin_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="catkin_package"))
             continue
         if cmd == "set_target_properties":
             opts, args = cmake.argparse(args, { "PROPERTIES" : "p" })
@@ -265,30 +271,30 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             continue
         if cmd == "set":
             if args[0] in immutable_vars:
-                errors.append((manifest.name,) + msg("IMMUTABLE_VAR", var=args[0]))
+                results.append((manifest.name, ERROR) + msg("IMMUTABLE_VAR", var=args[0]))
             elif args[0] in critical_vars:
                 value = ';'.join(args[1:])
                 if not "@%s@" % args[0] in value: 
-                    errors.append((manifest.name,) + msg("CRITICAL_VAR_OVERWRITE", var=args[0]))
+                    results.append((manifest.name, ERROR) + msg("CRITICAL_VAR_OVERWRITE", var=args[0]))
                 else:
-                    warnings.append((manifest.name,) + msg("CRITICAL_VAR_APPEND", var=args[0]))
+                    results.append((manifest.name, WARNING) + msg("CRITICAL_VAR_APPEND", var=args[0]))
             else:
                 var[args[0]] = ';'.join(args[1:])
             continue
         if cmd == "unset":
             if args[0] in immutable_vars:
-                errors.append((manifest.name,) + msg("IMMUTABLE_VAR", var=args[0]))
+                results.append((manifest.name, ERROR) + msg("IMMUTABLE_VAR", var=args[0]))
             elif args[0] in critical_vars:
-                errors.append((manifest.name,) + msg("CRITICAL_VAR_OVERWRITE", var=args[0]))
+                results.append((manifest.name, ERROR) + msg("CRITICAL_VAR_OVERWRITE", var=args[0]))
             else:
                 var[args[0]] = ""
             continue
         if cmd == "catkin_python_setup":
             has_catkin_stuff = True
             if not "catkin" in cm_finds:
-                errors.append((manifest.name,) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
+                results.append((manifest.name, ERROR) + msg("ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package"))
             if not os.path.exists(os.path.join(path, "setup.py")):
-                errors.append((manifest.name,) + msg("MISSING_FILE", cmd=cmd, file="setup.py"))
+                results.append((manifest.name, ERROR) + msg("MISSING_FILE", cmd=cmd, file="setup.py"))
             continue
         if cmd == "install":
             install_type = ""
@@ -306,122 +312,110 @@ def check_catkin_pkg(path, manifest, warnings, errors, is_ros_package):
             for dest in [ "DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION" ]:
                 if not opts[dest]: continue
                 if not opts[dest].startswith("/catkin-target/"):
-                    warnings.append((manifest.name,) + msg("INSTALL_DESTINATION", type=install_type, dest=dest))
+                    results.append((manifest.name, WARNING) + msg("INSTALL_DESTINATION", type=install_type, dest=dest))
                 if opts[dest].startswith("/catkin-target/include/"):
                     installs_includes = True
             continue
     if "rosbuild_compat_fkie" in pkg_buildtool_dep | pkg_build_dep and not uses_rosbuild_compat:
-        warnings.append((manifest.name,) + msg("UNUSED_DEPEND", pkg="rosbuild_compat_fkie"))
+        results.append((manifest.name, WARNING) + msg("UNUSED_DEPEND", pkg="rosbuild_compat_fkie"))
     if uses_rosbuild_compat and not "rosbuild_compat_fkie" in pkg_buildtool_dep:
         if not "rosbuild_compat_fkie" in pkg_build_dep:
-            errors.append((manifest.name,) + msg("MISSING_DEPEND", type="buildtool", pkg="rosbuild_compat_fkie"))
+            results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", type="buildtool", pkg="rosbuild_compat_fkie"))
         else:
-            warnings.append((manifest.name,) + msg("WRONG_DEPEND", wrong_type="build", right_type="buildtool", pkg="rosbuild_compat_fkie"))
+            results.append((manifest.name, WARNING) + msg("WRONG_DEPEND", wrong_type="build", right_type="buildtool", pkg="rosbuild_compat_fkie"))
     if "catkin" in pkg_buildtool_dep:
         if not "catkin" in cm_finds:
-            errors.append((manifest.name,) + msg("MISSING_FIND", pkg="catkin"))
+            results.append((manifest.name, ERROR) + msg("MISSING_FIND", pkg="catkin"))
         if not "catkin_package" in cm_commands and not manifest.is_metapackage():
-            errors.append((manifest.name,) + msg("MISSING_CMD", cmd="catkin_package"))
+            results.append((manifest.name, ERROR) + msg("MISSING_CMD", cmd="catkin_package"))
         if not "catkin_metapackage" in cm_commands and manifest.is_metapackage():
-            errors.append((manifest.name,) + msg("MISSING_CMD", cmd="catkin_metapackage"))
+            results.append((manifest.name, ERROR) + msg("MISSING_CMD", cmd="catkin_metapackage"))
     elif has_catkin_stuff:
-        errors.append((manifest.name,) + msg("MISSING_DEPEND", type="buildtool", pkg="catkin"))
+        results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", type="buildtool", pkg="catkin"))
     if "generate_messages" in cm_commands and not declares_messages:
-        warnings.append((manifest.name,) + msg("UNUSED_GENERATE_MSG"))
+        results.append((manifest.name, WARNING) + msg("UNUSED_GENERATE_MSG"))
     if declares_messages and not "generate_messages" in cm_commands:
-        errors.append((manifest.name,) + msg("MISSING_GENERATE_MSG"))
+        results.append((manifest.name, ERROR) + msg("MISSING_GENERATE_MSG"))
         cm_commands.add("generate_messages") # Fake it
     if declares_messages and not "message_generation" in cm_build_dep and not manifest.is_metapackage():
-        errors.append((manifest.name,) + msg("MISSING_CATKIN_FIND", pkg="message_generation"))
+        results.append((manifest.name, ERROR) + msg("MISSING_CATKIN_FIND", pkg="message_generation"))
     if declares_messages and not "message_runtime" in cm_run_dep and not manifest.is_metapackage():
-        errors.append((manifest.name,) + msg("MISSING_CATKIN_DEPEND", pkg="message_runtime"))
+        results.append((manifest.name, ERROR) + msg("MISSING_CATKIN_DEPEND", pkg="message_runtime"))
     if cm_targets and cm_build_dep and not "/catkin-includes/" in cm_build_includes:
-        warnings.append((manifest.name,) + msg("MISSING_CATKIN_INCLUDE"))
+        results.append((manifest.name, WARNING) + msg("MISSING_CATKIN_INCLUDE"))
     if exports_includes and not installs_includes:
-        m = (manifest.name,) + msg("MISSING_INSTALL_INCLUDE")
-        if "install" in cm_commands:
-            errors.append(m)
-        else:
-            warnings.append(m)
+        results.append((manifest.name, ERROR if "install" in cm_commands else NOTICE) + msg("MISSING_INSTALL_INCLUDE"))
     if os.path.exists(os.path.join(path, "setup.py")) and not "catkin_python_setup" in cm_commands:
-        errors.append((manifest.name,) + msg("MISSING_PYTHON_SETUP"))
+        results.append((manifest.name, ERROR) + msg("MISSING_PYTHON_SETUP"))
     if exports_includes and cm_build_libs and not cm_export_libs:
-        warnings.append((manifest.name,) + msg("MISSING_EXPORT_LIB"))
+        results.append((manifest.name, WARNING) + msg("MISSING_EXPORT_LIB"))
     for pkg in cm_msg_dep - cm_build_dep - cm_finds:
-        errors.append((manifest.name,) + msg ("UNCONFIGURED_MSG_DEPEND", pkg=pkg))
+        results.append((manifest.name, ERROR) + msg ("UNCONFIGURED_MSG_DEPEND", pkg=pkg))
     for pkg in cm_msg_dep - pkg_build_dep:
-        errors.append((manifest.name,) + msg("MISSING_MSG_DEPEND", pkg=pkg, type="build"))
+        results.append((manifest.name, ERROR) + msg("MISSING_MSG_DEPEND", pkg=pkg, type="build"))
     for pkg in cm_msg_dep - cm_run_dep:
-        errors.append((manifest.name,) + msg("MISSING_MSG_CATKIN", pkg=pkg))
+        results.append((manifest.name, ERROR) + msg("MISSING_MSG_CATKIN", pkg=pkg))
     for pkg in cm_msg_dep - pkg_run_dep:
-        errors.append((manifest.name,) + msg("MISSING_MSG_DEPEND", pkg=pkg, type="run"))
+        results.append((manifest.name, ERROR) + msg("MISSING_MSG_DEPEND", pkg=pkg, type="run"))
     for lib in cm_export_libs:
         if not lib in cm_targets: continue
         if cm_target_outputs[lib] != lib:
-            errors.append((manifest.name,) + msg("EXPORT_LIB_RENAMED", target=lib))
+            results.append((manifest.name, ERROR) + msg("EXPORT_LIB_RENAMED", target=lib))
         if not lib in cm_installs:
-            m = (manifest.name,) + msg("UNINSTALLED_EXPORT_LIB", target=lib)
-            if "install" in cm_commands:
-                errors.append(m)
-            else:
-                warnings.append(m)
+            results.append((manifest.name, ERROR if "install" in cm_commands else NOTICE) + msg("UNINSTALLED_EXPORT_LIB", target=lib))
         if lib in cm_build_bins:
-            errors.append((manifest.name,) + msg("EXPORT_LIB_NOT_LIB", target=lib))
+            results.append((manifest.name, ERROR) + msg("EXPORT_LIB_NOT_LIB", target=lib))
     for tgt in cm_build_bins - cm_installs - cm_export_libs:
         if "test" in tgt: continue
-        warnings.append((manifest.name,) + msg("MISSING_INSTALL_TARGET", target=tgt))
+        results.append((manifest.name, WARNING if "install" in cm_commands else NOTICE) + msg("MISSING_INSTALL_TARGET", target=tgt))
     for pkg in cm_build_dep - cm_run_dep:
         if re.match(r"_msgs(_|$)", pkg) and is_ros_package(pkg):
-            warnings.append((manifest.name,) + msg("SUGGEST_CATKIN_DEPEND", pkg=pkg))
+            results.append((manifest.name, WARNING) + msg("SUGGEST_CATKIN_DEPEND", pkg=pkg))
     for pkg in cm_build_dep - pkg_build_dep:
         if pkg == "rosbuild_compat_fkie" and pkg in pkg_buildtool_dep: continue
-        errors.append((manifest.name,) + msg("MISSING_DEPEND", pkg=pkg, type="build"))
+        results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="build"))
     for pkg in pkg_build_dep - cm_build_dep - cm_finds:
         if is_ros_package(pkg):
-            errors.append((manifest.name,) + msg("UNCONFIGURED_DEPEND", pkg=pkg))
+            results.append((manifest.name, ERROR) + msg("UNCONFIGURED_DEPEND", pkg=pkg))
     for pkg in cm_run_dep - pkg_run_dep:
-        errors.append((manifest.name,) + msg("MISSING_DEPEND", pkg=pkg, type="run"))
+        results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="run"))
     for tgt in cm_export_targets - cm_targets:
-        errors.append((manifest.name,) + msg("UNDEFINED_TARGET",target=tgt))
+        results.append((manifest.name, ERROR) + msg("UNDEFINED_TARGET",target=tgt))
     for target, output in cm_target_outputs.iteritems():
         if os.sep in output:
-            errors.append((manifest.name,) + msg("INVALID_TARGET_OUTPUT", target=target))
+            results.append((manifest.name, ERROR) + msg("INVALID_TARGET_OUTPUT", target=target))
         if not short_name in target and not target in cm_export_libs:
-            warnings.append((manifest.name,) + msg("TARGET_NAME_COLLISION", target=target))
+            results.append((manifest.name, NOTICE) + msg("TARGET_NAME_COLLISION", target=target))
     for target, depends in cm_internal_deps.iteritems():
         if not target in cm_installs: continue
         for lib in depends:
             if not lib in cm_targets: continue
             if not lib in cm_installs:
-                errors.append((manifest.name,) + msg("UNINSTALLED_DEPEND", export_target=target, target=lib))
+                results.append((manifest.name, ERROR) + msg("UNINSTALLED_DEPEND", export_target=target, target=lib))
     if manifest.is_metapackage() and (len(cm_build_dep) > 0 or len(pkg_build_dep) > 0):
-        errors.append((manifest.name,) + msg("INVALID_META_DEPEND", type="build"))
+        results.append((manifest.name, ERROR) + msg("INVALID_META_DEPEND", type="build"))
     cm_plugin_dep = set([])
     for export in manifest.exports:
         if "plugin" in export.attributes.keys():
             plugin = export.attributes["plugin"]
             cm_plugin_dep.add(export.tagname)
             if not plugin.startswith("${prefix}/"):
-                errors.append((manifest.name,) + msg("PLUGIN_EXPORT_PREFIX", export=export.tagname))
+                results.append((manifest.name, ERROR) + msg("PLUGIN_EXPORT_PREFIX", export=export.tagname))
             else:
                 if not os.path.exists(os.path.join(path, plugin[10:])):
-                    errors.append((manifest.name,) + msg("PLUGIN_MISSING_FILE", export=export.tagname, file=plugin))
+                    results.append((manifest.name, ERROR) + msg("PLUGIN_MISSING_FILE", export=export.tagname, file=plugin))
                 if not os.path.normpath("/catkin-target/share/%s/%s" % (manifest.name, plugin[10:])) in cm_install_files:
-                    m = (manifest.name,) + msg("PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
-                    if "install" in cm_commands:
-                        errors.append(m)
-                    else:
-                        warnings.append(m)
+                    results.append((manifest.name, ERROR if "install" in cm_commands else NOTICE) + msg("PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:]))
     for dep in cm_plugin_dep - pkg_run_dep:
-        warnings.append((manifest.name,) + msg("PLUGIN_DEPEND", export=dep, type="run", pkg=dep))
+        results.append((manifest.name, WARNING) + msg("PLUGIN_DEPEND", export=dep, type="run", pkg=dep))
     chatter = re.match(r"((\s|[.,!?;()])*\b(%s|a\s+few|the|an?|packages?|contain(s|ed)?|comprise(d|s)?|include(s|d)?|provide(s|ed)?|suppl(y|ies|ied)?|offer(s|ed)?|add(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|do(es)?|did|this|these|those|that|which|(ros\s+)?nodes?|from|in|to|for|of|with|and|or|purpose|multiple|several|(an)?other|one|two|three|both|some|all|no(thing|ne|t)?|various|different|miscellaneous|routines?|(python\s+|c(\+\+)?\s+|java\s+)?code(\s+snippets?)?|useful|examples?|boilerplate|meaningless|programs?|executables?|versions?|work\s+in\s+progress|todo|descriptions?|interfaces?|implementations?|librar(y|ies)|functionalit(y|ies)|\d+)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
     if chatter is not None:
         s = chatter.group(0).replace("\n", " ").strip()
         if manifest.description[chatter.end(0):].strip():
             if len(s.split()) > 1:
-                warnings.append((manifest.name,) + msg("DESCRIPTION_BOILERPLATE", text=s))
+                results.append((manifest.name, NOTICE) + msg("DESCRIPTION_BOILERPLATE", text=s))
         else:
-            warnings.append((manifest.name,) + msg("DESCRIPTION_MEANINGLESS", text=s))
+            results.append((manifest.name, NOTICE) + msg("DESCRIPTION_MEANINGLESS", text=s))
 
 if __name__ == "__main__":
     try:
@@ -430,16 +424,14 @@ if __name__ == "__main__":
         parser = argparse.ArgumentParser()
         parser.add_argument("--version", action="version", version=catkin_lint_version)
         parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
-        parser.add_argument("-w", "--warn", action="store_true", help="show warnings")
-        parser.add_argument("-s", "--strict", action="store_true", help="treat warnings as errors")
-        parser.add_argument("-v", "--verbose", action="store_true", help="show additional explanations")
+        parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
+        parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
+        parser.add_argument("--explain", action="store_true", help="show additional explanations")
         args = parser.parse_args()
-        warnings = []
-        errors = []
+        results = []
         pkgs = {}
         local_pkg_names = set([])
         pkgs_to_check = []
-        warn_suppressed = 0
         nothing_to_do = 0
         if "ROS_PACKAGE_PATH" in os.environ:
             for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
@@ -471,37 +463,30 @@ if __name__ == "__main__":
             sys.exit(nothing_to_do)
         for path, manifest in pkgs_to_check:
             try:
-                check_catkin_pkg(path, manifest, warnings, errors, lambda pkg: pkg in local_pkg_names)
+                check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names)
             except Exception as e:
-                errors.append((manifest.name, "INTERNAL_ERROR", str(e), "catkin_lint failed to parse the package contents properly"))
-        if args.strict:
-            errors = warnings + errors
-            warnings = []
-        if not args.warn:
-            warn_suppressed = len(warnings)
-            warnings = []
+                results.append((manifest.name, ERROR, "EXCEPTION", str(e), "catkin_lint failed to parse the package contents properly"))
         explained = set([])
-        for pkg, msg_id, text, explanation in sorted(warnings):
-            sys.stdout.write("%s: warning: %s\n" % (pkg, text))
-            if args.verbose and not msg_id in explained:
+        suppressed = 0
+        max_level = 0
+        problems = 0
+        exit_code = 0
+        for pkg, level, msg_id, text, explanation in sorted(results):
+            if args.W < level:
+                suppressed += 1
+                if level > max_level: max_level = level
+                continue
+            if args.strict or level == ERROR: exit_code = 1
+            problems += 1
+            sys.stdout.write("%s: %s: %s\n" % (pkg, diagnostic_label[level], text))
+            if args.explain and not msg_id in explained:
                 explained.add(msg_id)
                 sys.stdout.write("%s\n" % textwrap.fill(explanation, initial_indent="     * ", subsequent_indent="     * "))
-        for pkg, msg_id, text, explanation in sorted(errors):
-            sys.stdout.write("%s: error: %s\n" % (pkg, text))
-            if args.verbose and not msg_id in explained:
-                explained.add(msg_id)
-                sys.stdout.write("%s\n" % textwrap.fill(explanation, initial_indent="     * ", subsequent_indent="     * "))
-        if errors and warnings:
-            sys.stderr.write ("catkin_lint: checked %d packages and found %d warnings and %d errors\n" % (len(pkgs_to_check), len(warnings), len(errors)))
-        elif errors and not warnings:
-            sys.stderr.write ("catkin_lint: checked %d packages and found %d errors\n" % (len(pkgs_to_check), len(errors)))
-        elif warnings and not errors:
-            sys.stderr.write ("catkin_lint: checked %d packages and found %d warnings\n" % (len(pkgs_to_check), len(warnings)))
-        else:
-            sys.stderr.write ("catkin_lint: checked %d packages and found no problems\n" % len(pkgs_to_check))
-        if (warn_suppressed): sys.stderr.write ("catkin_lint: %d warnings have been ignored. Use --warn to show them\n" % warn_suppressed)
-        sys.exit(1 if errors else 0)
+        sys.stderr.write ("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
+        if (suppressed > 0): sys.stderr.write ("catkin_lint: %d warnings have been ignored. Use -W%d to see all\n" % (suppressed, max_level))
+        sys.exit(exit_code)
     except Exception as err:
         sys.stderr.write("catkin_lint: %s\n\n" % str(err))
+        raise
         sys.exit(2)
 
