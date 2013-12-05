@@ -225,7 +225,7 @@ find_path(), and/or find_library() and add the dependency to the
 DEPENDS stanza.
 """
 ),
-"MISSING_CATKIN_INCLUDE" : ("include_directories() should list ${catkin_INCLUDE_DIRS}",
+"MISSING_CATKIN_INCLUDE" : ("missing include_directories(${catkin_INCLUDE_DIRS})",
 """\
 You must add the catkin include paths to your include search list, or
 you might experience build failures.
