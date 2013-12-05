@@ -1,3 +1,9 @@
+catkin-lint (1.1.4) unstable; urgency=low
+
+  * Be more precise about ignored diagnostics
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 05 Dec 2013 11:04:07 +0100
+
 catkin-lint (1.1.3) unstable; urgency=low
 
   * Reword include_directories() warning
