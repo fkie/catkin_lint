@@ -467,14 +467,12 @@ if __name__ == "__main__":
             except Exception as e:
                 results.append((manifest.name, ERROR, "EXCEPTION", str(e), "catkin_lint failed to parse the package contents properly"))
         explained = set([])
-        suppressed = 0
-        max_level = 0
+        suppressed = { ERROR: 0, WARNING: 0, NOTICE: 0 }
         problems = 0
         exit_code = 0
         for pkg, level, msg_id, text, explanation in sorted(results):
             if args.W < level:
-                suppressed += 1
-                if level > max_level: max_level = level
+                suppressed[level] += 1
                 continue
             if args.strict or level == ERROR: exit_code = 1
             problems += 1
@@ -483,7 +481,9 @@ if __name__ == "__main__":
                 explained.add(msg_id)
                 sys.stdout.write("%s\n" % textwrap.fill(explanation, initial_indent="     * ", subsequent_indent="     * "))
         sys.stderr.write ("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
-        if (suppressed > 0): sys.stderr.write ("catkin_lint: %d warnings have been ignored. Use -W%d to see all\n" % (suppressed, max_level))
+        for level in [ ERROR, WARNING, NOTICE ]:
+          if suppressed[level] > 0: 
+              sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
         sys.exit(exit_code)
     except Exception as err:
         sys.stderr.write("catkin_lint: %s\n\n" % str(err))
