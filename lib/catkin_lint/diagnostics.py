@@ -416,6 +416,22 @@ Test dependencies are additional dependencies for testing, so there is no
 need to list any build or run dependency a second time.
 """
 ),
+"REDUNDANT_LIB_PREFIX" : ("library output name '%(output)s' has redundant 'lib' prefix",
+"""\
+Libraries are automatically prefixed with 'lib', so your library will end up
+with a file name like 'lib%(output)s.so'. You can use
+set_target_properties(... PROPERTIES OUTPUT_NAME ...) to give your library a
+different file name without changing the target name.
+"""
+),
+"REDUNDANT_LIB_SUFFIX" : ("library output name '%(output)s' has redundant 'lib' suffix",
+"""\
+Libraries are automatically prefixed with 'lib', so your library will end up
+with a file name like 'lib%(output)s.so'. You can use
+set_target_properties(... PROPERTIES OUTPUT_NAME ...) to give your library a
+different file name without changing the target name.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
