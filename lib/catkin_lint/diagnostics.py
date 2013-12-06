@@ -410,6 +410,12 @@ The FindXXX.cmake modules are intended to be included by the find_package()
 command.
 """
 ),
+"REDUNDANT_TEST_DEPEND" : ("redundant test_depend '%(pkg)s'",
+"""\
+Test dependencies are additional dependencies for testing, so there is no 
+need to list any build or run dependency a second time.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):

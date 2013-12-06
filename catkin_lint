@@ -75,6 +75,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
     pkg_buildtool_dep = set([dep.name for dep in manifest.buildtool_depends])
     pkg_build_dep = set([dep.name for dep in manifest.build_depends])
     pkg_run_dep = set([dep.name for dep in manifest.run_depends])
+    pkg_test_dep = set([dep.name for dep in manifest.test_depends])
     in_macro = False
     in_function = False
     cmlist = open(os.path.join(path, "CMakeLists.txt"), "r")
@@ -385,6 +386,8 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
             results.append((manifest.name, ERROR) + msg("UNCONFIGURED_BUILD_DEPEND", pkg=pkg))
     for pkg in cm_run_dep - pkg_run_dep:
         results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="run"))
+    for pkg in (pkg_build_dep | pkg_run_dep) & pkg_test_dep:
+        results.append((manifest.name, ERROR) + msg("REDUNDANT_TEST_DEPEND", pkg=pkg))
     for tgt in cm_export_targets - cm_targets:
         results.append((manifest.name, ERROR) + msg("UNDEFINED_TARGET",target=tgt))
     for incl in cm_export_includes:
