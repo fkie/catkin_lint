@@ -403,8 +403,14 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
     for target, output in cm_target_outputs.iteritems():
         if os.sep in output:
             results.append((manifest.name, ERROR) + msg("INVALID_TARGET_OUTPUT", target=target))
-        nf = set(util.word_split(target))
-        if not (nf & name_fragments) and not target in cm_export_libs:
+        tgl = target.lower()
+        tnc = True
+        for nf in name_fragments:
+          if len(nf) < 3: continue
+          if nf in tgl:
+            tnc = False
+            break
+        if tnc and not target in cm_export_libs:
             results.append((manifest.name, NOTICE) + msg("TARGET_NAME_COLLISION", target=target))
         if target in cm_build_libs:
             if output.startswith("lib"):
