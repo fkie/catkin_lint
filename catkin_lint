@@ -406,11 +406,9 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         nf = set(util.word_split(target))
         if not (nf & name_fragments) and not target in cm_export_libs:
             results.append((manifest.name, NOTICE) + msg("TARGET_NAME_COLLISION", target=target))
-        if target in cm_build_libs: 
+        if target in cm_build_libs:
             if output.startswith("lib"):
                 results.append((manifest.name, NOTICE) + msg("REDUNDANT_LIB_PREFIX", output=output))
-            if output.endswith("lib"):
-                results.append((manifest.name, NOTICE) + msg("REDUNDANT_LIB_SUFFIX", output=output))
     for target, depends in cm_internal_deps.iteritems():
         if not target in cm_installs: continue
         for lib in depends:
