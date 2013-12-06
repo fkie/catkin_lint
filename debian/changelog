@@ -1,3 +1,14 @@
+catkin-lint (1.1.6) unstable; urgency=low
+
+  * Improve target name collision check
+  * Remove debug 'raise' which was left in accidentally
+  * Make include check more robust
+  * Reword a few diagnostic messages
+  * Check for redundant test depends
+  * Check for redundant lib prefixes and suffixes
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Fri, 06 Dec 2013 10:35:11 +0100
+
 catkin-lint (1.1.5) unstable; urgency=low
 
   * Check include paths
