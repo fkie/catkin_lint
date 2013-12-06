@@ -480,7 +480,6 @@ if __name__ == "__main__":
             try:
                 check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names)
             except Exception as e:
-                raise
                 results.append((manifest.name, ERROR, "EXCEPTION", str(e), "catkin_lint failed to parse the package contents properly"))
         explained = set([])
         suppressed = { ERROR: 0, WARNING: 0, NOTICE: 0 }
@@ -503,6 +502,5 @@ if __name__ == "__main__":
         sys.exit(exit_code)
     except Exception as err:
         sys.stderr.write("catkin_lint: %s\n\n" % str(err))
-        raise
         sys.exit(2)
 
