@@ -323,7 +323,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
                     installs_includes = True
             continue
     if "rosbuild_compat_fkie" in pkg_buildtool_dep | pkg_build_dep and not uses_rosbuild_compat:
-        results.append((manifest.name, WARNING) + msg("UNUSED_DEPEND", pkg="rosbuild_compat_fkie"))
+        results.append((manifest.name, WARNING) + msg("UNUSED_DEPEND", type="buildtool", pkg="rosbuild_compat_fkie"))
     if uses_rosbuild_compat and not "rosbuild_compat_fkie" in pkg_buildtool_dep:
         if not "rosbuild_compat_fkie" in pkg_build_dep:
             results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", type="buildtool", pkg="rosbuild_compat_fkie"))
@@ -344,7 +344,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         results.append((manifest.name, ERROR) + msg("MISSING_GENERATE_MSG"))
         cm_commands.add("generate_messages") # Fake it
     if declares_messages and not "message_generation" in cm_build_dep and not manifest.is_metapackage():
-        results.append((manifest.name, ERROR) + msg("MISSING_CATKIN_FIND", pkg="message_generation"))
+        results.append((manifest.name, ERROR) + msg("UNCONFIGURED_BUILD_DEPEND", pkg="message_generation"))
     if declares_messages and not "message_runtime" in cm_run_dep and not manifest.is_metapackage():
         results.append((manifest.name, ERROR) + msg("MISSING_CATKIN_DEPEND", pkg="message_runtime"))
     if cm_targets and cm_build_dep and not "/catkin-includes" in cm_build_includes:
@@ -382,7 +382,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="build"))
     for pkg in pkg_build_dep - cm_build_dep - cm_finds:
         if is_ros_package(pkg):
-            results.append((manifest.name, ERROR) + msg("UNCONFIGURED_DEPEND", pkg=pkg))
+            results.append((manifest.name, ERROR) + msg("UNCONFIGURED_BUILD_DEPEND", pkg=pkg))
     for pkg in cm_run_dep - pkg_run_dep:
         results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="run"))
     for tgt in cm_export_targets - cm_targets:

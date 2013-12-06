@@ -86,12 +86,6 @@ dependencies with the COMPONENTS keyword. This is shorter than
 multiple find_package() calls, but does not work for system dependencies.
 """
 ),
-"MISSING_CATKIN_FIND" : ("build_depend '%(pkg)s' is not configured",
-"""\
-You have specified a catkin build dependency but failed to call
-find_package() or list it as component in find_package(catkin).
-"""
-),
 "MISSING_CATKIN_DEPEND" : ("run_depend '%(pkg)s' is not listed in catkin_package()",
 """\
 You have specified a catkin run dependency but failed to list
@@ -159,7 +153,7 @@ package will continue to work if the file system layout is
 changed in the future.
 """
 ),
-"UNUSED_DEPEND" : ("unused depend on '%(pkg)s'",
+"UNUSED_DEPEND" : ("unused %(type)s_depend on '%(pkg)s'",
 """\
 You have a listed a package dependency but do not appear
 to use any of the features it provides.
@@ -171,16 +165,22 @@ Your package uses features of another package but you
 failed to list this dependency in your package.xml
 """
 ),
-"UNCONFIGURED_DEPEND" : ("unconfigured depend on '%(pkg)s'",
+"UNCONFIGURED_BUILD_DEPEND" : ("unconfigured build_depend on '%(pkg)s'",
 """\
-Your package uses features of another package but you
-failed to either call find_package() or list it as a
-component in the find_package(catkin) call.
+You declare a build dependency on another package but neither
+call find_package() nor have it listed as catkin component in
+the find_package(catkin) call.
 """
 ),
 "WRONG_DEPEND" : ("%(wrong_type)s_depend '%(pkg)s' should be a %(right_type)s_depend",
 """\
-You have listed a package as the wrong dependency type.
+You have listed a package as the wrong dependency type. build_depends are needed
+to build your package (as in compile the declared executables and libraries).
+run_depends are needed at runtime to run the nodes or use the libraries
+and exported headers in other projects. buildtool_depends are significant only
+for cross-compiling; in that case, buildtool_depends are host architecture (and run
+during the build process) while build_depends are target architecture (and are
+linked against). test_depends are additional run_depends which only apply to unit tests.
 """
 ),
 "UNUSED_GENERATE_MSG" : ("generate_messages() called but no message declared",
