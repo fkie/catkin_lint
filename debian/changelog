@@ -1,3 +1,9 @@
+catkin-lint (1.1.7) unstable; urgency=low
+
+  * Revert lib suffix check
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Fri, 06 Dec 2013 11:10:36 +0100
+
 catkin-lint (1.1.6) unstable; urgency=low
 
   * Improve target name collision check
