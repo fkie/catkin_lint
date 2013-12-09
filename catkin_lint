@@ -66,6 +66,82 @@ singleton_cmds = frozenset([
     "catkin_python_setup"
 ])
 
+# Check for meaningless package descriptions
+buzzwords = [
+    r"(an)?other",
+    r"(python\s+|c(\+\+)?\s+|java\s+)?code(\s+snippets?)?",
+    r"(ros\s+)?nodes?",
+    r"\d+",
+    r"a\s+few",
+    r"add(s|ed)?",
+    r"all",
+    r"an?",
+    r"and",
+    r"are",
+    r"be",
+    r"boilerplate",
+    r"both",
+    r"can",
+    r"comprise(s|d)?",
+    r"contain(s|ed)?",
+    r"describe(s|d)?",
+    r"descriptions?",
+    r"did",
+    r"different",
+    r"do(es)?",
+    r"done",
+    r"examples?",
+    r"executables?",
+    r"for",
+    r"from",
+    r"functionalit(y|ies)",
+    r"had",
+    r"has",
+    r"have",
+    r"implementations?",
+    r"in",
+    r"include(s|d)?",
+    r"interfaces?",
+    r"into",
+    r"is",
+    r"librar(y|ies)",
+    r"meaningless",
+    r"miscellaneous",
+    r"multiple",
+    r"no(thing|ne|t)?",
+    r"of",
+    r"offer(s|ed)",
+    r"one",
+    r"or",
+    r"packages?",
+    r"programs?",
+    r"provide(s|d)?",
+    r"purpose",
+    r"routines?",
+    r"runs?",
+    r"sets?",
+    r"several",
+    r"some",
+    r"suppl(y|ies|ied)",
+    r"that",
+    r"the",
+    r"these",
+    r"this",
+    r"those",
+    r"three",
+    r"to",
+    r"todo",
+    r"tools?",
+    r"two",
+    r"use[sd]?",
+    r"useful",
+    r"various",
+    r"versions?",
+    r"which",
+    r"with",
+    r"work\s+in\s+progress",
+]
+
 ERROR = 0
 WARNING = 1
 NOTICE = 2
@@ -438,7 +514,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
                     results.append((manifest.name, ERROR if "install" in cm_commands else NOTICE) + msg("PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:]))
     for dep in cm_plugin_dep - pkg_run_dep:
         results.append((manifest.name, WARNING) + msg("PLUGIN_DEPEND", export=dep, type="run", pkg=dep))
-    chatter = re.match(r"((\s|[.,!?;()])*\b(%s|a\s+few|the|an?|packages?|contain(s|ed)?|comprise(d|s)?|include(s|d)?|provide(s|ed)?|suppl(y|ies|ied)?|offer(s|ed)?|add(s|ed)?|can|be|use[sd]?|runs?|sets?|is|are|has|have|had|do(es)?|did|this|these|those|that|which|(ros\s+)?nodes?|from|in|to|for|of|with|and|or|purpose|multiple|several|(an)?other|one|two|three|both|some|all|no(thing|ne|t)?|various|different|miscellaneous|routines?|(python\s+|c(\+\+)?\s+|java\s+)?code(\s+snippets?)?|useful|examples?|boilerplate|meaningless|programs?|executables?|versions?|work\s+in\s+progress|todo|descriptions?|interfaces?|implementations?|librar(y|ies)|functionalit(y|ies)|\d+)\b)+" % manifest.name, manifest.description, re.IGNORECASE)
+    chatter = re.match(r"((\s|[.,!?;()/])*\b(%s|%s)\b)+" % (manifest.name, r"|".join(buzzwords)), manifest.description, re.IGNORECASE)
     if chatter is not None:
         s = chatter.group(0).replace("\n", " ").strip()
         if manifest.description[chatter.end(0):].strip():
