@@ -1,3 +1,15 @@
+catkin-lint (1.1.9) unstable; urgency=low
+
+  * Remove trailing whitespace
+  * New regex for message packages
+  * Check for CMAKE_BUILD_TYPE modifications
+  * Refactor buzzword list
+  * Make CATKIN_ variables critical
+  * Relax test exception for installed binaries
+  * Fix typo
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Mon, 09 Dec 2013 15:35:33 +0100
+
 catkin-lint (1.1.8) unstable; urgency=low
 
   * Improve name collision check
