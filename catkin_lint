@@ -39,7 +39,7 @@ from catkin_lint.diagnostics import msg
 import textwrap
 
 # Immutable variables must not be changed at all
-immutable_vars = frozenset([ 
+immutable_vars = frozenset([
     "CMAKE_C_COMPILER",
     "CMAKE_CXX_COMPILER",
     "PROJECT_NAME",
@@ -281,7 +281,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
                 results.append((manifest.name, ERROR) + msg("IMMUTABLE_VAR", var=args[0]))
             elif args[0] in critical_vars:
                 value = ';'.join(args[1:])
-                if not "@%s@" % args[0] in value: 
+                if not "@%s@" % args[0] in value:
                     results.append((manifest.name, ERROR) + msg("CRITICAL_VAR_OVERWRITE", var=args[0]))
                 else:
                     results.append((manifest.name, WARNING) + msg("CRITICAL_VAR_APPEND", var=args[0]))
@@ -511,7 +511,7 @@ if __name__ == "__main__":
                 sys.stdout.write("%s\n" % textwrap.fill(explanation, initial_indent="     * ", subsequent_indent="     * "))
         sys.stderr.write ("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
         for level in [ ERROR, WARNING, NOTICE ]:
-          if suppressed[level] > 0: 
+          if suppressed[level] > 0:
               sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
         sys.exit(exit_code)
     except Exception as err:

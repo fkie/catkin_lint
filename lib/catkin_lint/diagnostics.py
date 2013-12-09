@@ -296,7 +296,7 @@ stanza of your catkin_package() call.
 "UNINSTALLED_EXPORT_LIB" : ("exported library '%(target)s' is not installed",
 """\
 Your package can be used from the devel space but cannot be installed
-properly, because a library that is exported via catkin_package() will 
+properly, because a library that is exported via catkin_package() will
 not be copied to the proper location.
 """
 ),
@@ -316,8 +316,8 @@ equal to the actual library name.
 "SUGGEST_CATKIN_DEPEND" : ("package '%(pkg)s' looks like a run_depend",
 """\
 Your package configures another package as build dependency, and its name suggests
-that it contains ROS messages. In that case, you must add it to the 
-CATKIN_DEPENDS stanza of your catkin_package() and listed as run_depend in your package.xml 
+that it contains ROS messages. In that case, you must add it to the
+CATKIN_DEPENDS stanza of your catkin_package() and listed as run_depend in your package.xml
 """
 ),
 "UNDEFINED_TARGET" : ("exported target '%(target)s' is not defined",
@@ -380,7 +380,7 @@ the package source folder.
 "PLUGIN_MISSING_INSTALL" : ("%(export)s plugin file '%(file)s' ist not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}",
 """\
 Your package can be used from the devel space but cannot be installed
-properly, because a plugin declaration file which is listed in your package.xml 
+properly, because a plugin declaration file which is listed in your package.xml
 is not installed to the correct location.
 """
 ),
@@ -412,7 +412,7 @@ command.
 ),
 "REDUNDANT_TEST_DEPEND" : ("redundant test_depend '%(pkg)s'",
 """\
-Test dependencies are additional dependencies for testing, so there is no 
+Test dependencies are additional dependencies for testing, so there is no
 need to list any build or run dependency a second time.
 """
 ),

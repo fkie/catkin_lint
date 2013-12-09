@@ -100,7 +100,7 @@ def argparse(args, opts):
     result = {}
     remaining = []
     for optname, opttype in opts.iteritems():
-        if opttype == "*" or opttype == "+": 
+        if opttype == "*" or opttype == "+":
             result[optname] = []
         elif opttype == "?" or opttype == "!":
             result[optname] = None
@@ -123,7 +123,7 @@ def argparse(args, opts):
                     l = ll
                     curname = k
                     curtype = v
-        if l > 0: 
+        if l > 0:
             del t_args[:l]
             if curtype == "-":
                 result[curname] = True
