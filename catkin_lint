@@ -376,7 +376,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         if "test" in tgt: continue
         results.append((manifest.name, WARNING if "install" in cm_commands else NOTICE) + msg("MISSING_INSTALL_TARGET", target=tgt))
     for pkg in cm_build_dep - cm_run_dep:
-        if re.match(r"_msgs(_|$)", pkg) and is_ros_package(pkg):
+        if re.match(r"_(msg|message)s?(_|$)", pkg) and is_ros_package(pkg):
             results.append((manifest.name, WARNING) + msg("SUGGEST_CATKIN_DEPEND", pkg=pkg))
     for pkg in cm_build_dep - pkg_build_dep:
         if pkg == "rosbuild_compat_fkie" and pkg in pkg_buildtool_dep: continue
