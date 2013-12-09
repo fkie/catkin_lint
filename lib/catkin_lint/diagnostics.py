@@ -377,7 +377,7 @@ A plugin declaration file which is listed in your package.xml is missing from
 the package source folder.
 """
 ),
-"PLUGIN_MISSING_INSTALL" : ("%(export)s plugin file '%(file)s' ist not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}",
+"PLUGIN_MISSING_INSTALL" : ("%(export)s plugin file '%(file)s' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}",
 """\
 Your package can be used from the devel space but cannot be installed
 properly, because a plugin declaration file which is listed in your package.xml
