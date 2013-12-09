@@ -463,7 +463,7 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         if lib in cm_build_bins:
             results.append((manifest.name, ERROR) + msg("EXPORT_LIB_NOT_LIB", target=lib))
     for tgt in cm_build_bins - cm_installs - cm_export_libs:
-        if "test" in tgt: continue
+        if "test" in tgt.lower(): continue
         results.append((manifest.name, WARNING if "install" in cm_commands else NOTICE) + msg("MISSING_INSTALL_TARGET", target=tgt))
     for pkg in cm_build_dep - cm_run_dep:
         if re.match(r"_(msg|message)s?(_|$)", pkg) and is_ros_package(pkg):
