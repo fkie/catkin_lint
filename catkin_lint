@@ -609,7 +609,7 @@ if __name__ == "__main__":
                 continue
             if args.strict or level == ERROR: exit_code = 1
             problems += 1
-            sys.stdout.write("%s: %s: %s\n" % (pkg, diagnostic_label[level], text))
+            sys.stdout.write("%s: %s: %s\n" % (pkg, diagnostic_label[ERROR] if args.strict else diagnostic_label[level], text))
             if args.explain and not msg_id in explained:
                 explained.add(msg_id)
                 sys.stdout.write("%s\n" % textwrap.fill(explanation, initial_indent="     * ", subsequent_indent="     * "))
