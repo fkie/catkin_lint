@@ -546,6 +546,7 @@ if __name__ == "__main__":
         parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
         parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
         parser.add_argument("--explain", action="store_true", help="show additional explanations")
+        parser.add_argument("--pkg", action="append", help="specify catkin package by name")
         args = parser.parse_args()
         results = []
         pkgs = {}
@@ -556,12 +557,22 @@ if __name__ == "__main__":
             for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
                 pkgs = find_packages(path)
                 local_pkg_names |= set([m.name for m in pkgs.values() ])
+                for p, m in pkgs.iteritems():
+                    if m.name in args.pkg:
+                        args.pkg.remove(m.name)
+                        args.path.append(os.path.join(path, p))
                 h, t = os.path.split(path)
                 if t == "src":
                     repodir = os.path.join(h, "repos")
                     if os.path.isdir(repodir):
                         pkgs = find_packages(repodir)
                         local_pkg_names |= set([m.name for m in pkgs.values() ])
+                        for p, m in pkgs.iteritems():
+                            if m.name in args.pkg:
+                                args.pkg.remove(m.name)
+                                args.path.append(os.path.join(repodir, p))
+        for p in args.pkg:
+            sys.stderr.write ("catkin_lint: no such package: %s\n" % p)
         if not args.path:
             if os.path.exists("package.xml"):
                 args.path += [ "." ]

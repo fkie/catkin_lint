@@ -5,12 +5,15 @@ if type rosrepo &> /dev/null; then
 _catkin_lint_complete()
 {
 	local arg="${COMP_WORDS[COMP_CWORD]}"
-	COMPREPLY=( $( compgen -W "-h --help --version -W0 -W1 -W2 --strict --explain" -- "$arg" ) )
-	if [ "${arg:0:1}" != "-" ]
+	local prev="${COMP_WORDS[COMP_CWORD-1]}"
+	if [ "$prev" == "--pkg" ]
 	then
-		compopt -o filenames 2>/dev/null
-		COMPREPLY+=( $( compgen -d -- "$arg" ) )
+		COMPREPLY=( $( compgen -W "$( rospack list-names 2>/dev/null )" -- "$arg" ) )
+		return 0
 	fi
+	compopt -o filenames 2>/dev/null
+	COMPREPLY=( $( compgen -W "-h --help --version -W0 -W1 -W2 --strict --explain --pkg" -- "$arg" ) )
+	COMPREPLY+=( $( compgen -d -- "$arg" ) )
 	return 0
 }
 
