@@ -6,19 +6,45 @@ catkin\_lint
 `CMakeLists.txt` files. It can detect and report a number of common
 problems.
 
-If **catkin\_lint** is invoked with one or more paths as parameters, 
-it searches for packages recursively and checks all of them.
-Otherwise, it looks for a package in the current working directory.
+If **catkin\_lint** is invoked with one or more paths as parameters, it
+searches for packages recursively and checks all of them.  Otherwise, it
+looks for a package in the current working directory.
 
-## Reported Errors
-Problems which are reported as errors are severe enough to either
-break the build or produce unintended results.
+## Problem Severities
 
-## Reported Warnings
-If the `--warn` option is given, a number of potential problems
-are reported which may indicate a bug in your package but may be
-justified for reasons **catkin\_lint** cannot discern. The `--strict` 
-option treats warnings as errors.
+Diagnostic messages are classified in three different categories:
+errors, warnings, and notices. The `-W` option controls which problems
+are reported to the user:
+
+- `-W0`: only errors are reported (this is the default)
+- `-W1`: errors and warnings are reported
+- `-W2`: errors, warnings, and notices are reported
+
+Normally, **catkin\_lint** returns a non-zero exit code if and only
+if errors occured. The `--strict` option causes **catkin\_lint** to
+treat any reported problem as error. The `--explain` option offers
+a more detailed explanation for each problem. The explanation is
+not repeated if a problem occurs multiple times in different contexts.
+
+### Errors
+
+Errors are severe enough to either break the build or produce unintended
+results. Usually, they violate the rules outlined in the
+[Catkin Manual](http://docs.ros.org/api/catkin/html/).
+
+### Warnings
+
+Potential errors which may indicate a bug in your package but may be
+justified for reasons **catkin\_lint** cannot discern. Constructs which
+trigger a warning can usually be modified in a way that is functionally
+equivalent but more robust.
+
+### Notices
+
+Issues which are not objectionable from a technical view point but
+should  be addressed to improve the quality of the package. Many notices
+highlight violations of the recommendations and best practises from the
+Catkin Manual.
 
 ## License
 
