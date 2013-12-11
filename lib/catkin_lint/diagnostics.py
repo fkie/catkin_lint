@@ -424,6 +424,12 @@ set_target_properties(... PROPERTIES OUTPUT_NAME ...) to give your library a
 different file name without changing the target name.
 """
 ),
+"UNKNOWN_DEPEND" : ("unknown %(type)s_depend '%(pkg)s'",
+"""\
+The specified dependency is neither a ROS package nor a known system dependency
+from the rosdep database.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):

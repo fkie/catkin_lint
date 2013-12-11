@@ -161,7 +161,7 @@ NOTICE = 2
 
 diagnostic_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
 
-def check_catkin_pkg(path, manifest, results, is_ros_package):
+def check_catkin_pkg(path, manifest, results, is_ros_package, is_rosdep):
     pkg_buildtool_dep = set([dep.name for dep in manifest.buildtool_depends])
     pkg_build_dep = set([dep.name for dep in manifest.build_depends])
     pkg_run_dep = set([dep.name for dep in manifest.run_depends])
@@ -478,6 +478,18 @@ def check_catkin_pkg(path, manifest, results, is_ros_package):
         results.append((manifest.name, ERROR) + msg("MISSING_DEPEND", pkg=pkg, type="run"))
     for pkg in (pkg_build_dep | pkg_run_dep) & pkg_test_dep:
         results.append((manifest.name, ERROR) + msg("REDUNDANT_TEST_DEPEND", pkg=pkg))
+    for pkg in pkg_buildtool_dep:
+        if not is_ros_package(pkg) and not is_rosdep(pkg):
+            results.append((manifest.name, ERROR) + msg("UNKNOWN_DEPEND", pkg=pkg, type="buildtool"))
+    for pkg in pkg_build_dep:
+        if not is_ros_package(pkg) and not is_rosdep(pkg):
+            results.append((manifest.name, ERROR) + msg("UNKNOWN_DEPEND", pkg=pkg, type="build"))
+    for pkg in pkg_build_dep:
+        if not is_ros_package(pkg) and not is_rosdep(pkg):
+            results.append((manifest.name, ERROR) + msg("UNKNOWN_DEPEND", pkg=pkg, type="run"))
+    for pkg in pkg_test_dep:
+        if not is_ros_package(pkg) and not is_rosdep(pkg):
+            results.append((manifest.name, ERROR) + msg("UNKNOWN_DEPEND", pkg=pkg, type="test"))
     for tgt in cm_export_targets - cm_targets:
         results.append((manifest.name, ERROR) + msg("UNDEFINED_TARGET",target=tgt))
     for incl in cm_export_includes:
@@ -594,9 +606,19 @@ if __name__ == "__main__":
         if not pkgs_to_check:
             sys.stderr.write ("catkin_lint: no packages to check\n")
             sys.exit(nothing_to_do)
+        view = {}
+        try:
+            from rosdep2.lookup import RosdepLookup
+            from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
+            from rosdep2.sources_list import SourcesListLoader
+            sources_loader = SourcesListLoader.create_default()
+            lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
+            view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
+        except Exception as err:
+            sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
         for path, manifest in pkgs_to_check:
             try:
-                check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names)
+                check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names, lambda key: not view.keys() or key in view.keys())
             except Exception as e:
                 results.append((manifest.name, ERROR, "EXCEPTION", str(e), "catkin_lint failed to parse the package contents properly"))
         explained = set([])
