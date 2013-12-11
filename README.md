@@ -7,12 +7,15 @@ catkin\_lint
 problems.
 
 If **catkin\_lint** is invoked with one or more paths as parameters, it
-searches for packages recursively and checks all of them.  Otherwise, it
-looks for a package in the current working directory.
+searches for packages recursively and checks all of them. Alternatively, the
+`--pkg` option can be used to add the path of a particular ROS package.
+
+If neither paths nor packages are specified, **catkin\_lint** looks for a
+package in the current working directory.
 
 ## Problem Severities
 
-Diagnostic messages are classified in three different categories:
+Diagnostic messages come in three different categories:
 errors, warnings, and notices. The `-W` option controls which problems
 are reported to the user:
 
