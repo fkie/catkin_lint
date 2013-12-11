@@ -1,3 +1,10 @@
+catkin-lint (1.1.12) unstable; urgency=low
+
+  * Update documentation
+  * Check for invalid dependencies
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 11 Dec 2013 14:15:10 +0100
+
 catkin-lint (1.1.11) unstable; urgency=low
 
   * Fix regression bug if --pkg is not used
