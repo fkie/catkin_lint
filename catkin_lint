@@ -161,6 +161,18 @@ NOTICE = 2
 
 diagnostic_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
 
+def learn_packages(pkgs, catkin_pkgs, other_pkgs):
+  for m in pkgs.values():
+    is_catkin = True
+    for e in m.exports:
+      if e.tagname == "build_type" and e.content != "catkin":
+        is_catkin = False
+        break
+    if is_catkin:
+      catkin_pkgs.add(m.name)
+    else:
+      other_pkgs.add(m.name)
+
 def check_catkin_pkg(path, manifest, results, is_ros_package, is_rosdep):
     pkg_buildtool_dep = set([dep.name for dep in manifest.buildtool_depends])
     pkg_build_dep = set([dep.name for dep in manifest.build_depends])
@@ -563,12 +575,13 @@ if __name__ == "__main__":
         results = []
         pkgs = {}
         local_pkg_names = set([])
+        other_pkg_names = set([])
         pkgs_to_check = []
         nothing_to_do = 0
         if "ROS_PACKAGE_PATH" in os.environ:
             for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
                 pkgs = find_packages(path)
-                local_pkg_names |= set([m.name for m in pkgs.values() ])
+                learn_packages(pkgs, local_pkg_names, other_pkg_names)
                 if args.pkg:
                     for p, m in pkgs.iteritems():
                         if m.name in args.pkg:
@@ -579,7 +592,7 @@ if __name__ == "__main__":
                     repodir = os.path.join(h, "repos")
                     if os.path.isdir(repodir):
                         pkgs = find_packages(repodir)
-                        local_pkg_names |= set([m.name for m in pkgs.values() ])
+                        learn_packages(pkgs, local_pkg_names, other_pkg_names)
                         if args.pkg:
                             for p, m in pkgs.iteritems():
                                 if m.name in args.pkg:
@@ -601,7 +614,7 @@ if __name__ == "__main__":
                 nothing_to_do = 1
                 continue
             pkgs = find_packages(path)
-            local_pkg_names |= set([ m.name for m in pkgs.values() ])
+            learn_packages(pkgs, local_pkg_names, other_pkg_names)
             pkgs_to_check += [ (os.path.join(path, p), m) for p,m in pkgs.iteritems() ]
         if not pkgs_to_check:
             sys.stderr.write ("catkin_lint: no packages to check\n")
@@ -618,7 +631,7 @@ if __name__ == "__main__":
             sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
         for path, manifest in pkgs_to_check:
             try:
-                check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names, lambda key: not view.keys() or key in view.keys())
+                check_catkin_pkg(path, manifest, results, lambda pkg: pkg in local_pkg_names, lambda key: key in other_pkg_names or not view.keys() or key in view.keys())
             except Exception as e:
                 results.append((manifest.name, ERROR, "EXCEPTION", str(e), "catkin_lint failed to parse the package contents properly"))
         explained = set([])
