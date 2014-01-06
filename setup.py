@@ -12,10 +12,19 @@ setup(
   author        = "Timo Röhling",
   author_email  = "timo.roehling@fkie.fraunhofer.de",
   license       = "BSD",
+  url           = "https://github.com/fkie/catkin_lint",
+  download_url  = "https://github.com/fkie/catkin_lint/tarball/%s" % catkin_lint_version,
   packages      = [ "catkin_lint" ],
   package_dir   = { "" : "lib" },
   scripts       = [ "catkin_lint" ],
   version       = catkin_lint_version,
-  requires      = [ "catkin_pkg" ]
+  requires      = [ "catkin_pkg" ],
+  classifiers   = [
+                    "Development Status :: 4 - Beta",
+                    "Intended Audience :: Developers",
+                    "License :: OSI Approved :: BSD License",
+                    "Topic :: Software Development :: Quality Assurance",
+                    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+                  ]
 )
 
