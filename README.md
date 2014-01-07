@@ -2,6 +2,9 @@
 catkin\_lint
 ============
 
+**Bleeding Edge**: This branch is currently work in progress and will
+not work.
+
 **catkin\_lint** runs a static analysis of the `package.xml` and
 `CMakeLists.txt` files. It can detect and report a number of common
 problems.
