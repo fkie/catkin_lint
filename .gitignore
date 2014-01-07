@@ -2,4 +2,6 @@
 /.pydevproject
 /.settings
 *.pyc
+__pycache__
+*_old.py
 
