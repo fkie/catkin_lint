@@ -3,7 +3,8 @@ catkin\_lint
 ============
 
 **Bleeding Edge**: This branch is currently work in progress and will
-not work.
+not work. 
+[![Build Status](https://travis-ci.org/fkie/catkin_lint.png?branch=bleeding-edge)](https://travis-ci.org/fkie/catkin_lint)
 
 **catkin\_lint** runs a static analysis of the `package.xml` and
 `CMakeLists.txt` files. It can detect and report a number of common
