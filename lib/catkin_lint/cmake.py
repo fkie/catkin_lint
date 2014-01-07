@@ -44,7 +44,7 @@ def _resolve(s, var):
     mo = _find_var(s)
     while mo is not None:
         key = mo.group(1)
-        value = var[key] if var.has_key(key) else ""
+        value = var[key] if key in var else ""
         s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = _find_var(s)
     return s

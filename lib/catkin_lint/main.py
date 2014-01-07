@@ -66,7 +66,7 @@ class CMakeLinter(object):
         self._init_hooks.append(cb)
 
     def add_command_hook(self, cmd, cb):
-        if not self._cmd_hooks.has_key(cmd):
+        if cmd not in self._cmd_hooks:
             self._cmd_hooks[cmd] = [ cb ]
         else:
             self._cmd_hooks[cmd].append(cb)
@@ -103,7 +103,7 @@ class CMakeLinter(object):
                         in_function = True
                         info.report(WARNING, "UNSUPPORTED_CMD", cmd="function")
                         continue
-                if self._cmd_hooks.has_key(cmd):
+                if cmd in self._cmd_hooks:
                     for cb in self._cmd_hooks[cmd]:
                         cb(info, cmd, args)
                 info.commands.add(cmd)
@@ -185,7 +185,7 @@ class CatkinEnvironment(object):
         if not os.path.isdir(path):
             return []
         realpath = os.path.realpath(path)
-        if self.cache.has_key(realpath):
+        if realpath in self.cache:
             return self.cache[realpath]
         pkgs = find_packages(path)
         found = []
