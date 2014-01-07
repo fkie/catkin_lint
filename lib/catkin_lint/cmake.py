@@ -32,11 +32,11 @@ _token_spec = [
     ( 'NL', r'\r|\n|\r\n' ),
     ( 'LPAREN', r'\(' ),
     ( 'RPAREN', r'\)' ),
-    ( 'ID', r'[a-z_][a-z_0-9]*(?=[ \t\r\n\(\);#])' ),
+    ( 'ID', r'[a-z_][a-z_0-9]*(?=[ \t\r\n\(\)#])' ),
     ( 'STRING', r'"[^\r\n]*?"' ),
     ( 'WORD', r'[^\(\)# \t\r\n]+' ),
     ( 'COMMENT', r'#.*?$' ),
-    ( 'SKIP', r'[ \t;]+' ),
+    ( 'SKIP', r'[ \t]+' ),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
 
@@ -74,12 +74,14 @@ def _expect(etyp, typ, val, line):
 def parse(s, var=None):
     state = 0
     cmd = None
+    cmdline = 0
     for typ, val, line in _lexer(s):
         if typ == "COMMENT": continue
         if state == 0:
             cmd = _expect(["ID"], typ, val, line).lower()
             args = []
             state = 1
+            cmdline = line
         elif state == 1:
             _expect(["LPAREN"], typ, val, line)
             state = 2
@@ -87,12 +89,12 @@ def parse(s, var=None):
             _expect(["RPAREN","ID","WORD","STRING"], typ, val, line)
             if var is not None: val = _resolve(val, var)
             if typ == "RPAREN":
-                yield ( cmd, args )
+                yield ( cmd, args, cmdline )
                 state = 0
             elif typ == "STRING":
                 args.append(val[1:-1])
             else:
-                args += val.split(";")
+                args += re.split(";|[ \t]+", val)
     if state != 0:
         raise RuntimeError("Unexpected end of file")
 
