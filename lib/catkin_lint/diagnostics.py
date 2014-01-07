@@ -430,6 +430,18 @@ The specified dependency is neither a ROS package nor a known system dependency
 from the rosdep database.
 """
 ),
+"UNSUPPORTED_CMD" : ("unsupported command '%(cmd)s'",
+"""\
+Your package uses CMake constructs which cannot be linted properly at this time.
+Certain errors may go unnoticed while other errors may be false positives.
+"""
+),
+"OS_ERROR" : ( "OS error: %(msg)s",
+"""\
+An operating system error has occured. This is not a linting problem per se but
+might be caused by a missing or unreadable file.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
