@@ -95,7 +95,7 @@ class CMakeLinter(object):
                 else:
                     if cmd == "macro":
                         in_macro = True
-                        info.report(WARNING, "UNSUPPORTED_CMD", cmd="macro")
+                        info.report(NOTICE, "UNSUPPORTED_CMD", cmd="macro")
                         continue
                 if in_function:
                     if cmd == "endfunction": in_function = False
@@ -103,7 +103,7 @@ class CMakeLinter(object):
                 else:
                     if cmd == "function":
                         in_function = True
-                        info.report(WARNING, "UNSUPPORTED_CMD", cmd="function")
+                        info.report(NOTICE, "UNSUPPORTED_CMD", cmd="function")
                         continue
                 if cmd in self._cmd_hooks:
                     for cb in self._cmd_hooks[cmd]:
