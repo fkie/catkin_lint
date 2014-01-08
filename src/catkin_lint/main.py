@@ -76,15 +76,19 @@ class CMakeLinter(object):
     def add_final_hook(self, cb):
         self._final_hooks.append(cb)
 
+    def _read_file(self, filename):
+        f = open(filename, "r")
+        content = f.read()
+        f.close()
+        return content
+
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
         try:
             info.file = os.path.relpath(filename, info.path)
             info.line = None
-            f = open(filename, "r")
-            content = f.read()
-            f.close()
+            content = self._read_file(filename)
             in_macro = False
             in_function = False
             for cmd, args, line in cmake.parse(content, info.var):
