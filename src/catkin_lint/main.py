@@ -234,6 +234,12 @@ def main():
         nothing_to_do = 0
         pkgs_to_check = []
         env = CatkinEnvironment()
+        if not args.path and not args.pkg:
+            if os.path.exists("package.xml"):
+                pkgs_to_check += env.add_path(os.getcwd())
+            else:
+                sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
+                sys.exit(0)
         if "ROS_PACKAGE_PATH" in os.environ:
             for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
                 env.add_path(path)
@@ -249,11 +255,6 @@ def main():
                 nothing_to_do = 1
                 continue
             pkgs_to_check.append(env.manifests[name])
-        if not args.path and not args.pkg:
-            if os.path.exists("package.xml"):
-                pkgs_to_check += env.add_path(os.getcwd())
-            else:
-                sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
         if not pkgs_to_check:
             sys.stderr.write ("catkin_lint: no packages to check\n")
             sys.exit(nothing_to_do)
