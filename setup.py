@@ -3,7 +3,7 @@
 
 from distutils.core import setup
 import sys
-sys.path.insert(0, "lib")
+sys.path.insert(0, "src")
 from catkin_lint import __version__ as catkin_lint_version
 
 setup(
@@ -16,8 +16,8 @@ setup(
   download_url  = "https://github.com/fkie/catkin_lint/tarball/%s" % catkin_lint_version,
   keywords      = "catkin,ROS",
   packages      = [ "catkin_lint" ],
-  package_dir   = { "" : "lib" },
-  scripts       = [ "catkin_lint" ],
+  package_dir   = { "" : "src" },
+  scripts       = [ "bin/catkin_lint" ],
   version       = catkin_lint_version,
   requires      = [ "catkin_pkg" ],
   classifiers   = [

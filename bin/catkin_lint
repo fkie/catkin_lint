@@ -24,11 +24,6 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import os
-import sys
-# If run from the source tree
-libdir = os.path.join(sys.path[0], "lib")
-if os.path.isdir(os.path.join(libdir, "catkin_lint")): sys.path.insert(0, libdir)
 
 from catkin_lint.main import main
 
