@@ -313,11 +313,12 @@ library export function will break if the logical target name is not
 equal to the actual library name.
 """
 ),
-"SUGGEST_CATKIN_DEPEND" : ("package '%(pkg)s' looks like a run_depend",
+"SUGGEST_CATKIN_DEPEND" : ("package '%(pkg)s' should be listed in catkin_package()",
 """\
-Your package configures another package as build dependency, and its name suggests
+Your package configures another package as build dependency, it is listed as
+run_depend in your package.xml, and its name suggests
 that it contains ROS messages. In that case, you must add it to the
-CATKIN_DEPENDS stanza of your catkin_package() and listed as run_depend in your package.xml
+CATKIN_DEPENDS stanza of your catkin_package()
 """
 ),
 "UNDEFINED_TARGET" : ("exported target '%(target)s' is not defined",
@@ -426,7 +427,7 @@ different file name without changing the target name.
 ),
 "UNKNOWN_DEPEND" : ("unknown %(type)s_depend '%(pkg)s'",
 """\
-The specified dependency is neither a ROS package nor a known system dependency
+The specified dependency is neither a catkin package nor a known system dependency
 from the rosdep database.
 """
 ),
