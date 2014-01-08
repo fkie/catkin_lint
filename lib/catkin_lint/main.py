@@ -25,6 +25,8 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
+import sys
+import argparse
 import textwrap
 from catkin_pkg.packages import find_packages
 from catkin_lint import __version__ as catkin_lint_version
@@ -74,13 +76,13 @@ class CMakeLinter(object):
     def add_final_hook(self, cb):
         self._final_hooks.append(cb)
 
-    def _parse_file(self, info, file):
+    def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
         try:
-            info.file = os.path.relpath(file, info.path)
+            info.file = os.path.relpath(filename, info.path)
             info.line = None
-            f = open(file, "r")
+            f = open(filename, "r")
             content = f.read()
             f.close()
             in_macro = False
@@ -209,15 +211,13 @@ class CatkinEnvironment(object):
         return name in self.known_catkin_pkgs
 
     def is_system_pkg(self, name):
-        return name in rosdep_view.keys() or name in self.known_other_pkgs
+        return name in self.rosdep_view.keys() or name in self.known_other_pkgs
 
     def is_known_pkg(self, name):
-        return is_catkin_pkg(name) or is_system_pkg(name)
+        return self.is_catkin_pkg(name) or self.is_system_pkg(name)
 
 def main():
     try:
-        import sys
-        import argparse
         parser = argparse.ArgumentParser()
         parser.add_argument("--version", action="version", version=catkin_lint_version)
         parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
@@ -240,11 +240,11 @@ def main():
                 continue
             pkgs_to_check += env.add_path(path)
         for name in args.pkg:
-            if not name in ce.known_catkin_pkgs:
+            if not name in env.known_catkin_pkgs:
                 sys.stderr.write("catkin_lint: no such package: %s\n" % name)
                 nothing_to_do = 1
                 continue
-            pkgs_to_check.append(ce.manifests[name])
+            pkgs_to_check.append(env.manifests[name])
         if not args.path and not args.pkg:
             if os.path.exists("package.xml"):
                 pkgs_to_check += env.add_path(os.getcwd())
@@ -267,16 +267,16 @@ def main():
         suppressed = { ERROR: 0, WARNING: 0, NOTICE: 0 }
         problems = 0
         exit_code = 0
-        for pkg, file, line, level, msg_id, text, explanation in sorted(linter.messages):
+        for pkg, filename, line, level, msg_id, text, explanation in sorted(linter.messages):
             if args.W < level:
                 suppressed[level] += 1
                 continue
             if args.strict or level == ERROR: exit_code = 1
             problems += 1
             loc = pkg
-            if file is not None:
+            if filename is not None:
                 if line is not None:
-                    fn = "%s(%d)" % (file, line)
+                    fn = "%s(%d)" % (filename, line)
                 else:
                     fn = file
                 loc = "%s: %s" % (pkg, fn)
@@ -286,8 +286,8 @@ def main():
                 sys.stdout.write("%s\n" % textwrap.fill(explanation, initial_indent="     * ", subsequent_indent="     * "))
         sys.stderr.write ("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
         for level in [ ERROR, WARNING, NOTICE ]:
-          if suppressed[level] > 0:
-              sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
+            if suppressed[level] > 0:
+                sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
         sys.exit(exit_code)
     except Exception as err:
         sys.stderr.write("catkin_lint: internal error: %s\n\n" % str(err))
