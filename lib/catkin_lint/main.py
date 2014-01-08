@@ -131,6 +131,10 @@ class CMakeLinter(object):
                     if not "IMPORTED" in args: info.libraries.add(args[0])
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
+                if cmd == "find_path":
+                    info.var[args[0]] = "/find-path"
+                if cmd == "find_library":
+                    info.var[args[0]] = "/find-libs/library.so"
         except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         info.file = save_file
