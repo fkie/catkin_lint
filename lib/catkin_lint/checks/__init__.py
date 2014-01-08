@@ -10,7 +10,8 @@ import cmake
 import depends
 import misc
 
-def add_all_checks(linter):
+
+def everything(linter):
     build.targets(linter)
     build.plugins(linter)
     cmake.project(linter)

@@ -258,8 +258,8 @@ def main():
             sys.stderr.write ("catkin_lint: no packages to check\n")
             sys.exit(nothing_to_do)
         linter = CMakeLinter(env)
-        from catkin_lint.checks import add_all_checks
-        add_all_checks(linter)
+        import catkin_lint.checks
+        catkin_lint.checks.everything(linter)
         for path, manifest in pkgs_to_check:
             try:
                 linter.lint(path, manifest)
