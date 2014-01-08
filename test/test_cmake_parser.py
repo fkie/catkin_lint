@@ -48,6 +48,15 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd("one;two" three)'),
             [ ("cmd", [ "one;two", "three" ], 1) ]
         )
+        self.assertEqual(
+            self.parse_all('cmd("one;two";three)'),
+            [ ("cmd", [ "one;two", "three" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(one;"two;three")'),
+            [ ("cmd", [ "one", "two;three" ], 1) ]
+        )
+        self.assertRaises(RuntimeError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
         self.assertEqual(

@@ -34,9 +34,9 @@ _token_spec = [
     ( 'RPAREN', r'\)' ),
     ( 'ID', r'[a-z_][a-z_0-9]*(?=[ \t\r\n\(\)#])' ),
     ( 'STRING', r'"[^\r\n]*?"' ),
-    ( 'WORD', r'[^\(\)# \t\r\n]+' ),
+    ( 'WORD', r'[^\(\)"#; \t\r\n]+' ),
     ( 'COMMENT', r'#.*?$' ),
-    ( 'SKIP', r'[ \t]+' ),
+    ( 'SKIP', r'[ \t;]+' ),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
 
