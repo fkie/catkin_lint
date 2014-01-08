@@ -7,6 +7,7 @@ __license__ = "BSD"
 
 import build
 import cmake
+import depends
 import misc
 
 def add_all_checks(linter):
@@ -16,3 +17,6 @@ def add_all_checks(linter):
     cmake.special_vars(linter)
     cmake.singleton_commands(linter)
     misc.package_description(linter)
+    depends.catkin_depends(linter)
+    depends.message_generation(linter)
+
