@@ -6,5 +6,5 @@ install:
   - pip install nose coverage argparse catkin_pkg
 script:
   - coverage run `which nosetests` -s --tests test
-  - coverage report src/catkin_lint/checks/*.py
+  - coverage report `find src -name "*.py"`
 
