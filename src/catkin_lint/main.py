@@ -188,6 +188,8 @@ class CatkinEnvironment(object):
                 self.rosdep_view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
             except Exception as err:
                 sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
+                sys.stderr.write("catkin_lint: unknown dependency errors will be ignored\n")
+                self.rosdep_view = {}
         else:
             self.rosdep_view = rosdep_view
         self.cache = {}
@@ -224,6 +226,9 @@ class CatkinEnvironment(object):
 
     def is_known_pkg(self, name):
         return self.is_catkin_pkg(name) or self.is_system_pkg(name)
+
+    def has_rosdep(self):
+        return len(self.rosdep_view) > 0
 
 def main():
     try:

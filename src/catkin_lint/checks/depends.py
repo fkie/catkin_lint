@@ -124,18 +124,19 @@ def catkin_depends(linter):
         for pkg in (pkg_build_dep | pkg_run_dep) & pkg_test_dep:
             if info.env.is_known_pkg(pkg):
                 info.report (ERROR, "REDUNDANT_TEST_DEPEND", pkg=pkg)
-        for pkg in pkg_buildtool_dep:
-            if not info.env.is_known_pkg(pkg):
-                info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool")
-        for pkg in pkg_build_dep:
-            if not info.env.is_known_pkg(pkg):
-                info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build")
-        for pkg in pkg_run_dep:
-            if not info.env.is_known_pkg(pkg):
-                info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
-        for pkg in pkg_test_dep:
-            if not info.env.is_known_pkg(pkg):
-                info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="test")
+        if info.env.has_rosdep():
+            for pkg in pkg_buildtool_dep:
+                if not info.env.is_known_pkg(pkg):
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool")
+            for pkg in pkg_build_dep:
+                if not info.env.is_known_pkg(pkg):
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build")
+            for pkg in pkg_run_dep:
+                if not info.env.is_known_pkg(pkg):
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
+            for pkg in pkg_test_dep:
+                if not info.env.is_known_pkg(pkg):
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="test")
         for tgt in info.export_targets - info.targets:
             info.report(ERROR, "UNDEFINED_TARGET", target=tgt)
         if info.manifest.is_metapackage() and pkg_build_dep:
