@@ -10,9 +10,11 @@ def all(linter):
     import catkin_lint.checks.build as build
     import catkin_lint.checks.manifest as manifest
     import catkin_lint.checks.misc as misc
+    import catkin_lint.checks.python as python
     import catkin_lint.checks.fkie as fkie
 
     linter.require(build.all)
     linter.require(manifest.all)
     linter.require(misc.all)
+    linter.require(python.all)
     linter.require(fkie.all)

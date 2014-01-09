@@ -91,6 +91,7 @@ def catkin_build(linter):
     linter.add_command_hook("add_action_files", any_catkin_cmd)
     linter.add_command_hook("add_service_files", any_catkin_cmd)
     linter.add_command_hook("generate_messages", any_catkin_cmd)
+    linter.add_command_hook("catkin_python_setup", any_catkin_cmd)
     linter.add_command_hook("catkin_package", on_catkin_package)
     linter.add_command_hook("catkin_metapackage", on_catkin_metapackage)
     linter.add_final_hook(on_final)
