@@ -208,3 +208,8 @@ def message_generation(linter):
     linter.add_command_hook("add_action_files", on_add_msg_files)
     linter.add_command_hook("generate_messages", on_generate_msg)
     linter.add_final_hook(on_final)
+
+
+def all(linter):
+    linter.require(catkin_depends)
+    linter.require(message_generation)

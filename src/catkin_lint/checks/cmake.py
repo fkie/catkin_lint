@@ -102,3 +102,9 @@ def singleton_commands(linter):
 
     for cmd in singleton_cmds:
         linter.add_command_hook(cmd, on_command)
+
+
+def all(linter):
+    linter.require(project)
+    linter.require(special_vars)
+    linter.require(singleton_commands)

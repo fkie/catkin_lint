@@ -114,3 +114,7 @@ def package_description(linter):
                 info.report(NOTICE, "DESCRIPTION_MEANINGLESS", text=s)
 
     linter.add_init_hook(on_init)
+
+
+def all(linter):
+    linter.require(package_description)

@@ -64,6 +64,17 @@ class CMakeLinter(object):
         self._cmd_hooks = {}
         self._init_hooks = []
         self._final_hooks = []
+        self._added_checks = set([])
+        self._catch_circular_deps = set([])
+
+    def require(self, check):
+        if check in self._catch_circular_deps:
+            raise RuntimeError("Circular dependency detected")
+        if check in self._added_checks: return
+        self._added_checks.add(check)
+        self._catch_circular_deps.add(check)
+        check(self)
+        self._catch_circular_deps.remove(check)
 
     def add_init_hook(self, cb):
         self._init_hooks.append(cb)
@@ -270,7 +281,7 @@ def main():
             sys.exit(nothing_to_do)
         linter = CMakeLinter(env)
         import catkin_lint.checks
-        catkin_lint.checks.everything(linter)
+        linter.require(catkin_lint.checks.all)
         for path, manifest in pkgs_to_check:
             try:
                 linter.lint(path, manifest)

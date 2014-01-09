@@ -1,6 +1,6 @@
 from catkin_lint.main import CatkinEnvironment, CMakeLinter 
 from catkin_pkg.package import Package, Dependency, Person
-from catkin_lint.checks import everything
+from catkin_lint.checks import all
 
 def create_env(catkin_pkgs=[], system_pkgs=[]):
     env = CatkinEnvironment(rosdep_view={})
@@ -22,7 +22,7 @@ def create_manifest(name, description="", buildtool_depends=[ "catkin" ], build_
     )
 
 
-def mock_lint(env, manifest, cmakelist, checks=everything):
+def mock_lint(env, manifest, cmakelist, checks=all):
     linter = CMakeLinter(env)
     def get_cmakelist(filename): return cmakelist
     linter._read_file = get_cmakelist
