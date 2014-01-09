@@ -63,7 +63,7 @@ def targets(linter):
             info.report(ERROR, "INVALID_META_COMMAND", cmd=cmd)
             return
         if not "catkin" in info.find_packages:
-            info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package")
+            info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if not "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="catkin_package")
         if args[0] in info.targets:
@@ -295,7 +295,7 @@ def message_generation(linter):
         if "generate_messages" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="generate_messages", second_cmd=cmd)
         if not "catkin" in info.find_packages:
-            info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package")
+            info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
     def on_generate_msg(info, cmd, args):
@@ -303,7 +303,7 @@ def message_generation(linter):
         if info.manifest.is_metapackage():
             info.report(ERROR, "INVALID_META_COMMAND", cmd=cmd)
         if not "catkin" in info.find_packages:
-            info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package")
+            info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
         opts, args = cmake.argparse(args, { "DEPENDENCIES": "*" })

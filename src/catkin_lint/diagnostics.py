@@ -67,6 +67,12 @@ specified by the catkin build manual. Failure to do so may lead to
 improper configuration of the package and build problems.
 """
 ),
+"CATKIN_ORDER_VIOLATION" : ( "%(cmd)s() is called before find_package(catkin)",
+"""\
+Catkin macros cannot be called before catkin has been configured with
+find_package(catkin).
+"""
+),
 "DEPRECATED_ROSBUILD" : ( "%(cmd)s() is deprecated",
 """\
 This construct was intended to facilitate the migration from

@@ -69,12 +69,12 @@ def catkin_build(linter):
         if info.manifest.is_metapackage():
             info.report(ERROR, "CATKIN_PKG_VS_META")
         if not "catkin" in info.find_packages:
-            info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package")
+            info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
     def on_catkin_metapackage(info, cmd, args):
         if not info.manifest.is_metapackage():
             info.report (ERROR, "CATKIN_META_VS_PKG")
         if not "catkin" in info.find_packages:
-            info.report (ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="find_package")
+            info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
     def on_final(info):
         if not info.is_catkin: return
         if not "catkin" in info.find_packages:
