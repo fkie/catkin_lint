@@ -99,7 +99,7 @@ class CMakeLinter(object):
         save_line = info.line
         try:
             info.file = os.path.relpath(filename, info.path)
-            info.line = None
+            info.line = 0
             content = self._read_file(filename)
             in_macro = False
             in_function = False
@@ -151,10 +151,9 @@ class CMakeLinter(object):
                     info.var[args[0]] = "/find-path"
                 if cmd == "find_library":
                     info.var[args[0]] = "/find-libs/library.so"
-        except IOError as err:
-            info.report(ERROR, "OS_ERROR", msg=str(err))
-        info.file = save_file
-        info.line = save_line
+        finally:
+            info.file = save_file
+            info.line = save_line
 
     def lint(self, path, manifest):
         info = LintInfo(self.env)
@@ -177,11 +176,14 @@ class CMakeLinter(object):
           "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/lib/python",
           "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/share",
         }
-        for cb in self._init_hooks:
-            cb(info)
-        self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
-        for cb in self._final_hooks:
-            cb(info)
+        try:
+            for cb in self._init_hooks:
+                cb(info)
+            self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
+            for cb in self._final_hooks:
+                cb(info)
+        except IOError as err:
+            info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
 
 class CatkinEnvironment(object):
