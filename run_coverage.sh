@@ -1,8 +1,21 @@
 #!/bin/bash
 set -e
 
-version=${1:-2.7}
-rm -f .coverage
-coverage-${version} run $( which nosetests-${version} ) -s
-coverage-${version} report $( find src -name "*.py" )
+version=
+
+if [[ -n "$1" && "$1" != -* ]]
+then
+    version=-$1
+    shift
+fi
+
+x()
+{
+    echo '$' "$@"
+    "$@"
+}
+
+x rm -f .coverage
+x coverage${version} run "$( which nosetests${version} )"
+x coverage${version} report "$@" $( find src -name "*.py" )
 
