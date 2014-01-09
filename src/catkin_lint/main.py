@@ -201,7 +201,7 @@ class CatkinEnvironment(object):
                 self.rosdep_view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
             except Exception as err:
                 sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
-                sys.stderr.write("catkin_lint: unknown dependency errors will be ignored\n")
+                sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
                 self.rosdep_view = {}
         else:
             self.rosdep_view = rosdep_view
