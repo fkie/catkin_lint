@@ -6,7 +6,7 @@ import sys
 sys.stderr = sys.stdout
 
 
-class ChecksCMakeTest(unittest.TestCase):
+class ChecksMiscTest(unittest.TestCase):
 
     def test_project(self):
         env = create_env()
