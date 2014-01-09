@@ -36,3 +36,9 @@ def word_split(s):
         mo = ws.search(s)
     result.append(s.lower())
     return result
+
+# Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
+try:
+    iteritems = dict.iteritems
+except AttributeError:
+    iteritems = dict.items

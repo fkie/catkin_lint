@@ -7,10 +7,10 @@ __license__ = "BSD"
 
 
 def everything(linter):
-    import build
-    import cmake
-    import depends
-    import misc
+    import catkin_lint.checks.build as build
+    import catkin_lint.checks.cmake as cmake
+    import catkin_lint.checks.depends as depends
+    import catkin_lint.checks.misc as misc
 
     build.targets(linter)
     build.plugins(linter)

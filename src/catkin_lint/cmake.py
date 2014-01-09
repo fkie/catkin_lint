@@ -25,6 +25,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import re
+from catkin_lint.util import iteritems
 
 _find_var = re.compile(r'\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
@@ -101,7 +102,7 @@ def parse(s, var=None):
 def argparse(args, opts):
     result = {}
     remaining = []
-    for optname, opttype in opts.iteritems():
+    for optname, opttype in iteritems(opts):
         if opttype == "*" or opttype == "+":
             result[optname] = []
         elif opttype == "?" or opttype == "!":
@@ -117,7 +118,7 @@ def argparse(args, opts):
     t_args = args[:]
     while t_args:
         l = 0
-        for k,v in opts.iteritems():
+        for k,v in iteritems(opts):
             kl = k.split()
             ll = len(kl)
             if kl == t_args[:ll]:
@@ -145,7 +146,7 @@ def argparse(args, opts):
         else:
             remaining.append(t_args[0])
         del t_args[0]
-    for optname, opttype in opts.iteritems():
+    for optname, opttype in iteritems(opts):
         if opttype == "+" and not result[optname]:
             raise RuntimeError("Option '%s' requires at least one argument" % optname)
         if opttype == "!" and not result[optname]:

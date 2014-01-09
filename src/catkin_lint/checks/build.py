@@ -28,7 +28,7 @@ import os
 import catkin_lint.cmake as cmake
 import catkin_lint.util as util
 from catkin_lint.main import ERROR, WARNING, NOTICE
-
+from catkin_lint.util import iteritems
 
 def targets(linter):
     def on_init(info):
@@ -121,7 +121,7 @@ def targets(linter):
         name_fragments = set(util.word_split(info.manifest.name))
         if info.export_includes and not info.install_includes:
             info.report (ERROR if "install" in info.commands else NOTICE, "MISSING_INSTALL_INCLUDE")
-        for target, output in info.target_outputs.iteritems():
+        for target, output in iteritems(info.target_outputs):
             if os.sep in output:
                 info.report (ERROR, "INVALID_TARGET_OUTPUT", target=target)
             tgl = target.lower()
@@ -135,7 +135,7 @@ def targets(linter):
                 info.report (NOTICE, "TARGET_NAME_COLLISION", target=target)
             if target in info.libraries and output.startswith("lib"):
                 info.report (NOTICE, "REDUNDANT_LIB_PREFIX", output=output)
-        for target, depends in info.target_links.iteritems():
+        for target, depends in iteritems(info.target_links):
             if not target in info.install_targets: continue
             for lib in depends:
                 if not lib in info.libraries: continue

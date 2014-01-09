@@ -30,8 +30,9 @@ import argparse
 import textwrap
 from catkin_pkg.packages import find_packages
 from catkin_lint import __version__ as catkin_lint_version
-import cmake
-import diagnostics
+import catkin_lint.cmake as cmake
+import catkin_lint.diagnostics as diagnostics
+from catkin_lint.util import iteritems
 
 ERROR = 0
 WARNING = 1
@@ -43,8 +44,8 @@ class LintInfo(object):
         self.env = env
         self.path = None
         self.manifest = None
-        self.file = None
-        self.line = None
+        self.file = ""
+        self.line = 0
         self.commands = set([])
         self.find_packages = set([])
         self.targets = set([])
@@ -199,7 +200,7 @@ class CatkinEnvironment(object):
             return self.cache[realpath]
         pkgs = find_packages(path)
         found = []
-        for p, m in pkgs.iteritems():
+        for p, m in iteritems(pkgs):
             is_catkin = True
             for e in m.exports:
                 if e.tagname == "build_type" and e.content != "catkin":
@@ -283,11 +284,11 @@ def main():
             if args.strict or level == ERROR: exit_code = 1
             problems += 1
             loc = pkg
-            if filename is not None:
-                if line is not None:
+            if filename:
+                if line:
                     fn = "%s(%d)" % (filename, line)
                 else:
-                    fn = file
+                    fn = filename
                 loc = "%s: %s" % (pkg, fn)
             sys.stdout.write("%s: %s: %s\n" % (loc, diagnostic_label[ERROR] if args.strict else diagnostic_label[level], text))
             if args.explain and not msg_id in explained:
