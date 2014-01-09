@@ -54,6 +54,7 @@ def _lexer(s):
     keywords = set([])
     line = 1
     mo = _next_token(s)
+    pos = 0
     while mo is not None:
         typ = mo.lastgroup
         if typ == 'NL':
@@ -138,7 +139,9 @@ def argparse(args, opts):
                 result[curname] = t_args[0]
                 curname = None
                 curtype = None
-            elif curtype == "p" and len(t_args) >= 2:
+            elif curtype == "p":
+                if len(t_args) < 2:
+                    raise RuntimeError("Option '%s' has truncated key-value pair" % curname)
                 result[curname][t_args[0]] = t_args[1]
                 del t_args[0]
             else:
