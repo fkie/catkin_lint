@@ -47,6 +47,75 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([ "REDUNDANT_TEST_DEPEND" ], result)
 
+
+    def test_catkin_build(self):
+        env = create_env()
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.catkin_build)
+        self.assertEqual([], result)
+
+        pkg = create_manifest("mock", buildtool_depends=[])
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.catkin_build)
+        self.assertEqual([ "MISSING_DEPEND" ], result)
+
+        pkg = create_manifest("mock", buildtool_depends=[], build_depends=[ "catkin" ])
+        result = mock_lint(env, pkg, "", checks=cc.catkin_build)
+        self.assertEqual([ "WRONG_DEPEND" ], result)
+
+        pkg = create_manifest("mock", buildtool_depends=[], run_depends=[ "catkin" ])
+        result = mock_lint(env, pkg, "", checks=cc.catkin_build)
+        self.assertEqual([ "WRONG_DEPEND" ], result)
+
+        pkg = create_manifest("mock", buildtool_depends=[], test_depends=[ "catkin" ])
+        result = mock_lint(env, pkg, "", checks=cc.catkin_build)
+        self.assertEqual([ "WRONG_DEPEND" ], result)
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "", checks=cc.catkin_build)
+        self.assertEqual([ "UNUSED_DEPEND" ], result)
+
+        pkg = create_manifest("mock", meta=True)
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.catkin_build)
+        self.assertEqual([ "CATKIN_PKG_VS_META" ], result)
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_metapackage()", checks=cc.catkin_build)
+        self.assertEqual([ "CATKIN_META_VS_PKG" ], result)
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) catkin_package()", checks=cc.catkin_build)
+        self.assertEqual([ "CATKIN_ORDER_VIOLATION", "MISSING_FIND" ], result)
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) generate_messages()", checks=cc.catkin_build)
+        self.assertEqual([ "MISSING_FIND", "MISSING_CMD" ], result)
+
+        pkg = create_manifest("mock", meta=True)
+        result = mock_lint(env, pkg, "project(mock) catkin_metapackage()", checks=cc.catkin_build)
+        self.assertEqual([ "CATKIN_ORDER_VIOLATION", "MISSING_FIND" ], result)
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED)", checks=cc.catkin_build)
+        self.assertEqual([ "MISSING_CMD" ], result)
+
+        pkg = create_manifest("mock", meta=True)
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED)", checks=cc.catkin_build)
+        self.assertEqual([ "MISSING_CMD" ], result)
+
+
+    def test_export_targets(self):
+        env = create_env()
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package(EXPORTED_TARGETS valid) add_custom_target(valid)", checks=cc.export_targets)
+        self.assertEqual([], result)
+
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package(EXPORTED_TARGETS invalid)", checks=cc.export_targets)
+        self.assertEqual([ "UNDEFINED_TARGET" ], result)
+
+
     def test_package_description(self):
         env = create_env()
         pkg = create_manifest("mock", description="Cool Worf")

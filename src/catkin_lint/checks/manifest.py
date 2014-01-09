@@ -64,6 +64,9 @@ def catkin_build(linter):
         info.is_catkin = False
     def any_catkin_cmd(info, cmd, args):
         info.is_catkin = True
+    def on_find_package(info, cmd, args):
+        if args[0] == "catkin":
+            info.is_catkin = True
     def on_catkin_package(info, cmd, args):
         info.is_catkin = True
         if info.manifest.is_metapackage():
@@ -71,27 +74,40 @@ def catkin_build(linter):
         if not "catkin" in info.find_packages:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
     def on_catkin_metapackage(info, cmd, args):
+        info.is_catkin = True
         if not info.manifest.is_metapackage():
             info.report (ERROR, "CATKIN_META_VS_PKG")
         if not "catkin" in info.find_packages:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
     def on_final(info):
-        if not info.is_catkin: return
+        if "catkin" in info.build_dep:
+            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="build", right_type="buildtool")
+        if "catkin" in info.run_dep:
+            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="run", right_type="buildtool")
+        if "catkin" in info.test_dep:
+            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="test", right_type="buildtool")
+        if not info.is_catkin:
+            if not "catkin" in info.find_packages and "catkin" in info.buildtool_dep:
+                info.report(ERROR, "UNUSED_DEPEND", pkg="catkin", type="buildtool")
+            return
         if not "catkin" in info.find_packages:
             info.report(ERROR, "MISSING_FIND", pkg="catkin")
         if not "catkin" in info.buildtool_dep:
             info.report(ERROR, "MISSING_DEPEND", pkg="catkin", type="buildtool")
-        if not "catkin_package" in info.commands and not info.manifest.is_metapackage():
-            info.report(ERROR, "MISSING_CMD", cmd="catkin_package")
-        if not "catkin_metapackage" in info.commands and info.manifest.is_metapackage():
-            info.report(ERROR, "MISSING_CMD", cmd="catkin_metapackage")
+        if not "catkin_package" in info.commands and not "catkin_metapackage" in info.commands:
+            if info.manifest.is_metapackage():
+                info.report(ERROR, "MISSING_CMD", cmd="catkin_metapackage")
+            else:
+                info.report(ERROR, "MISSING_CMD", cmd="catkin_package")
 
+    linter.require(depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("add_message_files", any_catkin_cmd)
     linter.add_command_hook("add_action_files", any_catkin_cmd)
     linter.add_command_hook("add_service_files", any_catkin_cmd)
     linter.add_command_hook("generate_messages", any_catkin_cmd)
     linter.add_command_hook("catkin_python_setup", any_catkin_cmd)
+    linter.add_command_hook("find_package", on_find_package)
     linter.add_command_hook("catkin_package", on_catkin_package)
     linter.add_command_hook("catkin_metapackage", on_catkin_metapackage)
     linter.add_final_hook(on_final)
