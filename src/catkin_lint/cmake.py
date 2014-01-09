@@ -133,22 +133,23 @@ def argparse(args, opts):
                 result[curname] = True
                 curname = None
                 curtype = None
-            continue
         elif curname is not None:
             if curtype == "?" or curtype == "!":
                 result[curname] = t_args[0]
                 curname = None
                 curtype = None
+                del t_args[0]
             elif curtype == "p":
                 if len(t_args) < 2:
                     raise RuntimeError("Option '%s' has truncated key-value pair" % curname)
                 result[curname][t_args[0]] = t_args[1]
-                del t_args[0]
+                del t_args[:2]
             else:
                 result[curname].append(t_args[0])
+                del t_args[0]
         else:
             remaining.append(t_args[0])
-        del t_args[0]
+            del t_args[0]
     for optname, opttype in iteritems(opts):
         if opttype == "+" and not result[optname]:
             raise RuntimeError("Option '%s' requires at least one argument" % optname)
