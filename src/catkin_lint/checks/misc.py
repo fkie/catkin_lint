@@ -24,97 +24,87 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from catkin_lint.main import NOTICE
-import re
+from catkin_lint.main import ERROR, WARNING
 
-def package_description(linter):
-    # Check for meaningless package descriptions
-    buzzwords = [
-        r"(an)?other",
-        r"(python\s+|c(\+\+)?\s+|java\s+)?code(\s+snippets?)?",
-        r"(ros\s+)?nodes?",
-        r"\d+",
-        r"a\s+few",
-        r"add(s|ed)?",
-        r"all",
-        r"an?",
-        r"and",
-        r"are",
-        r"be",
-        r"boilerplate",
-        r"both",
-        r"can",
-        r"comprise(s|d)?",
-        r"contain(s|ed)?",
-        r"describe(s|d)?",
-        r"descriptions?",
-        r"did",
-        r"different",
-        r"do(es)?",
-        r"done",
-        r"examples?",
-        r"executables?",
-        r"for",
-        r"from",
-        r"functionalit(y|ies)",
-        r"had",
-        r"has",
-        r"have",
-        r"implementations?",
-        r"in",
-        r"include(s|d)?",
-        r"interfaces?",
-        r"into",
-        r"is",
-        r"librar(y|ies)",
-        r"meaningless",
-        r"miscellaneous",
-        r"multiple",
-        r"no(thing|ne|t)?",
-        r"of",
-        r"offer(s|ed)",
-        r"one",
-        r"or",
-        r"packages?",
-        r"programs?",
-        r"provide(s|d)?",
-        r"purpose",
-        r"routines?",
-        r"runs?",
-        r"sets?",
-        r"several",
-        r"some",
-        r"suppl(y|ies|ied)",
-        r"that",
-        r"the",
-        r"these",
-        r"this",
-        r"those",
-        r"three",
-        r"to",
-        r"todo",
-        r"tools?",
-        r"two",
-        r"use[sd]?",
-        r"useful",
-        r"various",
-        r"versions?",
-        r"which",
-        r"with",
-        r"work\s+in\s+progress",
-    ]
+
+def project(linter):
+    def on_project(info, cmd, args):
+        if args[0] != info.manifest.name:
+            info.report(ERROR, "PROJECT_NAME", name=args[0])
+
+    linter.add_command_hook("project", on_project)
+
+
+def special_vars(linter):
+    # Immutable variables must not be changed at all
+    immutable_vars = frozenset([
+        "CMAKE_BUILD_TYPE",
+        "CMAKE_C_COMPILER",
+        "CMAKE_CXX_COMPILER",
+        "PROJECT_NAME",
+        "EXECUTABLE_OUTPUT_PATH",
+        "LIBRARY_OUTPUT_PATH",
+        "CATKIN_PACKAGE_BIN_DESTINATION",
+        "CATKIN_PACKAGE_ETC_DESTINATION",
+        "CATKIN_PACKAGE_INCLUDE_DESTINATION",
+        "CATKIN_PACKAGE_LIB_DESTINATION",
+        "CATKIN_PACKAGE_PYTHON_DESTINATION",
+        "CATKIN_PACKAGE_SHARE_DESTINATION",
+        "CATKIN_GLOBAL_BIN_DESTINATION",
+        "CATKIN_GLOBAL_ETC_DESTINATION",
+        "CATKIN_GLOBAL_INCLUDE_DESTINATION",
+        "CATKIN_GLOBAL_LIB_DESTINATION",
+        "CATKIN_GLOBAL_LIBEXEC_DESTINATION",
+        "CATKIN_GLOBAL_PYTHON_DESTINATION",
+        "CATKIN_GLOBAL_SHARE_DESTINATION"
+    ])
+    # Critical variables contain important values that must not be overwritten,
+    # but appending additional items is okay
+    critical_vars = frozenset([
+        "CMAKE_C_FLAGS",
+        "CMAKE_CXX_FLAGS",
+        "CMAKE_INCLUDE_PATH",
+        "CMAKE_LIBRARY_PATH",
+        "CMAKE_FIND_ROOT_PATH",
+        "CMAKE_MODULE_PATH","CMAKE_PREFIX_PATH"
+    ])
+
     def on_init(info):
-        chatter = re.match(r"((\s|[.,!?;()/])*\b(%s|%s)\b)+" % (info.manifest.name, r"|".join(buzzwords)), info.manifest.description, re.IGNORECASE)
-        if chatter is not None:
-            s = chatter.group(0).replace("\n", " ").strip()
-            if info.manifest.description[chatter.end(0):].strip():
-                if len(s.split()) > 1:
-                    info.report(NOTICE, "DESCRIPTION_BOILERPLATE", text=s)
+        for key in critical_vars:
+            info.var[key] = "@%s@" % key
+    def on_set_or_unset(info, cmd, args):
+        if args[0] in immutable_vars:
+            info.report(ERROR, "IMMUTABLE_VAR", var=args[0])
+        if args[0] in critical_vars:
+            value = ';'.join(args[1:])
+            if cmd == "unset" or not "@%s@" % args[0] in value:
+                info.report(ERROR, "CRITICAL_VAR_OVERWRITE", var=args[0])
             else:
-                info.report(NOTICE, "DESCRIPTION_MEANINGLESS", text=s)
+                info.report(WARNING, "CRITICAL_VAR_APPEND", var=args[0])
 
     linter.add_init_hook(on_init)
+    linter.add_command_hook("set", on_set_or_unset)
+    linter.add_command_hook("unset", on_set_or_unset)
+
+
+def singleton_commands(linter):
+    # Singleton commands may not appear more than once
+    singleton_cmds = frozenset([
+        "project",
+        "generate_messages",
+        "catkin_package",
+        "catkin_metapackage",
+        "catkin_python_setup"
+    ])
+    def on_command(info, cmd, args):
+        if cmd in info.commands:
+            info.report(ERROR, "DUPLICATE_CMD", cmd=cmd)
+
+    for cmd in singleton_cmds:
+        linter.add_command_hook(cmd, on_command)
 
 
 def all(linter):
-    linter.require(package_description)
+    linter.require(project)
+    linter.require(special_vars)
+    linter.require(singleton_commands)
