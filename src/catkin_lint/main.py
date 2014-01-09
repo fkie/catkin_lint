@@ -228,7 +228,7 @@ class CatkinEnvironment(object):
         return self.is_catkin_pkg(name) or self.is_system_pkg(name)
 
     def has_rosdep(self):
-        return len(self.rosdep_view) > 0
+        return len(self.rosdep_view.keys()) > 0
 
 def main():
     try:
