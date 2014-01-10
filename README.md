@@ -2,9 +2,21 @@
 catkin\_lint
 ============
 
-**Bleeding Edge**: This branch is currently work in progress and will
-not work. 
 [![Build Status](https://travis-ci.org/fkie/catkin_lint.png?branch=bleeding-edge)](https://travis-ci.org/fkie/catkin_lint)
+
+## Overview
+
+**catkin\_lint** is a tool to debug package configurations for the
+[ROS Catkin](https://github.com/ros/catkin) build system. It is part of
+an ongoing effort to simplify ROS packaging
+(see also: [issue #153](https://github.com/ros/catkin/issues/153)).
+
+## Installation
+
+**catkin\_lint** is available as PyPI package or can be installed from source
+with `setup.py install`.
+
+## Running
 
 **catkin\_lint** runs a static analysis of the `package.xml` and
 `CMakeLists.txt` files. It can detect and report a number of common
@@ -16,6 +28,23 @@ searches for packages recursively and checks all of them. Alternatively, the
 
 If neither paths nor packages are specified, **catkin\_lint** looks for a
 package in the current working directory.
+
+A more detailed list of command line options can be obtained by running
+`catkin_lint --help`.
+
+## Catkin Build Integration
+
+It is recommended to run **catkin\_lint** at workspace configuration time.
+The simplest way is to symlink `/opt/ros/$ROS_DISTRO/share/catkin/cmake/toplevel.cmake`
+to your `$WSDIR/src` folder manually (do not use `catkin_init_workspace`).
+Then add the following `CMakeLists.txt`:
+
+    cmake_minimum_required(VERSION 2.8.3)
+    execute_process(COMMAND catkin_lint "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+    if(NOT ${lint_result} EQUAL 0)
+        message(FATAL_ERROR "catkin_lint failed")
+    endif()
+    include(toplevel.cmake)
 
 ## Problem Severities
 
