@@ -271,7 +271,7 @@ def plugins(linter):
     def on_final(info):
         plugin_dep = set([])
         for export in info.manifest.exports:
-            if "plugin" in export.attributes.keys():
+            if "plugin" in export.attributes:
                 plugin = export.attributes["plugin"]
                 plugin_dep.add(export.tagname)
                 if not plugin.startswith("${prefix}/"):

@@ -38,3 +38,45 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "LINK_DIRECTORY" ], result)
         result = mock_lint(env, pkg, "link_directories(/not/in/package)", checks=cc.link_directories)
         self.assertEqual([ "EXTERNAL_LINK_DIRECTORY" ], result)
+
+    @patch("os.path.isfile", lambda x: True)
+    def test_plugins_with_file(self):
+        from catkin_pkg.package import Export
+        env = create_env()
+        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg, "", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
+
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
+
+        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_EXPORT_PREFIX" ], result)
+
+        pkg = create_manifest("mock")
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_DEPEND" ], result)
+
+    @patch("os.path.isfile", lambda x: False)
+    def test_plugins_without_file(self):
+        from catkin_pkg.package import Export
+        env = create_env()
+        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
