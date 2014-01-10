@@ -277,7 +277,7 @@ def plugins(linter):
                 if not plugin.startswith("${prefix}/"):
                     info.report (ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
                 else:
-                    if not os.path.exists(os.path.join(info.path, plugin[10:])):
+                    if not os.path.isfile(os.path.join(info.path, plugin[10:])):
                         info.report (ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
                     if not os.path.normpath("/catkin-target/share/%s/%s" % (info.manifest.name, plugin[10:])) in info.install_files:
                         info.report (ERROR if "install" in info.commands else NOTICE, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])

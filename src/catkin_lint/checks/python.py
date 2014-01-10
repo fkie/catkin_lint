@@ -31,10 +31,10 @@ def setup(linter):
     def on_catkin_python_setup(info, cmd, args):
         if not "catkin" in info.find_packages:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
-        if not os.path.exists(os.path.join(info.path, "setup.py")):
+        if not os.path.isfile(os.path.join(info.path, "setup.py")):
             info.report(ERROR, "MISSING_FILE", cmd=cmd, file="setup.py")
     def on_final(info):
-        if not "catkin_python_setup" in info.commands and os.path.exists(os.path.join(info.path, "setup.py")):
+        if not "catkin_python_setup" in info.commands and os.path.isfile(os.path.join(info.path, "setup.py")):
             info.report(ERROR, "MISSING_PYTHON_SETUP")
 
     linter.add_command_hook("catkin_python_setup", on_catkin_python_setup)

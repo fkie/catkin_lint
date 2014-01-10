@@ -46,7 +46,7 @@ def main():
         pkgs_to_check = []
         env = CatkinEnvironment()
         if not args.path and not args.pkg:
-            if os.path.exists("package.xml"):
+            if os.path.isfile("package.xml"):
                 pkgs_to_check += env.add_path(os.getcwd())
             else:
                 sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
