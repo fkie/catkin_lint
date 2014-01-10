@@ -76,6 +76,8 @@ def targets(linter):
         if not args[0] in info.target_links: info.target_links[args[0]] = set([])
         info.target_links[args[0]] |= set([ d for d in args[1:] if not d.startswith("/") ])
     def on_final(info):
+        if (info.executables or info.libraries) and info.catkin_components and not "/catkin-includes" in info.build_includes:
+            info.report(ERROR, "MISSING_CATKIN_INCLUDE")
         name_fragments = set(util.word_split(info.manifest.name))
         for target, output in iteritems(info.target_outputs):
             if os.sep in output:
@@ -92,6 +94,8 @@ def targets(linter):
             if target in info.libraries and output.startswith("lib"):
                 info.report (NOTICE, "REDUNDANT_LIB_PREFIX", output=output)
 
+    linter.require(includes)
+    linter.require(depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("set_target_properties", on_set_target_properties)
     linter.add_command_hook("add_executable", on_add_target)
@@ -114,6 +118,7 @@ def link_directories(linter):
 def depends(linter):
     def on_init(info):
         info.required_packages = set([])
+        info.catkin_components = set([])
     def on_find_package(info, cmd, args):
         opts, args = cmake.argparse(args, { "REQUIRED": "-", "COMPONENTS": "*" })
         if not "project" in info.commands:
@@ -133,6 +138,7 @@ def depends(linter):
                 info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         info.find_packages |= set(opts["COMPONENTS"])
         info.required_packages |= set(opts["COMPONENTS"])
+        info.catkin_components |= set(opts["COMPONENTS"])
     def on_include(info, cmd, args):
         opts, args = cmake.argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
         if args:
