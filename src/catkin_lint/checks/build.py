@@ -25,10 +25,10 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
+from catkin_lint.linter import ERROR, WARNING, NOTICE
 import catkin_lint.cmake as cmake
 import catkin_lint.util as util
 import catkin_lint.checks.manifest
-from catkin_lint.main import ERROR, WARNING, NOTICE
 from catkin_lint.util import iteritems
 import re
 
