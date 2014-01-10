@@ -3,10 +3,12 @@ import catkin_lint.checks.python as cc
 from .helper import create_env, create_manifest, mock_lint
 
 import sys
-from unittest.mock import patch
-
 sys.stderr = sys.stdout
 
+try:
+    from mock import patch
+except ImportError:
+    from unittest.mock import patch
 
 class ChecksPythonTest(unittest.TestCase):
 
