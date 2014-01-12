@@ -1,3 +1,10 @@
+catkin-lint (1.2.0) unstable; urgency=low
+
+  * Make package downloadable by easy_install
+  * Major rewrite
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Sun, 12 Jan 2014 02:42:29 +0100
+
 catkin-lint (1.1.13) unstable; urgency=low
 
   * Support for ROS packages with non-catkin build type
