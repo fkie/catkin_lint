@@ -1,0 +1,10 @@
+language: python
+python:
+  - "2.7"
+  - "3.3"
+install:
+  - pip install nose coverage argparse catkin_pkg
+script:
+  - coverage run `which nosetests` -s --tests test
+  - coverage report `find src -name "*.py"`
+

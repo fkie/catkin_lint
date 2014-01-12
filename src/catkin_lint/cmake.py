@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright (c) 2013 Fraunhofer FKIE
+Copyright (c) 2013,2014 Fraunhofer FKIE
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -25,6 +25,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import re
+from catkin_lint.util import iteritems
 
 _find_var = re.compile(r'\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
@@ -32,9 +33,9 @@ _token_spec = [
     ( 'NL', r'\r|\n|\r\n' ),
     ( 'LPAREN', r'\(' ),
     ( 'RPAREN', r'\)' ),
-    ( 'ID', r'[a-z_][a-z_0-9]*(?=[ \t\r\n\(\);#])' ),
+    ( 'ID', r'[a-z_][a-z_0-9]*(?=[ \t\r\n\(\)#])' ),
     ( 'STRING', r'"[^\r\n]*?"' ),
-    ( 'WORD', r'[^\(\)# \t\r\n]+' ),
+    ( 'WORD', r'[^\(\)"#; \t\r\n]+' ),
     ( 'COMMENT', r'#.*?$' ),
     ( 'SKIP', r'[ \t;]+' ),
 ]
@@ -44,7 +45,7 @@ def _resolve(s, var):
     mo = _find_var(s)
     while mo is not None:
         key = mo.group(1)
-        value = var[key] if var.has_key(key) else ""
+        value = var[key] if key in var else ""
         s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = _find_var(s)
     return s
@@ -53,6 +54,7 @@ def _lexer(s):
     keywords = set([])
     line = 1
     mo = _next_token(s)
+    pos = 0
     while mo is not None:
         typ = mo.lastgroup
         if typ == 'NL':
@@ -74,12 +76,14 @@ def _expect(etyp, typ, val, line):
 def parse(s, var=None):
     state = 0
     cmd = None
+    cmdline = 0
     for typ, val, line in _lexer(s):
         if typ == "COMMENT": continue
         if state == 0:
             cmd = _expect(["ID"], typ, val, line).lower()
             args = []
             state = 1
+            cmdline = line
         elif state == 1:
             _expect(["LPAREN"], typ, val, line)
             state = 2
@@ -87,19 +91,19 @@ def parse(s, var=None):
             _expect(["RPAREN","ID","WORD","STRING"], typ, val, line)
             if var is not None: val = _resolve(val, var)
             if typ == "RPAREN":
-                yield ( cmd, args )
+                yield ( cmd, args, cmdline )
                 state = 0
             elif typ == "STRING":
                 args.append(val[1:-1])
             else:
-                args += val.split(";")
+                args += re.split(";|[ \t]+", val)
     if state != 0:
         raise RuntimeError("Unexpected end of file")
 
 def argparse(args, opts):
     result = {}
     remaining = []
-    for optname, opttype in opts.iteritems():
+    for optname, opttype in iteritems(opts):
         if opttype == "*" or opttype == "+":
             result[optname] = []
         elif opttype == "?" or opttype == "!":
@@ -115,7 +119,7 @@ def argparse(args, opts):
     t_args = args[:]
     while t_args:
         l = 0
-        for k,v in opts.iteritems():
+        for k,v in iteritems(opts):
             kl = k.split()
             ll = len(kl)
             if kl == t_args[:ll]:
@@ -129,21 +133,24 @@ def argparse(args, opts):
                 result[curname] = True
                 curname = None
                 curtype = None
-            continue
         elif curname is not None:
             if curtype == "?" or curtype == "!":
                 result[curname] = t_args[0]
                 curname = None
                 curtype = None
-            elif curtype == "p" and len(t_args) >= 2:
-                result[curname][t_args[0]] = t_args[1]
                 del t_args[0]
+            elif curtype == "p":
+                if len(t_args) < 2:
+                    raise RuntimeError("Option '%s' has truncated key-value pair" % curname)
+                result[curname][t_args[0]] = t_args[1]
+                del t_args[:2]
             else:
                 result[curname].append(t_args[0])
+                del t_args[0]
         else:
             remaining.append(t_args[0])
-        del t_args[0]
-    for optname, opttype in opts.iteritems():
+            del t_args[0]
+    for optname, opttype in iteritems(opts):
         if opttype == "+" and not result[optname]:
             raise RuntimeError("Option '%s' requires at least one argument" % optname)
         if opttype == "!" and not result[optname]:

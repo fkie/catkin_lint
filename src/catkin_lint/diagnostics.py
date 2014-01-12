@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright (c) 2013 Fraunhofer FKIE
+Copyright (c) 2013,2014 Fraunhofer FKIE
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -65,6 +65,12 @@ to the name of the source folder that contains the package.
 Certain configuration macros must be called in a specific order as
 specified by the catkin build manual. Failure to do so may lead to
 improper configuration of the package and build problems.
+"""
+),
+"CATKIN_ORDER_VIOLATION" : ( "%(cmd)s() is called before find_package(catkin)",
+"""\
+Catkin macros cannot be called before catkin has been configured with
+find_package(catkin).
 """
 ),
 "DEPRECATED_ROSBUILD" : ( "%(cmd)s() is deprecated",
@@ -313,11 +319,12 @@ library export function will break if the logical target name is not
 equal to the actual library name.
 """
 ),
-"SUGGEST_CATKIN_DEPEND" : ("package '%(pkg)s' looks like a run_depend",
+"SUGGEST_CATKIN_DEPEND" : ("package '%(pkg)s' should be listed in catkin_package()",
 """\
-Your package configures another package as build dependency, and its name suggests
+Your package configures another package as build dependency, it is listed as
+run_depend in your package.xml, and its name suggests
 that it contains ROS messages. In that case, you must add it to the
-CATKIN_DEPENDS stanza of your catkin_package() and listed as run_depend in your package.xml
+CATKIN_DEPENDS stanza of your catkin_package()
 """
 ),
 "UNDEFINED_TARGET" : ("exported target '%(target)s' is not defined",
@@ -426,8 +433,20 @@ different file name without changing the target name.
 ),
 "UNKNOWN_DEPEND" : ("unknown %(type)s_depend '%(pkg)s'",
 """\
-The specified dependency is neither a ROS package nor a known system dependency
+The specified dependency is neither a catkin package nor a known system dependency
 from the rosdep database.
+"""
+),
+"UNSUPPORTED_CMD" : ("unsupported command '%(cmd)s'",
+"""\
+Your package uses CMake constructs which cannot be linted properly at this time.
+Certain errors may go unnoticed while other errors may be false positives.
+"""
+),
+"OS_ERROR" : ( "OS error: %(msg)s",
+"""\
+An operating system error has occured. This is not a linting problem per se but
+might be caused by a missing or unreadable file.
 """
 ),
 }

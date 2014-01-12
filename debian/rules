@@ -10,7 +10,7 @@
 #export DH_VERBOSE=1
 
 DEB_VERSION:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 | cut -d"-" -f1 | cut -d"+" -f1 )
-PY_VERSION:=$(shell PYTHONPATH=lib python -c "from catkin_lint import __version__; print __version__" )
+PY_VERSION:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__" )
 
 ifneq ($(DEB_VERSION),$(PY_VERSION))
 $(error Debian version $(DEB_VERSION) does not match package version $(PY_VERSION))

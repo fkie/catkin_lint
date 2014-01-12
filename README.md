@@ -2,6 +2,22 @@
 catkin\_lint
 ============
 
+[![Build Status](https://travis-ci.org/fkie/catkin_lint.png?branch=master)](https://travis-ci.org/fkie/catkin_lint)
+
+## Overview
+
+**catkin\_lint** is a tool to debug package configurations for the
+[ROS Catkin](https://github.com/ros/catkin) build system. It is part of
+an ongoing effort to aid developers with their ROS packaging
+(see also: [issue #153](https://github.com/ros/catkin/issues/153)).
+
+## Installation
+
+**catkin\_lint** is available as PyPI package or can be installed from source
+with `setup.py install`.
+
+## Running
+
 **catkin\_lint** runs a static analysis of the `package.xml` and
 `CMakeLists.txt` files. It can detect and report a number of common
 problems.
@@ -12,6 +28,23 @@ searches for packages recursively and checks all of them. Alternatively, the
 
 If neither paths nor packages are specified, **catkin\_lint** looks for a
 package in the current working directory.
+
+A more detailed list of command line options can be obtained by running
+`catkin_lint --help`.
+
+## Catkin Build Integration
+
+It is recommended to run **catkin\_lint** at workspace configuration time.
+The simplest way is to symlink `/opt/ros/$ROS_DISTRO/share/catkin/cmake/toplevel.cmake`
+to your `$WSDIR/src` folder manually (do not use `catkin_init_workspace`).
+Then add the following `CMakeLists.txt`:
+
+    cmake_minimum_required(VERSION 2.8.3)
+    execute_process(COMMAND catkin_lint "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+    if(NOT ${lint_result} EQUAL 0)
+        message(FATAL_ERROR "catkin_lint failed")
+    endif()
+    include(toplevel.cmake)
 
 ## Problem Severities
 
@@ -48,6 +81,21 @@ Issues which are not objectionable from a technical view point but
 should  be addressed to improve the quality of the package. Many notices
 highlight violations of the recommendations and best practises from the
 Catkin Manual.
+
+## Contribution
+
+**catkin\_lint** is still under active development and lacks a number
+of features:
+
+* Unit tests with full coverage
+* Machine-parseable output format for easier scripting and IDE integration
+* Proper API documentation for lint checks
+* Check for missing source files in add_executable/add_library
+* Check proper usage of external libraries (e.g. Qt)
+* Support for CMake functions and macros
+
+If you would like to contribute, you are very welcome to do so.
+Please contact @roehling first to avoid any duplication of work.
 
 ## License
 
