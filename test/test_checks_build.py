@@ -433,6 +433,150 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "EXPORT_LIB_NOT_LIB" ], result)
 
 
+    def test_message_generation(self):
+        env = create_env()
+        pkg = create_manifest("mock", build_depends=[ "message_generation", "other_catkin" ], run_depends=[ "message_runtime", "other_catkin" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            generate_messages(DEPENDENCIES other_catkin)
+            add_message_files(FILES mock.msg)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "ORDER_VIOLATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "ORDER_VIOLATION", "ORDER_VIOLATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(message_generation)
+            find_package(other_catkin)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            find_package(catkin REQUIRED)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "CATKIN_ORDER_VIOLATION", "CATKIN_ORDER_VIOLATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            catkin_package(CATKIN_DEPENDS message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "MISSING_MSG_CATKIN" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            add_message_files(FILES mock.msg)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "MISSING_GENERATE_MSG" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            generate_messages(DEPENDENCIES other_catkin)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "UNUSED_GENERATE_MSG" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(message_generation)
+            find_package(other_catkin)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            catkin_package(CATKIN_DEPENDS other_catkin)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "MISSING_CATKIN_DEPEND" ], result)
+
+        pkg = create_manifest("mock")
+        pkg = create_manifest("mock", meta=True)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            add_message_files(FILES mock.msg)
+            generate_messages()
+            catkin_metapackage()
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "INVALID_META_COMMAND", "INVALID_META_COMMAND" ], result)
+
+        pkg = create_manifest("mock", build_depends=[ "other_catkin" ], run_depends=[ "message_runtime", "other_catkin" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "UNCONFIGURED_BUILD_DEPEND" ], result)
+
+        pkg = create_manifest("mock", build_depends=[ "message_generation" ], run_depends=[ "message_runtime" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS message_generation)
+            add_message_files(FILES mock.msg)
+            generate_messages(DEPENDENCIES other_catkin)
+            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "MISSING_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
+
+
     @patch("os.path.isfile", lambda x: x == "/mock-path/config.xml")
     def test_plugins(self):
         from catkin_pkg.package import Export

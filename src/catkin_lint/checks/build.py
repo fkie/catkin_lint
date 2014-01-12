@@ -341,6 +341,7 @@ def message_generation(linter):
             info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg="message_runtime")
 
     linter.require(catkin_lint.checks.manifest.depends)
+    linter.require(depends)
     linter.require(exports)
     linter.add_init_hook(on_init)
     linter.add_command_hook("add_message_files", on_add_msg_files)
