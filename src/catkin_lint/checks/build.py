@@ -185,6 +185,9 @@ def exports(linter):
                 info.report (WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg)
         if info.export_includes and info.libraries and not info.export_libs:
             info.report(WARNING, "MISSING_EXPORT_LIB")
+        for incl in info.export_includes:
+            if not os.path.isdir(os.path.join(info.path, incl[12:])):
+                info.report (ERROR, "MISSING_EXPORT_INCLUDE_PATH", path="./%s" % incl[12:])
         for lib in info.export_libs:
             if not lib in info.targets: continue
             if info.target_outputs[lib] != lib:
@@ -254,9 +257,6 @@ def installs(linter):
         for tgt in info.executables - info.install_targets:
             if "test" in tgt.lower(): continue
             info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
-        for incl in info.export_includes:
-            if not os.path.isdir(os.path.join(info.path, incl[12:])):
-                info.report (ERROR, "MISSING_EXPORT_INCLUDE_PATH", path="./%s" % incl[12:])
         if info.executables or info.libraries:
             for incl in info.export_includes - info.build_includes:
                 info.report (WARNING, "MISSING_BUILD_INCLUDE", path="./%s" % incl[12:])
