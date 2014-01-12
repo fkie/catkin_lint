@@ -1,8 +1,9 @@
 /.project
 /.pydevproject
 /.settings
+/.coverage
+/dist
+/MANIFEST
 *.pyc
 __pycache__
 *_old.py
-.coverage
-

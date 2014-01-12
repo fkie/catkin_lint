@@ -1,0 +1,2 @@
+include README.md run.py run_coverage.sh bash/catkin_lint
+recursive-include test *.py
