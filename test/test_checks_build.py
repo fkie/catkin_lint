@@ -221,6 +221,71 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "REDUNDANT_LIB_PREFIX" ], result)
 
 
+    @patch("os.path.isfile", lambda x: x in [ "/mock-path/bin/script", "/mock-path/share/file", "/mock-path/src/mock.cpp" ])
+    @patch("os.path.isdir", lambda x: x == "/mock-path/include")
+    def test_installs(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            include_directories(include)
+            catkin_package(INCLUDE_DIRS include)
+            add_executable(mock src/mock.cpp)
+            install(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            install(FILES share/file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+            install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            install(DIRECTORY include/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(PROGRAMS bin/script DESTINATION bin)
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "INSTALL_DESTINATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package(LIBRARIES mock)
+            add_library(mock src/mock.cpp)
+            add_executable(mock_prog src/mock.cpp)
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "UNINSTALLED_EXPORT_LIB", "MISSING_INSTALL_TARGET" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package(INCLUDE_DIRS include)
+            add_executable(test_mock src/mock.cpp)
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "MISSING_BUILD_INCLUDE", "MISSING_INSTALL_INCLUDE" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(mock_lib src/mock.cpp)
+            add_executable(mock src/mock.cpp)
+            target_link_libraries(mock mock_lib)
+            install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "UNINSTALLED_DEPEND" ], result)
+
+
     @patch("os.path.isfile", lambda x: x == "/mock-path/src/mock.cpp")
     @patch("os.path.isdir", lambda x: x == "/mock-path/include")
     def test_exports(self):
@@ -233,7 +298,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(other_catkin)
             find_package(other_system)
             catkin_package(
-            INCLUDE_DIRS incude
+            INCLUDE_DIRS include
             CATKIN_DEPENDS other_catkin
             DEPENDS other_system
             LIBRARIES mock
@@ -242,6 +307,21 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin)
+            find_package(other_system)
+            catkin_package(
+            INCLUDE_DIRS missing_include
+            CATKIN_DEPENDS other_catkin
+            DEPENDS other_system
+            )
+            """,
+        checks=cc.exports)
+        self.assertEqual([ "MISSING_EXPORT_INCLUDE_PATH" ], result)
 
         result = mock_lint(env, pkg,
             """
