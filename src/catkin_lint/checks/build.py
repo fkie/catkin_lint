@@ -66,8 +66,8 @@ def targets(linter):
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if not "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="catkin_package")
-        if args[0] in info.targets:
-            pass
+#        if args[0] in info.targets:
+#            TODO
         if not args[0] in info.target_outputs:
             info.target_outputs[args[0]] = args[0]
         if not args[0] in info.target_links:
@@ -78,21 +78,6 @@ def targets(linter):
     def on_final(info):
         if (info.executables or info.libraries) and info.catkin_components and not "/catkin-includes" in info.build_includes:
             info.report(ERROR, "MISSING_CATKIN_INCLUDE")
-        name_fragments = set(util.word_split(info.manifest.name))
-        for target, output in iteritems(info.target_outputs):
-            if os.sep in output:
-                info.report (ERROR, "INVALID_TARGET_OUTPUT", target=target)
-            tgl = target.lower()
-            tnc = True
-            for nf in name_fragments:
-                if len(nf) < 3: continue
-                if nf in tgl:
-                    tnc = False
-                    break
-            if tnc and not target in info.export_libs:
-                info.report (NOTICE, "TARGET_NAME_COLLISION", target=target)
-            if target in info.libraries and output.startswith("lib"):
-                info.report (NOTICE, "REDUNDANT_LIB_PREFIX", output=output)
 
     linter.require(includes)
     linter.require(depends)
@@ -173,6 +158,7 @@ def exports(linter):
         info.export_packages = set([])
         info.export_includes = set([])
         info.export_libs = set([])
+        info.export_targets = set([])
     def on_catkin_package(info, cmd, args):
         opts, args = cmake.argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
         for pkg in opts["CATKIN_DEPENDS"]:
@@ -210,6 +196,29 @@ def exports(linter):
     linter.require(targets)
     linter.add_init_hook(on_init)
     linter.add_command_hook("catkin_package", on_catkin_package)
+    linter.add_final_hook(on_final)
+
+
+def name_check(linter):
+    def on_final(info):
+        name_fragments = set(util.word_split(info.manifest.name))
+        for target, output in iteritems(info.target_outputs):
+            if os.sep in output:
+                info.report (ERROR, "INVALID_TARGET_OUTPUT", target=target)
+            tgl = target.lower()
+            tnc = True
+            for nf in name_fragments:
+                if len(nf) < 3: continue
+                if nf in tgl:
+                    tnc = False
+                    break
+            if tnc and not target in info.export_libs:
+                info.report (NOTICE, "TARGET_NAME_COLLISION", target=target)
+            if target in info.libraries and output.startswith("lib"):
+                info.report (NOTICE, "REDUNDANT_LIB_PREFIX", output=output)
+
+    linter.require(targets)
+    linter.require(exports)
     linter.add_final_hook(on_final)
 
 
