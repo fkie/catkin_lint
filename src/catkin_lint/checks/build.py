@@ -356,6 +356,7 @@ def all(linter):
     linter.require(link_directories)
     linter.require(depends)
     linter.require(exports)
+    linter.require(name_check)
     linter.require(installs)
     linter.require(plugins)
     linter.require(message_generation)
