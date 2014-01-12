@@ -15,7 +15,7 @@ setup(
   url           = "https://github.com/fkie/catkin_lint",
   download_url  = "https://github.com/fkie/catkin_lint/tarball/%s" % catkin_lint_version,
   keywords      = "catkin,ROS",
-  packages      = [ "catkin_lint" ],
+  packages      = [ "catkin_lint", "catkin_lint.checks" ],
   package_dir   = { "" : "src" },
   scripts       = [ "bin/catkin_lint" ],
   version       = catkin_lint_version,
