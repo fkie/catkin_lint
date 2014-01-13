@@ -1,3 +1,9 @@
+catkin-lint (1.2.2) unstable; urgency=low
+
+  * Provide explicit sort order for lint messages
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Mon, 13 Jan 2014 23:35:04 +0100
+
 catkin-lint (1.2.1) unstable; urgency=low
 
   * Move include path check to correct unit
