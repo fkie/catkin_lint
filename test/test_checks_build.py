@@ -574,7 +574,7 @@ class ChecksBuildTest(unittest.TestCase):
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
             """,
         checks=cc.message_generation)
-        self.assertEqual([ "MISSING_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
+        self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
 
 
     @patch("os.path.isfile", lambda x: x == "/mock-path/config.xml")

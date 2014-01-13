@@ -325,6 +325,8 @@ def message_generation(linter):
         info.msg_dep |= set(opts["DEPENDENCIES"])
     def on_final(info):
         if info.manifest.is_metapackage(): return
+        for pkg in info.msg_dep - info.find_packages:
+            info.report(ERROR, "UNCONFIGURED_MSG_DEPEND", pkg=pkg)
         for pkg in info.msg_dep - info.export_packages:
             info.report(ERROR, "MISSING_MSG_CATKIN", pkg=pkg)
         for pkg in info.msg_dep - info.build_dep:
