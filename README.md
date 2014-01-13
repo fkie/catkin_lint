@@ -88,7 +88,6 @@ Catkin Manual.
 of features:
 
 * Unit tests with full coverage
-* Machine-parseable output format for easier scripting and IDE integration
 * Proper API documentation for lint checks
 * Check for missing source files in add_executable/add_library
 * Check proper usage of external libraries (e.g. Qt)

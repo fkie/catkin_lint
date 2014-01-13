@@ -32,4 +32,4 @@ def mock_lint(env, manifest, cmakelist, checks=all, full_result=False):
     if full_result:
         return linter.messages
     else:
-        return [ m[4] for m in linter.messages ]
+        return [ m.id for m in linter.messages ]

@@ -35,6 +35,17 @@ ERROR = 0
 WARNING = 1
 NOTICE = 2
 
+class Message:
+
+    def __init__(self, package, file, line, level, id, text, description):
+        self.package = package
+        self.file = file
+        self.line = line
+        self.level = level
+        self.id = id
+        self.text = text
+        self.description = description
+
 class LintInfo(object):
 
     def __init__(self, env):
@@ -51,8 +62,17 @@ class LintInfo(object):
         self.var = {}
         self.messages = []
 
-    def report(self, severity, msg_id, **kwargs):
-        self.messages.append( (self.manifest.name, self.file, self.line, severity) + diagnostics.msg(msg_id, **kwargs) )
+    def report(self, level, msg_id, **kwargs):
+        id, text, description = diagnostics.msg(msg_id, **kwargs)
+        self.messages.append(Message(
+            package=self.manifest.name, 
+            file=self.file, 
+            line=self.line,
+            level=level,
+            id=id,
+            text=text,
+            description=description
+        ))
 
 class CMakeLinter(object):
     def __init__(self, env):
