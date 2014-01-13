@@ -26,6 +26,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
 import sys
+from functools import total_ordering
 from catkin_pkg.packages import find_packages
 import catkin_lint.cmake as cmake
 import catkin_lint.diagnostics as diagnostics
@@ -35,6 +36,7 @@ ERROR = 0
 WARNING = 1
 NOTICE = 2
 
+@total_ordering
 class Message:
 
     def __init__(self, package, file, line, level, id, text, description):
@@ -45,6 +47,12 @@ class Message:
         self.id = id
         self.text = text
         self.description = description
+
+    def __eq__(self, other):
+        return (self.package, self.level, self.file, self.line, self.id) == (other.package, other.level, other.file, other.line, other.id)
+
+    def __lt__(self, other):
+        return (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
 
 class LintInfo(object):
 
