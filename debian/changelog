@@ -1,3 +1,16 @@
+catkin-lint (1.2.1) unstable; urgency=low
+
+  * Move include path check to correct unit
+  * More unit tests for build checks
+  * Add more unit tests for build checks
+  * Add missing files to setup manifest
+  * Check for find_package() of message dependencies
+  * Add XML output format
+  * Link to author in README
+  * Convert README to rst markup
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Mon, 13 Jan 2014 23:18:34 +0100
+
 catkin-lint (1.2.0) unstable; urgency=low
 
   * Make package downloadable by easy_install
