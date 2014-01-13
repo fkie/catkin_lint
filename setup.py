@@ -3,12 +3,17 @@
 
 from distutils.core import setup
 import sys
+import os
 sys.path.insert(0, "src")
 from catkin_lint import __version__ as catkin_lint_version
+
+def read(fname):
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
   name          = "catkin_lint",
   description   = "Check catkin packages for common errors",
+  long_description = read("README.rst"),
   author        = "Timo Röhling",
   author_email  = "timo.roehling@fkie.fraunhofer.de",
   license       = "BSD",
@@ -25,6 +30,8 @@ setup(
                     "Intended Audience :: Developers",
                     "License :: OSI Approved :: BSD License",
                     "Topic :: Software Development :: Quality Assurance",
+                    "Environment :: Console",
+                    "Operating System :: POSIX",
                     "Programming Language :: Python",
                     "Programming Language :: Python :: 3"
                   ]
