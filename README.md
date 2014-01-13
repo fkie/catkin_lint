@@ -94,7 +94,8 @@ of features:
 * Support for CMake functions and macros
 
 If you would like to contribute, you are very welcome to do so.
-Please contact @roehling first to avoid any duplication of work.
+Please contact [@roehling](https://github.com/roehling) first 
+to avoid any duplication of work.
 
 ## License
 
