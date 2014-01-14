@@ -96,7 +96,7 @@ of features:
 
 * Unit tests with full coverage
 * Proper API documentation for lint checks
-* Check for missing source files in add_executable/add_library
+* Check for missing source files in add_executable()/add_library()
 * Check proper usage of external libraries (e.g. Qt)
 * Support for CMake functions and macros
 
