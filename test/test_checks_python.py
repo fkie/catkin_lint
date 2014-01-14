@@ -36,3 +36,8 @@ class ChecksPythonTest(unittest.TestCase):
 
         result = mock_lint(env, pkg, "project(mock)", checks=cc.setup)
         self.assertEqual([ "MISSING_PYTHON_SETUP" ], result)
+
+        pkg = create_manifest("catkin")
+        result = mock_lint(env, pkg, "project(catkin) catkin_python_setup()", checks=cc.setup)
+        self.assertEqual([], result)
+

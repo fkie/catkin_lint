@@ -28,10 +28,15 @@ from catkin_lint.linter import ERROR, WARNING
 
 
 def project(linter):
+    def on_init(info):
+        info.is_catkin = False
     def on_project(info, cmd, args):
         if args[0] != info.manifest.name:
             info.report(ERROR, "PROJECT_NAME", name=args[0])
+        if args[0] == "catkin":
+            info.is_catkin = True
 
+    linter.add_init_hook(on_init)
     linter.add_command_hook("project", on_project)
 
 

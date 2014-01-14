@@ -95,6 +95,9 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED)", checks=cc.catkin_build)
         self.assertEqual([ "MISSING_CMD" ], result)
 
+        pkg = create_manifest("catkin")
+        result = mock_lint(env, pkg, "project(catkin) catkin_package()")
+        self.assertEqual([], result)
 
     def test_export_targets(self):
         env = create_env()

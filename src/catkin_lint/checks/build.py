@@ -303,7 +303,7 @@ def message_generation(linter):
         info.declares_messages = False
         info.msg_dep = set([])
     def on_add_msg_files(info, cmd, args):
-        info.is_catkin = True
+        info.uses_catkin = True
         if info.manifest.is_metapackage():
             info.report(ERROR, "INVALID_META_COMMAND", cmd=cmd)
         info.declares_messages = True
@@ -314,7 +314,7 @@ def message_generation(linter):
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
     def on_generate_msg(info, cmd, args):
-        info.is_catkin = True
+        info.uses_catkin = True
         if info.manifest.is_metapackage():
             info.report(ERROR, "INVALID_META_COMMAND", cmd=cmd)
         if not "catkin" in info.find_packages:

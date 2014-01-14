@@ -25,11 +25,12 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 from catkin_lint.linter import ERROR
+from .misc import project
 import os
 
 def setup(linter):
     def on_catkin_python_setup(info, cmd, args):
-        if not "catkin" in info.find_packages:
+        if not "catkin" in info.find_packages and not info.is_catkin:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if not os.path.isfile(os.path.join(info.path, "setup.py")):
             info.report(ERROR, "MISSING_FILE", cmd=cmd, file="setup.py")
@@ -37,6 +38,7 @@ def setup(linter):
         if not "catkin_python_setup" in info.commands and os.path.isfile(os.path.join(info.path, "setup.py")):
             info.report(ERROR, "MISSING_PYTHON_SETUP")
 
+    linter.require(project)
     linter.add_command_hook("catkin_python_setup", on_catkin_python_setup)
     linter.add_final_hook(on_final)
 

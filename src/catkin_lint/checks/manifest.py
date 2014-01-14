@@ -27,6 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 from catkin_lint.linter import ERROR, NOTICE
 import catkin_lint.cmake as cmake
 import re
+from .misc import project
 
 
 def depends(linter):
@@ -61,34 +62,34 @@ def depends(linter):
 
 def catkin_build(linter):
     def on_init(info):
-        info.is_catkin = False
+        info.uses_catkin = False
     def any_catkin_cmd(info, cmd, args):
-        info.is_catkin = True
+        info.uses_catkin = True
     def on_find_package(info, cmd, args):
         if args[0] == "catkin":
-            info.is_catkin = True
+            info.uses_catkin = True
     def on_catkin_package(info, cmd, args):
-        info.is_catkin = True
+        info.uses_catkin = True
         if info.manifest.is_metapackage():
             info.report(ERROR, "CATKIN_PKG_VS_META")
-        if not "catkin" in info.find_packages:
+        if not "catkin" in info.find_packages and not info.is_catkin:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
     def on_catkin_metapackage(info, cmd, args):
-        info.is_catkin = True
+        info.uses_catkin = True
         if not info.manifest.is_metapackage():
             info.report (ERROR, "CATKIN_META_VS_PKG")
-        if not "catkin" in info.find_packages:
+        if not "catkin" in info.find_packages and not info.is_catkin:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
     def on_final(info):
         if "catkin" in info.build_dep:
             info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="build", right_type="buildtool")
-        if not info.is_catkin:
+        if not info.uses_catkin:
             if not "catkin" in info.find_packages and "catkin" in info.buildtool_dep:
                 info.report(ERROR, "UNUSED_DEPEND", pkg="catkin", type="buildtool")
             return
-        if not "catkin" in info.find_packages:
+        if not "catkin" in info.find_packages and not info.is_catkin:
             info.report(ERROR, "MISSING_FIND", pkg="catkin")
-        if not "catkin" in info.buildtool_dep:
+        if not "catkin" in info.buildtool_dep and not info.is_catkin:
             info.report(ERROR, "MISSING_DEPEND", pkg="catkin", type="buildtool")
         if not "catkin_package" in info.commands and not "catkin_metapackage" in info.commands:
             if info.manifest.is_metapackage():
@@ -96,6 +97,7 @@ def catkin_build(linter):
             else:
                 info.report(ERROR, "MISSING_CMD", cmd="catkin_package")
 
+    linter.require(project)
     linter.require(depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("add_message_files", any_catkin_cmd)
