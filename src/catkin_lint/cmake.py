@@ -70,7 +70,7 @@ def _lexer(s):
 
 def _expect(etyp, typ, val, line):
     if not typ in etyp:
-        raise RuntimeError("Unexpected token '%s' on line %d'" % ( val, line ))
+        raise RuntimeError("Unexpected token '%s' on line %d" % ( val, line ))
     return val
 
 def parse(s, var=None):
@@ -86,13 +86,21 @@ def parse(s, var=None):
             cmdline = line
         elif state == 1:
             _expect(["LPAREN"], typ, val, line)
+            paren = 1
             state = 2
         elif state == 2:
-            _expect(["RPAREN","ID","WORD","STRING"], typ, val, line)
+            _expect([ "LPAREN", "RPAREN","ID","WORD","STRING"], typ, val, line)
             if var is not None: val = _resolve(val, var)
-            if typ == "RPAREN":
-                yield ( cmd, args, cmdline )
-                state = 0
+            if typ == "LPAREN":
+                paren += 1
+                args.append("(")
+            elif typ == "RPAREN":
+                paren -= 1
+                if paren == 0:
+                    yield ( cmd, args, cmdline )
+                    state = 0
+                else:
+                    args.append(")")
             elif typ == "STRING":
                 args.append(val[1:-1])
             else:

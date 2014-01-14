@@ -62,6 +62,18 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd(one;"two;three")'),
             [ ("cmd", [ "one", "two;three" ], 1) ]
         )
+        self.assertEqual(
+            self.parse_all('if(NOT (A OR B)) endif()'),
+            [ ("if", [ "NOT", "(", "A", "OR", "B", ")" ], 1), ( "endif", [], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd("(")'),
+            [ ("cmd", [ "(" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(")")'),
+            [ ("cmd", [ ")" ], 1) ]
+        )
         self.assertRaises(RuntimeError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
