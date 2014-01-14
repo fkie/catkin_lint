@@ -177,7 +177,7 @@ class CMakeLinter(object):
                 if cmd == "find_library":
                     info.var[args[0]] = "/find-libs/library.so"
         except cmake.SyntaxError as err:
-            raise SyntaxError ("%s: %s" % (info.file, str(err)))
+            raise cmake.SyntaxError ("%s: %s" % (info.file, str(err)))
         finally:
             info.file = save_file
             info.line = save_line
