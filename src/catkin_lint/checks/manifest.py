@@ -82,10 +82,6 @@ def catkin_build(linter):
     def on_final(info):
         if "catkin" in info.build_dep:
             info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="build", right_type="buildtool")
-        if "catkin" in info.run_dep:
-            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="run", right_type="buildtool")
-        if "catkin" in info.test_dep:
-            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="test", right_type="buildtool")
         if not info.is_catkin:
             if not "catkin" in info.find_packages and "catkin" in info.buildtool_dep:
                 info.report(ERROR, "UNUSED_DEPEND", pkg="catkin", type="buildtool")

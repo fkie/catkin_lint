@@ -63,14 +63,6 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "", checks=cc.catkin_build)
         self.assertEqual([ "WRONG_DEPEND" ], result)
 
-        pkg = create_manifest("mock", buildtool_depends=[], run_depends=[ "catkin" ])
-        result = mock_lint(env, pkg, "", checks=cc.catkin_build)
-        self.assertEqual([ "WRONG_DEPEND" ], result)
-
-        pkg = create_manifest("mock", buildtool_depends=[], test_depends=[ "catkin" ])
-        result = mock_lint(env, pkg, "", checks=cc.catkin_build)
-        self.assertEqual([ "WRONG_DEPEND" ], result)
-
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "", checks=cc.catkin_build)
         self.assertEqual([ "UNUSED_DEPEND" ], result)
