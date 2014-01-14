@@ -41,6 +41,9 @@ _token_spec = [
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
 
+class SyntaxError(RuntimeError):
+    pass
+
 def _resolve(s, var):
     mo = _find_var(s)
     while mo is not None:
@@ -66,11 +69,11 @@ def _lexer(s):
         pos = mo.end()
         mo = _next_token(s, pos)
     if pos != len(s):
-        raise RuntimeError("Unexpected character %r on line %d" % (s[pos], line))
+        raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
 
 def _expect(etyp, typ, val, line):
     if not typ in etyp:
-        raise RuntimeError("Unexpected token '%s' on line %d" % ( val, line ))
+        raise SyntaxError("Unexpected token '%s' on line %d" % ( val, line ))
     return val
 
 def parse(s, var=None):
@@ -106,7 +109,7 @@ def parse(s, var=None):
             else:
                 args += re.split(";|[ \t]+", val)
     if state != 0:
-        raise RuntimeError("Unexpected end of file")
+        raise SyntaxError("Unexpected end of file")
 
 def argparse(args, opts):
     result = {}
@@ -149,7 +152,7 @@ def argparse(args, opts):
                 del t_args[0]
             elif curtype == "p":
                 if len(t_args) < 2:
-                    raise RuntimeError("Option '%s' has truncated key-value pair" % curname)
+                    raise SyntaxError("Option '%s' has truncated key-value pair" % curname)
                 result[curname][t_args[0]] = t_args[1]
                 del t_args[:2]
             else:
@@ -160,8 +163,8 @@ def argparse(args, opts):
             del t_args[0]
     for optname, opttype in iteritems(opts):
         if opttype == "+" and not result[optname]:
-            raise RuntimeError("Option '%s' requires at least one argument" % optname)
+            raise SyntaxError("Option '%s' requires at least one argument" % optname)
         if opttype == "!" and not result[optname]:
-            raise RuntimeError("Option '%s' requires exactly one argument" % optname)
+            raise SyntaxError("Option '%s' requires exactly one argument" % optname)
     return result, remaining
 

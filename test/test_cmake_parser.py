@@ -28,10 +28,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all("MiXeDCaSe()"),
             [ ("mixedcase", [], 1)]
         )
-        self.assertRaises(RuntimeError, self.parse_all, "unbalanced(")
-        self.assertRaises(RuntimeError, self.parse_all, "invalid%=characters$()")
-        self.assertRaises(RuntimeError, self.parse_all, "()")
-        self.assertRaises(RuntimeError, self.parse_all, "missing_braces")
+        self.assertRaises(cmake.SyntaxError, self.parse_all, "unbalanced(")
+        self.assertRaises(cmake.SyntaxError, self.parse_all, "invalid%=characters$()")
+        self.assertRaises(cmake.SyntaxError, self.parse_all, "()")
+        self.assertRaises(cmake.SyntaxError, self.parse_all, "missing_braces")
 
     def test_arguments(self):
         self.assertEqual(
@@ -74,7 +74,7 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd(")")'),
             [ ("cmd", [ ")" ], 1) ]
         )
-        self.assertRaises(RuntimeError, self.parse_all, 'cmd("unclosed string)')
+        self.assertRaises(cmake.SyntaxError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
         self.assertEqual(
@@ -131,13 +131,13 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual({ "TEST": None }, opts)
         self.assertEqual([], args)
 
-        self.assertRaises(RuntimeError, cmake.argparse, [], { "TEST" : "!"})
+        self.assertRaises(cmake.SyntaxError, cmake.argparse, [], { "TEST" : "!"})
 
         opts, args = cmake.argparse([], { "TEST" : "*"})
         self.assertEqual({ "TEST": [] }, opts)
         self.assertEqual([], args)
 
-        self.assertRaises(RuntimeError, cmake.argparse, [], { "TEST" : "+"})
+        self.assertRaises(cmake.SyntaxError, cmake.argparse, [], { "TEST" : "+"})
 
         opts, args = cmake.argparse([], { "TEST" : "p"})
         self.assertEqual({ "TEST": {} }, opts)
@@ -167,7 +167,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual({ "PROPERTIES" : { "key1" : "value1", "key2" : "value2" } }, opts)
         self.assertEqual([ "argument" ], args)
 
-        self.assertRaises(RuntimeError, cmake.argparse, ["PROPERTIES", "key1", "value1", "key2" ], { "PROPERTIES" : "p"})
+        self.assertRaises(cmake.SyntaxError, cmake.argparse, ["PROPERTIES", "key1", "value1", "key2" ], { "PROPERTIES" : "p"})
 
         opts, args = cmake.argparse([ "DOUBLE", "DOUBLE", "ARGUMENT", "ARGUMENT" ], {"DOUBLE ARGUMENT" : "?"})
         self.assertEqual({ "DOUBLE ARGUMENT" : "ARGUMENT" }, opts)
