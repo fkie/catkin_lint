@@ -24,9 +24,10 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from catkin_lint.linter import ERROR
-from .misc import project
 import os
+from ..linter import ERROR
+from .misc import project
+
 
 def setup(linter):
     def on_catkin_python_setup(info, cmd, args):

@@ -25,18 +25,18 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
-from catkin_lint.linter import ERROR, WARNING, NOTICE
-import catkin_lint.cmake as cmake
-import catkin_lint.util as util
-from .manifest import depends as manifest_depends
-from catkin_lint.util import iteritems
 import re
+from ..linter import ERROR, WARNING, NOTICE
+from ..cmake import argparse as cmake_argparse
+from ..util import word_split, iteritems
+from .manifest import depends as manifest_depends
+
 
 def includes(linter):
     def on_init(info):
         info.build_includes = set([])
     def on_include_directories(info, cmd, args):
-        _, args = cmake.argparse(args, { "AFTER" : "-", "BEFORE" : "-", "SYSTEM" : "-" })
+        _, args = cmake_argparse(args, { "AFTER" : "-", "BEFORE" : "-", "SYSTEM" : "-" })
         info.build_includes |= set([ os.path.normpath(os.path.join("/pkg-source", d)) for d in args])
     def on_final(info):
         for incl in info.build_includes:
@@ -54,7 +54,7 @@ def targets(linter):
         info.target_outputs = {}
         info.target_links = {}
     def on_set_target_properties(info, cmd, args):
-        opts, args = cmake.argparse(args, { "PROPERTIES" : "p" })
+        opts, args = cmake_argparse(args, { "PROPERTIES" : "p" })
         for target in args:
             if "OUTPUT_NAME" in opts["PROPERTIES"]:
                 info.target_outputs[target] = opts["PROPERTIES"]["OUTPUT_NAME"]
@@ -105,7 +105,7 @@ def depends(linter):
         info.required_packages = set([])
         info.catkin_components = set([])
     def on_find_package(info, cmd, args):
-        opts, args = cmake.argparse(args, { "REQUIRED": "-", "COMPONENTS": "*" })
+        opts, args = cmake_argparse(args, { "REQUIRED": "-", "COMPONENTS": "*" })
         if not "project" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="project")
         if args[0] in info.find_packages:
@@ -125,7 +125,7 @@ def depends(linter):
         info.required_packages |= set(opts["COMPONENTS"])
         info.catkin_components |= set(opts["COMPONENTS"])
     def on_include(info, cmd, args):
-        opts, args = cmake.argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
+        opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
         if args:
             mo = re.search(r"\bFind([A-Za-z0-9]+)(\.cmake)?$", args[0])
             if mo:
@@ -160,7 +160,7 @@ def exports(linter):
         info.export_libs = set([])
         info.export_targets = set([])
     def on_catkin_package(info, cmd, args):
-        opts, args = cmake.argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
+        opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
         for pkg in opts["CATKIN_DEPENDS"]:
             if not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
@@ -204,7 +204,7 @@ def exports(linter):
 
 def name_check(linter):
     def on_final(info):
-        name_fragments = set(util.word_split(info.manifest.name))
+        name_fragments = set(word_split(info.manifest.name))
         for target, output in iteritems(info.target_outputs):
             if os.sep in output:
                 info.report (ERROR, "INVALID_TARGET_OUTPUT", target=target)
@@ -232,7 +232,7 @@ def installs(linter):
         info.install_files = set([])
     def on_install(info, cmd, args):
         install_type = ""
-        opts, args =  cmake.argparse(args, { "PROGRAMS" : "*", "FILES": "*", "TARGETS": "*", "DIRECTORY" : "?", "DESTINATION" : "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?" })
+        opts, args =  cmake_argparse(args, { "PROGRAMS" : "*", "FILES": "*", "TARGETS": "*", "DIRECTORY" : "?", "DESTINATION" : "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?" })
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
         if opts["DIRECTORY"]:
@@ -321,7 +321,7 @@ def message_generation(linter):
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
-        opts, args = cmake.argparse(args, { "DEPENDENCIES": "*" })
+        opts, args = cmake_argparse(args, { "DEPENDENCIES": "*" })
         info.msg_dep |= set(opts["DEPENDENCIES"])
     def on_final(info):
         if info.manifest.is_metapackage(): return

@@ -24,9 +24,9 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-from catkin_lint.linter import ERROR, NOTICE
-import catkin_lint.cmake as cmake
 import re
+from ..linter import ERROR, NOTICE
+from ..cmake import argparse as cmake_argparse
 from .misc import project
 
 
@@ -115,7 +115,7 @@ def export_targets(linter):
     def on_init(info):
         info.export_targets = set([])
     def on_catkin_package(info, cmd, args):
-        opts, args = cmake.argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
+        opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
     def on_final(info):
         for tgt in info.export_targets - info.targets:

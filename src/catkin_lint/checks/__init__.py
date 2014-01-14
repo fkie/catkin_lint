@@ -7,14 +7,14 @@ __license__ = "BSD"
 
 
 def all(linter):
-    import catkin_lint.checks.build as build
-    import catkin_lint.checks.manifest as manifest
-    import catkin_lint.checks.misc as misc
-    import catkin_lint.checks.python as python
-    import catkin_lint.checks.fkie as fkie
+    from .build import all as build_all
+    from .manifest import all as manifest_all
+    from .misc import all as misc_all
+    from .python import all as python_all
+    from .fkie import all as fkie_all
 
-    linter.require(build.all)
-    linter.require(manifest.all)
-    linter.require(misc.all)
-    linter.require(python.all)
-    linter.require(fkie.all)
+    linter.require(build_all)
+    linter.require(manifest_all)
+    linter.require(misc_all)
+    linter.require(python_all)
+    linter.require(fkie_all)

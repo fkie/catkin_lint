@@ -28,8 +28,8 @@ import os
 import sys
 from functools import total_ordering
 from catkin_pkg.packages import find_packages
-import catkin_lint.cmake as cmake
-import catkin_lint.diagnostics as diagnostics
+from .cmake import parse as cmake_parse, SyntaxError as CMakeSyntaxError
+from .diagnostics import msg
 from .util import iteritems
 
 ERROR = 0
@@ -71,7 +71,7 @@ class LintInfo(object):
         self.messages = []
 
     def report(self, level, msg_id, **kwargs):
-        id, text, description = diagnostics.msg(msg_id, **kwargs)
+        id, text, description = msg(msg_id, **kwargs)
         self.messages.append(Message(
             package=self.manifest.name, 
             file=self.file, 
@@ -128,7 +128,7 @@ class CMakeLinter(object):
             content = self._read_file(filename)
             in_macro = False
             in_function = False
-            for cmd, args, line in cmake.parse(content, info.var):
+            for cmd, args, line in cmake_parse(content, info.var):
                 info.line = line
                 if in_macro:
                     if cmd == "endmacro": in_macro = False
@@ -176,8 +176,8 @@ class CMakeLinter(object):
                     info.var[args[0]] = "/find-path"
                 if cmd == "find_library":
                     info.var[args[0]] = "/find-libs/library.so"
-        except cmake.SyntaxError as err:
-            raise cmake.SyntaxError ("%s: %s" % (info.file, str(err)))
+        except CMakeSyntaxError as err:
+            raise CMakeSyntaxError ("%s: %s" % (info.file, str(err)))
         finally:
             info.file = save_file
             info.line = save_line

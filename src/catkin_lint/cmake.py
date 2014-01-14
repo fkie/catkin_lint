@@ -25,7 +25,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import re
-from catkin_lint.util import iteritems
+from .util import iteritems
 
 _find_var = re.compile(r'\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
