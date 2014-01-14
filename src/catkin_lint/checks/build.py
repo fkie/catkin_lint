@@ -28,7 +28,7 @@ import os
 from catkin_lint.linter import ERROR, WARNING, NOTICE
 import catkin_lint.cmake as cmake
 import catkin_lint.util as util
-import catkin_lint.checks.manifest
+from .manifest import depends as manifest_depends
 from catkin_lint.util import iteritems
 import re
 
@@ -146,7 +146,7 @@ def depends(linter):
             if info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
 
-    linter.require(catkin_lint.checks.manifest.depends)
+    linter.require(manifest_depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("find_package", on_find_package)
     linter.add_command_hook("include", on_include)
@@ -195,7 +195,7 @@ def exports(linter):
             if lib in info.executables:
                 info.report(ERROR, "EXPORT_LIB_NOT_LIB", target=lib)
 
-    linter.require(catkin_lint.checks.manifest.depends)
+    linter.require(manifest_depends)
     linter.require(targets)
     linter.add_init_hook(on_init)
     linter.add_command_hook("catkin_package", on_catkin_package)
@@ -293,7 +293,7 @@ def plugins(linter):
         for dep in plugin_dep - info.run_dep:
             info.report (WARNING, "PLUGIN_DEPEND", export=dep, type="run", pkg=dep)
 
-    linter.require(catkin_lint.checks.manifest.depends)
+    linter.require(manifest_depends)
     linter.require(installs)
     linter.add_final_hook(on_final)
 
@@ -342,7 +342,7 @@ def message_generation(linter):
         if info.declares_messages and not "message_runtime" in info.export_packages:
             info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg="message_runtime")
 
-    linter.require(catkin_lint.checks.manifest.depends)
+    linter.require(manifest_depends)
     linter.require(depends)
     linter.require(exports)
     linter.add_init_hook(on_init)
