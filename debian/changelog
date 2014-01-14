@@ -1,3 +1,14 @@
+catkin-lint (1.2.3) unstable; urgency=low
+
+  * Allow parentheses in command arguments
+  * Allow catkin as run_depend or test_depend
+  * Use relative imports
+  * Special handling for catkin itself
+  * Include file name in error message if parsing fails
+  * Let setup.py install bash auto completion code
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Tue, 14 Jan 2014 23:37:43 +0100
+
 catkin-lint (1.2.2) unstable; urgency=low
 
   * Provide explicit sort order for lint messages
