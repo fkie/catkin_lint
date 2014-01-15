@@ -244,7 +244,7 @@ def installs(linter):
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
         for dest in [ "DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION" ]:
-            if not opts[dest]: continue
+            if opts[dest] is None: continue
             if not opts[dest].startswith("/catkin-target/"):
                 info.report(WARNING, "INSTALL_DESTINATION", type=install_type, dest=dest)
             if opts[dest].startswith("/catkin-target/include"):

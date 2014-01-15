@@ -255,6 +255,16 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
+            catkin_package()
+            install(PROGRAMS bin/script DESTINATION "${missing_variable}")
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "INSTALL_DESTINATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
             catkin_package(LIBRARIES mock)
             add_library(mock src/mock.cpp)
             add_executable(mock_prog src/mock.cpp)
