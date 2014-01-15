@@ -176,6 +176,12 @@ class CMakeLinter(object):
                     info.var[args[0]] = "/find-path"
                 if cmd == "find_library":
                     info.var[args[0]] = "/find-libs/library.so"
+                if cmd == "find_file":
+                    info.var[args[0]] = "/find-file/filename.ext"
+            if in_macro:
+                raise CMakeSyntaxError("unexpected end of file while looking for endmacro()")
+            if in_function:
+                raise CMakeSyntaxError("unexpected end of file while looking for endfunction()")
         except CMakeSyntaxError as err:
             raise CMakeSyntaxError ("%s: %s" % (info.file, str(err)))
         finally:
