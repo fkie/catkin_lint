@@ -27,9 +27,22 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 import argparse
+import importlib
 from . import __version__ as catkin_lint_version
 from .linter import CatkinEnvironment, CMakeLinter, ERROR, WARNING, NOTICE
 from .output import TextOutput, ExplainedTextOutput, XmlOutput
+
+import catkin_lint.checks
+
+def add_linter_check(linter, check):
+    if "." in check:
+        pkg, func = check.rsplit(".", 1)
+        check_module = importlib.import_module(pkg, "catkin_lint.checks")
+    else:
+        check_module = catkin_lint.checks
+        func = check
+    linter.require(getattr(check_module, func))
+
 
 def main():
     try:
@@ -38,6 +51,7 @@ def main():
         parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
         parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
         parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
+        parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[ "all" ], help=argparse.SUPPRESS)
         parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
         parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
         group = parser.add_mutually_exclusive_group()
@@ -80,8 +94,13 @@ def main():
         else:
             output = TextOutput()
         linter = CMakeLinter(env)
-        import catkin_lint.checks
-        linter.require(catkin_lint.checks.all)
+        for check in args.check:
+            try:
+                add_linter_check(linter, check)
+            except Exception as err:
+                sys.stderr.write("catkin_lint: cannot import '%s': %s\n" % (check, str(err)))
+                if args.debug: raise
+                sys.exit(1)
         for path, manifest in pkgs_to_check:
             try:
                 linter.lint(path, manifest)
