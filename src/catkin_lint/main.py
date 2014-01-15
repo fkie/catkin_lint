@@ -36,15 +36,15 @@ def main():
         parser = argparse.ArgumentParser()
         parser.add_argument("--version", action="version", version=catkin_lint_version)
         parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
+        parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
         parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
         parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
-        parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name")
-        parser.add_argument("--quiet", action="store_true", help="supress final summary")
+        parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--text", action="store_true", help="output result as text (default)")
         group.add_argument("--explain", action="store_true", help="output result as text with explanations")
         group.add_argument("--xml", action="store_true", help="output result as XML")
-        parser.add_argument("--debug", action="store_true", help="show stack trace on exceptions")
+        parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
         args = parser.parse_args()
         nothing_to_do = 0
         pkgs_to_check = []
