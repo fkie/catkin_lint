@@ -32,6 +32,18 @@ class CMakeParserTest(unittest.TestCase):
         self.assertRaises(cmake.SyntaxError, self.parse_all, "invalid%=characters$()")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "()")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "missing_braces")
+        self.assertRaises(cmake.SyntaxError, self.parse_all, "cmd();")
+        self.assertRaises(cmake.SyntaxError, self.parse_all, "cmd cmd()")
+
+    def test_string(self):
+        self.assertEqual(
+            self.parse_all('cmd("simple string")'),
+            [ ("cmd", [ "simple string" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd("string with \\"quote\\"")'),
+            [ ("cmd", [ 'string with "quote"' ], 1) ]
+        )
 
     def test_arguments(self):
         self.assertEqual(
@@ -74,6 +86,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd(")")'),
             [ ("cmd", [ ")" ], 1) ]
         )
+        self.assertEqual(
+            self.parse_all('cmd("\\"")'),
+            [ ("cmd", [ '"' ], 1) ]
+        )
         self.assertRaises(cmake.SyntaxError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
@@ -88,6 +104,22 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual(
             self.parse_all('cmd("${args}")', { "args" : "one;two;three"}),
             [ ("cmd", [ "one;two;three" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd("\\${args}")', { "args" : "fail"}),
+            [ ("cmd", [ "${args}" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(\\${args})', { "args" : "fail"}),
+            [ ("cmd", [ "${args}" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(${args})', { "args" : "\\\\"}),
+            [ ("cmd", [ "\\\\" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(fun ${args})', { "args" : "stuff"}),
+            [ ("cmd", [ "fun", "stuff" ], 1) ]
         )
 
     def test_comments(self):

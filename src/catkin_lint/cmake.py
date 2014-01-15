@@ -27,19 +27,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import re
 from .util import iteritems
 
-_find_var = re.compile(r'\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
+_find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
 _token_spec = [
     ( 'NL', r'\r|\n|\r\n' ),
+    ( 'SKIP', r'[ \t]+' ),
     ( 'LPAREN', r'\(' ),
     ( 'RPAREN', r'\)' ),
-    ( 'ID', r'[a-z_][a-z_0-9]*(?=[ \t\r\n\(\)#])' ),
-    ( 'STRING', r'"[^\r\n]*?"' ),
-    ( 'WORD', r'[^\(\)"#; \t\r\n]+' ),
+    ( 'STRING', r'"[^\r\n\\"]*(?:\\.[^\r\n\\"]*)*"' ),
+    ( 'SEMICOLON', r';'),
+    ( 'WORD', r'[^\(\)"# \t\r\n;]+' ),
     ( 'COMMENT', r'#.*?$' ),
-    ( 'SKIP', r'[ \t;]+' ),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
+
 
 class SyntaxError(RuntimeError):
     pass
@@ -49,6 +50,7 @@ def _resolve(s, var):
     while mo is not None:
         key = mo.group(1)
         value = var[key] if key in var else ""
+        value = re.sub(r"\\", r"\\\\", value)
         s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = _find_var(s)
     return s
@@ -71,10 +73,8 @@ def _lexer(s):
     if pos != len(s):
         raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
 
-def _expect(etyp, typ, val, line):
-    if not typ in etyp:
-        raise SyntaxError("Unexpected token '%s' on line %d" % ( val, line ))
-    return val
+def _unescape(s):
+    return re.sub(r'\\(.)', r"\1", s)
 
 def parse(s, var=None):
     state = 0
@@ -83,17 +83,20 @@ def parse(s, var=None):
     for typ, val, line in _lexer(s):
         if typ == "COMMENT": continue
         if state == 0:
-            cmd = _expect(["ID"], typ, val, line).lower()
+            if typ != "WORD":
+                raise SyntaxError("Expected command identifier and got '%s' on line %d" % (val, line))
+            cmd = val.lower()
+            if not re.match(r'^[a-z_][a-z_0-9]*$', cmd):
+                raise SyntaxError("Invalid command identifier '%s' on line %d" % (val, line))
             args = []
             state = 1
             cmdline = line
         elif state == 1:
-            _expect(["LPAREN"], typ, val, line)
+            if typ != "LPAREN":
+                raise SyntaxError("Expected '(' and got '%s' on line %d" % (val, line))
             paren = 1
             state = 2
         elif state == 2:
-            _expect([ "LPAREN", "RPAREN","ID","WORD","STRING"], typ, val, line)
-            if var is not None: val = _resolve(val, var)
             if typ == "LPAREN":
                 paren += 1
                 args.append("(")
@@ -104,10 +107,15 @@ def parse(s, var=None):
                     state = 0
                 else:
                     args.append(")")
+            elif typ == "SEMICOLON":
+                pass
             elif typ == "STRING":
-                args.append(val[1:-1])
+                val = val[1:-1]
+                if var is not None: val = _resolve(val, var)
+                args.append(_unescape(val))
             else:
-                args += re.split(";|[ \t]+", val)
+                if var is not None: val = _resolve(val, var)
+                args += re.split(";|[ \t]+", _unescape(val))
     if state != 0:
         raise SyntaxError("Unexpected end of file")
 
