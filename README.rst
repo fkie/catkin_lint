@@ -1,25 +1,29 @@
 catkin\_lint
-============
-
-.. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=master
-   :target: https://travis-ci.org/fkie/catkin_lint
+############
 
 Overview
---------
+========
 
-**catkin\_lint** is a tool to debug package configurations for the
+**catkin\_lint** checks package configurations for the
 `ROS Catkin <https://github.com/ros/catkin>`_ build system. It is part of
 an ongoing effort to aid developers with their ROS packaging
 (see also: `issue #153 <https://github.com/ros/catkin/issues/153>`_).
 
 Installation
-------------
+============
 
-**catkin\_lint** is available as PyPI package or can be installed from source
-with ``setup.py install``.
+**catkin\_lint** is available as `PyPI package <https://pypi.python.org/pypi/catkin_lint>`_.
+It can also be downloaded from `GitHub <https://github.com/fkie/catkin_lint>`_
+and installed manually with ``python setup.py install``.
+
+Build status of latest version:
+
+.. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=master
+   :target: https://travis-ci.org/fkie/catkin_lint
+
 
 Running
--------
+=======
 
 **catkin\_lint** runs a static analysis of the ``package.xml`` and
 ``CMakeLists.txt`` files. It can detect and report a number of common
@@ -35,8 +39,16 @@ package in the current working directory.
 A more detailed list of command line options can be obtained by running
 ``catkin_lint --help``.
 
+Limitations
+===========
+
+**catkin\_lint** emulates a limited subset of CMake. It does not
+evaluate boolean expressions in ``if()`` clauses, ignores all
+``function()`` and ``macro()`` definitions, and will not ``include()``
+other CMake files.
+
 Catkin Build Integration
-------------------------
+========================
 
 It is recommended to run **catkin\_lint** at workspace configuration time.
 The simplest way is to symlink ``/opt/ros/$ROS_DISTRO/share/catkin/cmake/toplevel.cmake``
@@ -51,9 +63,9 @@ Then add the following ``CMakeLists.txt``::
     include(toplevel.cmake)
 
 Diagnostic Levels
------------------
+=================
 
-**catkin\_lint** messages come in three different categories:
+**catkin\_lint** has messages in three different categories:
 errors, warnings, and notices. The ``-W`` option controls which problems
 are reported to the user:
 
@@ -62,18 +74,18 @@ are reported to the user:
 - ``-W2``: errors, warnings, and notices are reported
 
 Normally, **catkin\_lint** returns a non-zero exit code if and only
-if errors occured. The ``--strict`` option causes **catkin\_lint** to
+if errors occurred. The ``--strict`` option causes **catkin\_lint** to
 treat any reported problem as error.
 
 Errors
-''''''
+------
 
-Errors are severe enough to either break the build or produce unintended
-results. Usually, they violate the rules outlined in the
+Errors are severe enough to break the build and/or produce unintended
+side effects. Usually, they violate the rules outlined in the
 `Catkin Manual <http://docs.ros.org/api/catkin/html/>`_
 
 Warnings
-''''''''
+--------
 
 Potential errors which may indicate a bug in your package but may be
 justified for reasons **catkin\_lint** cannot discern. Constructs which
@@ -81,7 +93,7 @@ trigger a warning can usually be modified in a way that is functionally
 equivalent but more robust.
 
 Notices
-'''''''
+-------
 
 Issues which are not objectionable from a technical view point but
 should  be addressed to improve the quality of the package. Many notices
@@ -89,7 +101,7 @@ highlight violations of the recommendations and best practises from the
 Catkin Manual.
 
 Contribution
-------------
+============
 
 **catkin\_lint** is still under active development and lacks a number
 of features:
@@ -98,6 +110,7 @@ of features:
 * Proper API documentation for lint checks
 * Check for missing source files in add_executable()/add_library()
 * Check proper usage of external libraries (e.g. Qt)
+* Support for include files
 * Support for CMake functions and macros
 
 If you would like to contribute, you are very welcome to do so.
@@ -105,7 +118,7 @@ Please contact `@roehling <https://github.com/roehling>`_ first
 to avoid any duplication of work.
 
 License
--------
+=======
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
