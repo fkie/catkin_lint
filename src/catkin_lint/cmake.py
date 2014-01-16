@@ -50,7 +50,7 @@ def _resolve(s, var):
     while mo is not None:
         key = mo.group(1)
         value = var[key] if key in var else ""
-        value = re.sub(r"\\", r"\\\\", value)
+        value = re.sub(r"([\\$])", r"\\\1", value)
         s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = _find_var(s)
     return s

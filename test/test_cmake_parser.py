@@ -118,6 +118,14 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd", [ "\\\\" ], 1) ]
         )
         self.assertEqual(
+            self.parse_all('cmd(${args})', { "args" : "${looks_like_a_variable}"}),
+            [ ("cmd", [ "${looks_like_a_variable}" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(${args})', { "args" : ")"}),
+            [ ("cmd", [ ")" ], 1) ]
+        )
+        self.assertEqual(
             self.parse_all('cmd(fun ${args})', { "args" : "stuff"}),
             [ ("cmd", [ "fun", "stuff" ], 1) ]
         )
