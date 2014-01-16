@@ -37,7 +37,7 @@ WARNING = 1
 NOTICE = 2
 
 @total_ordering
-class Message:
+class Message(object):
 
     def __init__(self, package, file, line, level, id, text, description):
         self.package = package
