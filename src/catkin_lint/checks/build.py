@@ -130,14 +130,9 @@ def depends(linter):
             mo = re.search(r"\bFind([A-Za-z0-9]+)(\.cmake)?$", args[0])
             if mo:
                 pkg = mo.group(1)
+                if pkg == "PackageHandleStandardArgs": return
                 if not os.path.isfile(os.path.join(info.path, args[0])) and not opts["OPTIONAL"]:
                     info.report (ERROR, "FIND_BY_INCLUDE", pkg=pkg)
-                info.var["%s_INCLUDE_DIRS" % pkg] = "/%s-includes" % pkg
-                info.var["%s_INCLUDE_DIRS" % pkg.upper()] = "/%s-includes" % pkg
-                info.var["%s_LIBRARIES" % pkg] = "/%s-libs/library.so" % pkg
-                info.var["%s_LIBRARIES" % pkg.upper()] = "/%s-libs/library.so" % pkg
-                info.find_packages.add(pkg)
-                info.find_packages.add(pkg.upper())
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep:
             if info.env.is_known_pkg(pkg):

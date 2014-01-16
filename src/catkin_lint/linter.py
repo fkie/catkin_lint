@@ -27,8 +27,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 from functools import total_ordering
+from fnmatch import fnmatch
 from catkin_pkg.packages import find_packages
-from .cmake import parse as cmake_parse, SyntaxError as CMakeSyntaxError
+from .cmake import parse as cmake_parse, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
 from .util import iteritems
 
@@ -91,6 +92,7 @@ class CMakeLinter(object):
         self._final_hooks = []
         self._added_checks = set([])
         self._catch_circular_deps = set([])
+        self._include_blacklist = { "catkin" : [ "cmake/*" ]}
 
     def require(self, check):
         if check in self._catch_circular_deps:
@@ -118,6 +120,27 @@ class CMakeLinter(object):
         content = f.read()
         f.close()
         return content
+
+    def _include_file(self, info, args):
+        opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
+        incl_file = args[0]
+        if not "/" in incl_file and not "." in incl_file:
+            incl_file = "NOTFOUND"
+        else:
+            if incl_file.startswith("/find-path"): return
+            if incl_file.startswith("/pkg-source/"): incl_file = incl_file[12:]
+            if info.manifest.name in self._include_blacklist:
+                for glob_pattern in self._include_blacklist[info.manifest.name]:
+                    if fnmatch(incl_file, glob_pattern): return
+            try:
+                real_file = os.path.join(info.path, incl_file)
+                self._parse_file(info, real_file)
+            except Exception:
+                if not "OPTIONAL" in args:
+                    info.report(ERROR, "MISSING_FILE", cmd="include", file=incl_file)
+                incl_file = "NOTFOUND"
+        if opts["RESULT_VARIABLE"]:
+            info.var[opts["RESULT_VARIABLE"]] = incl_file
 
     def _parse_file(self, info, filename):
         save_file = info.file
@@ -155,7 +178,7 @@ class CMakeLinter(object):
                 if cmd == "unset":
                     info.var[args[0]] = ""
                 if cmd == "include":
-                    pass
+                    self._include_file(info, args)
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
                 if cmd == "find_package":
