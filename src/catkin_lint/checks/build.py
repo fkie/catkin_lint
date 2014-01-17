@@ -127,7 +127,7 @@ def depends(linter):
     def on_include(info, cmd, args):
         opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
         if args:
-            mo = re.search(r"\bFind([A-Za-z0-9]+)(\.cmake)?$", args[0])
+            mo = re.match(r"^Find([A-Za-z0-9_-]+)$", args[0])
             if mo:
                 pkg = mo.group(1)
                 if pkg == "PackageHandleStandardArgs": return

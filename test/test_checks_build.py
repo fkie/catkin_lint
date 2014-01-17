@@ -54,7 +54,17 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
-            include(FindOther.cmake)
+            include(missing.cmake)
+            catkin_package()
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "MISSING_FILE" ], result)
+
+        result = mock_lint(env, pkg, 
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            include(FindStuff)
             catkin_package()
             """,
         checks=cc.depends)

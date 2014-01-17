@@ -92,7 +92,7 @@ class CMakeLinter(object):
         self._final_hooks = []
         self._added_checks = set([])
         self._catch_circular_deps = set([])
-        self._include_blacklist = { "catkin" : [ "cmake/*" ]}
+        self._include_blacklist = { "catkin" : [ "*" ]}
 
     def require(self, check):
         if check in self._catch_circular_deps:
@@ -129,14 +129,18 @@ class CMakeLinter(object):
         else:
             if incl_file.startswith("/find-path"): return
             if incl_file.startswith("/pkg-source/"): incl_file = incl_file[12:]
+            skip_parsing = False
             if info.manifest.name in self._include_blacklist:
                 for glob_pattern in self._include_blacklist[info.manifest.name]:
-                    if fnmatch(incl_file, glob_pattern): return
-            try:
-                real_file = os.path.join(info.path, incl_file)
-                self._parse_file(info, real_file)
-            except Exception:
-                if not "OPTIONAL" in args:
+                    if fnmatch(incl_file, glob_pattern):
+                        skip_parsing = True
+                        break
+            real_file = os.path.join(info.path, incl_file)
+            if os.path.isfile(real_file):
+                if not skip_parsing:
+                    self._parse_file(info, real_file)
+            else:
+                if not opts["OPTIONAL"]:
                     info.report(ERROR, "MISSING_FILE", cmd="include", file=incl_file)
                 incl_file = "NOTFOUND"
         if opts["RESULT_VARIABLE"]:
