@@ -30,7 +30,7 @@ from .util import iteritems
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
 _token_spec = [
-    ( 'NL', r'\r|\n|\r\n' ),
+    ( 'NL', r'\r\n|\r|\n' ),
     ( 'SKIP', r'[ \t]+' ),
     ( 'LPAREN', r'\(' ),
     ( 'RPAREN', r'\)' ),

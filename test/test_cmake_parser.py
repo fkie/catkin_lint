@@ -155,6 +155,18 @@ class CMakeParserTest(unittest.TestCase):
             """),
             [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 5) ]
         )
+        self.assertEqual(
+            self.parse_all("cmd1()\rcmd2()\rcmd3()\r"),
+            [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
+        )
+        self.assertEqual(
+            self.parse_all("cmd1()\ncmd2()\ncmd3()\n"),
+            [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
+        )
+        self.assertEqual(
+            self.parse_all("cmd1()\r\ncmd2()\r\ncmd3()\r\n"),
+            [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
+        )
 
     def test_argparse(self):
         self.assertRaises(RuntimeError, cmake.argparse, [], { "TEST" : "xxx"})
