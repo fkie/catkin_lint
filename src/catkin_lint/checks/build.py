@@ -89,6 +89,32 @@ def targets(linter):
     linter.add_final_hook(on_final)
 
 
+def source_files(linter):
+    def on_add_executable(info, cmd, args):
+        if "IMPORTED" in args: return
+        opts, args = cmake_argparse(args, { "WIN32": "-", "MACOSX_BUNDLE": "-", "EXCLUDE_FROM_ALL": "-"})
+        for source_file in args[1:]:
+            if not source_file: continue
+            if source_file.startswith("/pkg-source"):
+                source_file = source_file[12:]
+            if os.path.isabs(source_file): continue
+            if not os.path.isfile(os.path.join(info.path, source_file)):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
+    def on_add_library(info, cmd, args):
+        if "IMPORTED" in args: return
+        opts, args = cmake_argparse(args, { "STATIC": "-", "SHARED": "-", "MODULE": "-", "EXCLUDE_FROM_ALL": "-"})
+        for source_file in args[1:]:
+            if not source_file: continue
+            if source_file.startswith("/pkg-source"):
+                source_file = source_file[12:]
+            if os.path.isabs(source_file): continue
+            if not os.path.isfile(os.path.join(info.path, source_file)):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
+
+    linter.add_command_hook("add_executable", on_add_executable)
+    linter.add_command_hook("add_library", on_add_library)
+
+
 def link_directories(linter):
     def on_link_directories(info, cmd, args):
         externals = [ p for p in args if os.path.isabs(p) and not p.startswith("/pkg-") ]
@@ -351,6 +377,7 @@ def message_generation(linter):
 def all(linter):
     linter.require(includes)
     linter.require(targets)
+    linter.require(source_files)
     linter.require(link_directories)
     linter.require(depends)
     linter.require(exports)
