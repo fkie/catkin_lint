@@ -1,10 +1,8 @@
-language: python
-python:
-  - "2.7"
-  - "3.3"
+language: c
+compiler:
+  - gcc
 install:
-  - pip install nose coverage argparse catkin_pkg
+  - sudo apt-get install dpkg-dev debhelper python fakeroot
 script:
-  - coverage run `which nosetests` -s --tests test
-  - coverage report `find src -name "*.py"`
+  - dpkg-buildpackage -tc -uc 
 
