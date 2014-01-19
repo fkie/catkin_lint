@@ -1,3 +1,14 @@
+catkin-lint (1.2.4-1) unstable; urgency=low
+
+  * Parser support for escaped characters
+  * Add option to run additional lint checks
+  * Parser support for include()
+  * Fix improper handling of Windows EOL
+  * Build check for existing source files
+  * Move debian folder to its own branch
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Sun, 19 Jan 2014 22:37:41 +0100
+
 catkin-lint (1.2.3) unstable; urgency=low
 
   * Allow parentheses in command arguments
