@@ -107,10 +107,7 @@ Contribution
 of features:
 
 * Unit tests with full coverage
-* Proper API documentation for lint checks
-* Check for missing source files in add_executable()/add_library()
 * Check proper usage of external libraries (e.g. Qt)
-* Support for include files
 * Support for CMake functions and macros
 
 If you would like to contribute, you are very welcome to do so.
