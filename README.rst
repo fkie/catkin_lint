@@ -1,10 +1,10 @@
-catkin\_lint
+catkin_lint
 ############
 
 Overview
 ========
 
-**catkin\_lint** checks package configurations for the
+**catkin_lint** checks package configurations for the
 `ROS Catkin <https://github.com/ros/catkin>`_ build system. It is part of
 an ongoing effort to aid developers with their ROS packaging
 (see also: `issue #153 <https://github.com/ros/catkin/issues/153>`_).
@@ -12,7 +12,7 @@ an ongoing effort to aid developers with their ROS packaging
 Installation
 ============
 
-**catkin\_lint** is available as `PyPI package <https://pypi.python.org/pypi/catkin_lint>`_.
+**catkin_lint** is available as `PyPI package <https://pypi.python.org/pypi/catkin_lint>`_.
 It can also be downloaded from `GitHub <https://github.com/fkie/catkin_lint>`_
 and installed manually with ``python setup.py install``.
 
@@ -25,15 +25,15 @@ Build status of latest version:
 Running
 =======
 
-**catkin\_lint** runs a static analysis of the ``package.xml`` and
+**catkin_lint** runs a static analysis of the ``package.xml`` and
 ``CMakeLists.txt`` files. It can detect and report a number of common
 problems.
 
-If **catkin\_lint** is invoked with one or more paths as parameters, it
+If **catkin_lint** is invoked with one or more paths as parameters, it
 searches for packages recursively and checks all of them. Alternatively, the
 ``--pkg`` option can be used to add the path of a particular ROS package.
 
-If neither paths nor packages are specified, **catkin\_lint** looks for a
+If neither paths nor packages are specified, **catkin_lint** looks for a
 package in the current working directory.
 
 A more detailed list of command line options can be obtained by running
@@ -42,7 +42,7 @@ A more detailed list of command line options can be obtained by running
 Limitations
 ===========
 
-**catkin\_lint** emulates a limited subset of CMake. It does not
+**catkin_lint** emulates a limited subset of CMake. It does not
 evaluate boolean expressions in ``if()`` clauses, ignores all
 ``function()`` and ``macro()`` definitions, and will not ``include()``
 other CMake files.
@@ -50,7 +50,7 @@ other CMake files.
 Catkin Build Integration
 ========================
 
-It is recommended to run **catkin\_lint** at workspace configuration time.
+It is recommended to run **catkin_lint** at workspace configuration time.
 The simplest way is to symlink ``/opt/ros/$ROS_DISTRO/share/catkin/cmake/toplevel.cmake``
 to your ``$WSDIR/src`` folder manually (do not use ``catkin_init_workspace``).
 Then add the following ``CMakeLists.txt``::
@@ -65,7 +65,7 @@ Then add the following ``CMakeLists.txt``::
 Diagnostic Levels
 =================
 
-**catkin\_lint** has messages in three different categories:
+**catkin_lint** has messages in three different categories:
 errors, warnings, and notices. The ``-W`` option controls which problems
 are reported to the user:
 
@@ -73,8 +73,8 @@ are reported to the user:
 - ``-W1``: errors and warnings are reported
 - ``-W2``: errors, warnings, and notices are reported
 
-Normally, **catkin\_lint** returns a non-zero exit code if and only
-if errors occurred. The ``--strict`` option causes **catkin\_lint** to
+Normally, **catkin_lint** returns a non-zero exit code if and only
+if errors occurred. The ``--strict`` option causes **catkin_lint** to
 treat any reported problem as error.
 
 Errors
@@ -88,7 +88,7 @@ Warnings
 --------
 
 Potential errors which may indicate a bug in your package but may be
-justified for reasons **catkin\_lint** cannot discern. Constructs which
+justified for reasons **catkin_lint** cannot discern. Constructs which
 trigger a warning can usually be modified in a way that is functionally
 equivalent but more robust.
 
@@ -103,7 +103,7 @@ Catkin Manual.
 Contribution
 ============
 
-**catkin\_lint** is still under active development and lacks a number
+**catkin_lint** is still under active development and lacks a number
 of features:
 
 * Unit tests with full coverage
