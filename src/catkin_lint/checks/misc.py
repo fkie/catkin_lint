@@ -24,7 +24,9 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+import re
 from ..linter import ERROR, WARNING
+from ..cmake import argparse as cmake_argparse
 
 
 def project(linter):
@@ -109,7 +111,21 @@ def singleton_commands(linter):
         linter.add_command_hook(cmd, on_command)
 
 
+def cmake_includes(linter):
+    def on_include(info, cmd, args):
+        opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
+        if args:
+            mo = re.match(r"^Find([A-Za-z0-9_-]+)$", args[0])
+            if mo:
+                pkg = mo.group(1)
+                if pkg == "PackageHandleStandardArgs": return
+                info.report (ERROR, "FIND_BY_INCLUDE", pkg=pkg)
+
+    linter.add_command_hook("include", on_include)
+
+
 def all(linter):
     linter.require(project)
     linter.require(special_vars)
     linter.require(singleton_commands)
+    linter.require(cmake_includes)

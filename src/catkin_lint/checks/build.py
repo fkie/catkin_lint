@@ -150,15 +150,6 @@ def depends(linter):
         info.find_packages |= set(opts["COMPONENTS"])
         info.required_packages |= set(opts["COMPONENTS"])
         info.catkin_components |= set(opts["COMPONENTS"])
-    def on_include(info, cmd, args):
-        opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
-        if args:
-            mo = re.match(r"^Find([A-Za-z0-9_-]+)$", args[0])
-            if mo:
-                pkg = mo.group(1)
-                if pkg == "PackageHandleStandardArgs": return
-                if not os.path.isfile(os.path.join(info.path, args[0])) and not opts["OPTIONAL"]:
-                    info.report (ERROR, "FIND_BY_INCLUDE", pkg=pkg)
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep:
             if info.env.is_known_pkg(pkg):
@@ -170,7 +161,6 @@ def depends(linter):
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("find_package", on_find_package)
-    linter.add_command_hook("include", on_include)
     linter.add_final_hook(on_final)
 
 

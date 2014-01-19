@@ -5,6 +5,11 @@ from .helper import create_env, create_manifest, mock_lint
 import sys
 sys.stderr = sys.stdout
 
+try:
+    from mock import patch
+except ImportError:
+    from unittest.mock import patch
+
 
 class ChecksMiscTest(unittest.TestCase):
 
@@ -37,3 +42,29 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) project(mock2)", checks=cc.singleton_commands)
         self.assertEqual([ "DUPLICATE_CMD" ], result)
+
+    @patch("os.path.isfile", lambda x: x == "/mock-path/FindLocal.cmake")
+    def test_cmake_includes(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, 
+            """
+            include(FindLocal.cmake)
+            include(FindOptional.cmake OPTIONAL)
+            """,
+        checks=cc.cmake_includes)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg, 
+            """
+            include(missing.cmake)
+            """,
+        checks=cc.cmake_includes)
+        self.assertEqual([ "MISSING_FILE" ], result)
+
+        result = mock_lint(env, pkg, 
+            """
+            include(FindStuff)
+            """,
+        checks=cc.cmake_includes)
+        self.assertEqual([ "FIND_BY_INCLUDE" ], result)
