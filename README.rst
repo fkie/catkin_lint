@@ -43,9 +43,8 @@ Limitations
 ===========
 
 **catkin_lint** emulates a limited subset of CMake. It does not
-evaluate boolean expressions in ``if()`` clauses, ignores all
-``function()`` and ``macro()`` definitions, and will not ``include()``
-other CMake files.
+evaluate boolean expressions in ``if()`` clauses and ignores all
+``function()`` and ``macro()`` definitions.
 
 Catkin Build Integration
 ========================
