@@ -3,7 +3,9 @@ compiler:
   - gcc
 install:
   - sudo apt-get install dpkg-dev debhelper python fakeroot
-script:
+before_script:
+  - git fetch origin master:master
   - debian/rules make-orig-tar
-  - dpkg-buildpackage -tc -uc 
+script:
+  - dpkg-buildpackage -tc -uc
 
