@@ -2,7 +2,7 @@ language: c
 compiler:
   - gcc
 install:
-  - sudo apt-get install dpkg-dev debhelper python fakeroot
+  - sudo apt-get install dpkg-dev debhelper python-all python3-all fakeroot
 before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar

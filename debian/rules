@@ -16,8 +16,28 @@ ifneq ($(DEB_VERSION),$(PY_VERSION))
 $(error Debian version $(DEB_VERSION) does not match package version $(PY_VERSION))
 endif
 
+PY3REQUESTED := $(shell py3versions -r)
+PY3DEFAULT := $(shell py3versions -d)
+PYTHON3 := $(filter-out $(PY3DEFAULT),$(PY3REQUESTED)) python3
+
 %:
-	dh $@ --with python2 --buildsystem=python_distutils
+	dh $@ --with python2,python3 --buildsystem=python_distutils
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf build
+
+override_dh_auto_build:
+	set -e; for python in $(PYTHON3); do \
+		$$python setup.py build; \
+	done
+	dh_auto_build
+
+override_dh_auto_install:
+	set -e; for python in $(PYTHON3); do \
+		$$python setup.py install --install-layout=deb --root=debian/tmp; \
+	done
+	dh_auto_install
 
 make-orig-tar:
 	git archive --prefix=catkin-lint-$(PY_VERSION)/ -o ../catkin-lint_$(PY_VERSION).orig.tar.gz $(shell git merge-base debian master )
