@@ -24,6 +24,20 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
 
 
+    @patch("os.path.isfile", lambda x: x == "/mock-path/src/existing.cpp")
+    def test_source_files(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "add_executable(mock src/existing.cpp) add_library(mock_lib src/existing.cpp)", checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/existing.cpp) add_library(mock_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/existing.cpp)", checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "add_executable(mock src/missing.cpp)", checks=cc.source_files)
+        self.assertEqual([ "MISSING_FILE" ], result)
+        result = mock_lint(env, pkg, "add_library(mock src/missing.cpp)", checks=cc.source_files)
+        self.assertEqual([ "MISSING_FILE" ], result)
+
+
     @patch("os.path.isdir", lambda x: x == "/mock-path/in_package")
     def test_link_directories(self):
         env = create_env()
