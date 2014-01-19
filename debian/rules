@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+# -*- makefile -*-
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+DEB_VERSION:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 | cut -d"-" -f1 | cut -d"+" -f1 )
+PY_VERSION:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__" )
+
+ifneq ($(DEB_VERSION),$(PY_VERSION))
+$(error Debian version $(DEB_VERSION) does not match package version $(PY_VERSION))
+endif
+
+%:
+	dh $@ --with python2 --buildsystem=python_distutils
+
+make-orig-tar:
+	git archive --prefix=catkin-lint-$(PY_VERSION)/ -o ../catkin-lint_$(PY_VERSION).orig.tar.gz $(shell git merge-base debian master )
+
