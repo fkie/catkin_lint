@@ -4,5 +4,6 @@ compiler:
 install:
   - sudo apt-get install dpkg-dev debhelper python fakeroot
 script:
+  - debian/rules make-orig-tar
   - dpkg-buildpackage -tc -uc 
 
