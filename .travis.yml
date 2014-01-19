@@ -7,5 +7,5 @@ before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar
 script:
-  - dpkg-buildpackage -tc -uc
+  - dpkg-buildpackage -tc -uc -us -i\\..*
 
