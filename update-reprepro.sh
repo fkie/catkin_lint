@@ -2,7 +2,12 @@
 set -e
 pkgname=$( dpkg-parsechangelog | grep ^Source: | cut -d' ' -f2 )
 pkgversion=$( dpkg-parsechangelog | grep ^Version: | cut -d' ' -f2 )
-dpkg-buildpackage -tc -uc -us
+build_type=$(<debian/source/format)
+if [ "$build_type" = "3.0 (quilt)" ]
+then
+	debian/rules make-orig-tar
+fi
+dpkg-buildpackage -tc -us -uc -i"\\..*"
 changefile=$( readlink -f ../${pkgname}_${pkgversion}_*.changes )
 buildfiles=( $( grep -A999 Files: "${changefile}" | awk '{ print $5 }' ) )
 
