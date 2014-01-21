@@ -44,6 +44,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd("string with \\"quote\\"")'),
             [ ("cmd", [ 'string with "quote"' ], 1) ]
         )
+        self.assertEqual(
+            self.parse_all('cmd("string that spans\nmultiple lines")'),
+            [ ("cmd", [ 'string that spans\nmultiple lines' ], 1) ]
+        )
 
     def test_arguments(self):
         self.assertEqual(

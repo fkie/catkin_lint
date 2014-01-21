@@ -34,7 +34,7 @@ _token_spec = [
     ( 'SKIP', r'[ \t]+' ),
     ( 'LPAREN', r'\(' ),
     ( 'RPAREN', r'\)' ),
-    ( 'STRING', r'"[^\r\n\\"]*(?:\\.[^\r\n\\"]*)*"' ),
+    ( 'STRING', r'"[^\\"]*(?:\\.[^\\"]*)*"' ),
     ( 'SEMICOLON', r';'),
     ( 'WORD', r'[^\(\)"# \t\r\n;]+' ),
     ( 'COMMENT', r'#.*?$' ),
