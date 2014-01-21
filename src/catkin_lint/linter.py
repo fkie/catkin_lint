@@ -172,6 +172,9 @@ class CMakeLinter(object):
         opts, args = cmake_argparse(args, { "EXCLUDE_FROM_ALL": "-" })
         subdir = info.package_path(args[0])
         real_subdir = info.real_path(subdir)
+        if os.path.isabs(subdir):
+            info.report(ERROR, "EXTERNAL_SUBDIR", subdir=subdir)
+            return
         if not os.path.isdir(real_subdir):
             info.report(ERROR, "MISSING_SUBDIR", subdir=subdir)
             return
