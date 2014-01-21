@@ -167,6 +167,20 @@ class CMakeLinter(object):
         if opts["RESULT_VARIABLE"]:
             info.var[opts["RESULT_VARIABLE"]] = incl_file
 
+    def _subdirectory(self, info, args):
+        opts, args = cmake_argparse(args, { "EXCLUDE_FROM_ALL": "-" })
+        subdir = info.package_path(args[0])
+        real_subdir = info.real_path(subdir)
+        if not os.path.isdir(real_subdir):
+            info.report(ERROR, "MISSING_SUBDIR", subdir=subdir)
+            return
+        old_src_dir = info.var["CMAKE_CURRENT_SOURCE_DIR"]
+        try:
+            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info.var["CMAKE_CURRENT_SOURCE_DIR"], subdir)
+            self._parse_file (info, os.path.join(real_subdir, "CMakeLists.txt"))
+        finally:
+            info.var["CMAKE_CURRENT_SOURCE_DIR"] = old_src_dir
+
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
@@ -204,6 +218,8 @@ class CMakeLinter(object):
                     info.var[args[0]] = ""
                 if cmd == "include":
                     self._include_file(info, args)
+                if cmd == "add_subdirectory":
+                    self._subdirectory(info, args)
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
                 if cmd == "find_package":

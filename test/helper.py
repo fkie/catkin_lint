@@ -25,9 +25,15 @@ def create_manifest(name, description="", buildtool_depends=[ "catkin" ], build_
 
 def mock_lint(env, manifest, cmakelist, checks=all, full_result=False):
     linter = CMakeLinter(env)
-    def get_cmakelist(filename): 
-        if filename == "/mock-path/CMakeLists.txt": return cmakelist
-        return ""
+    def get_cmakelist(filename):
+        if type(cmakelist) is dict:
+            if filename in cmakelist:
+                 return cmakelist[filename]
+            else:
+                return ""
+        else:
+            if filename == "/mock-path/CMakeLists.txt": return cmakelist
+            return ""
     linter._read_file = get_cmakelist
     linter.require(checks)
     linter.lint ("/mock-path", manifest)

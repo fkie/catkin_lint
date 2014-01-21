@@ -443,6 +443,17 @@ Your package uses CMake constructs which cannot be linted properly at this time.
 Certain errors may go unnoticed while other errors may be false positives.
 """
 ),
+"EXTERNAL_SUBDIR" : ( "subdirectory %(subdir)s is not in package",
+"""\
+You added another subdirectory with add_subdirectory(), but the
+specified path points outside of the package source directory.
+"""
+),
+"MISSING_SUBDIR" : ( "subdirectory '%(subdir)s' is missing",
+"""\
+You specified a subdirectory which does not exists or is unreadable.
+"""
+),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\
 An operating system error has occured. This is not a linting problem per se but
