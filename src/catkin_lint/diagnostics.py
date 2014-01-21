@@ -454,6 +454,13 @@ specified path points outside of the package source directory.
 You specified a subdirectory which does not exists or is unreadable.
 """
 ),
+"DUPLICATE_SUBDIR" : ( "subdirectory '%(subdir)s' is added a second time",
+"""\
+You added another subdirectory with add_subdirectory() multiple times.
+This can also happen if you accidentally created a loop where subdir A
+adds subdir B, which adds subdir A again.
+"""
+),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\
 An operating system error has occured. This is not a linting problem per se but

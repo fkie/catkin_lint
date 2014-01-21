@@ -39,3 +39,17 @@ class LinterTest(unittest.TestCase):
             }, checks=cc.all
         )
         self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
+              "/mock-path/src/CMakeLists.txt" : """
+              include_directories(../include)
+              find_package(catkin REQUIRED)
+              catkin_package()
+              add_executable(mock_test mock.cpp)
+              add_subdirectory(../src)
+              """
+            }, checks=cc.all
+        )
+        self.assertEqual([ "DUPLICATE_SUBDIR" ], result)

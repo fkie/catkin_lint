@@ -63,6 +63,7 @@ class LintInfo(object):
     def __init__(self, env):
         self.env = env
         self.path = None
+        self.subdirs = set([])
         self.manifest = None
         self.file = ""
         self.line = 0
@@ -174,6 +175,10 @@ class CMakeLinter(object):
         if not os.path.isdir(real_subdir):
             info.report(ERROR, "MISSING_SUBDIR", subdir=subdir)
             return
+        if subdir in info.subdirs:
+            info.report(ERROR, "DUPLICATE_SUBDIR", subdir=subdir)
+            return
+        info.subdirs.add(subdir)
         old_src_dir = info.var["CMAKE_CURRENT_SOURCE_DIR"]
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info.var["CMAKE_CURRENT_SOURCE_DIR"], subdir)
