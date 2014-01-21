@@ -461,6 +461,12 @@ This can also happen if you accidentally created a loop where subdir A
 adds subdir B, which adds subdir A again.
 """
 ),
+"SUBPROJECT" : ( "subdirectory '%(subdir)s' contains a subproject",
+"""\
+Your package has an independent subproject. This can interact
+with catkin in unusual ways and is strongly discouraged.
+"""
+),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\
 An operating system error has occured. This is not a linting problem per se but

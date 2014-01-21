@@ -63,6 +63,7 @@ class LintInfo(object):
     def __init__(self, env):
         self.env = env
         self.path = None
+        self.subdir = ""
         self.subdirs = set([])
         self.manifest = None
         self.file = ""
@@ -182,12 +183,15 @@ class CMakeLinter(object):
             info.report(ERROR, "DUPLICATE_SUBDIR", subdir=subdir)
             return
         info.subdirs.add(subdir)
+        old_subdir = info.subdir
         old_src_dir = info.var["CMAKE_CURRENT_SOURCE_DIR"]
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info.var["CMAKE_CURRENT_SOURCE_DIR"], subdir)
+            info.subdir = subdir 
             self._parse_file (info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = old_src_dir
+            info.subdir = old_subdir
 
     def _parse_file(self, info, filename):
         save_file = info.file
@@ -216,6 +220,11 @@ class CMakeLinter(object):
                         in_function = True
                         info.report(NOTICE, "UNSUPPORTED_CMD", cmd="function")
                         continue
+                if cmd == "project":
+                    info.var["PROJECT_NAME"] = args[0]
+                    if info.subdir:
+                        info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
+                        return
                 if cmd in self._cmd_hooks:
                     for cb in self._cmd_hooks[cmd]:
                         cb(info, cmd, args)
@@ -228,8 +237,6 @@ class CMakeLinter(object):
                     self._include_file(info, args)
                 if cmd == "add_subdirectory":
                     self._subdirectory(info, args)
-                if cmd == "project":
-                    info.var["PROJECT_NAME"] = args[0]
                 if cmd == "find_package":
                     info.var["%s_INCLUDE_DIRS" % args[0]] = "/%s-includes" % args[0]
                     info.var["%s_INCLUDE_DIRS" % args[0].upper()] = "/%s-includes" % args[0]

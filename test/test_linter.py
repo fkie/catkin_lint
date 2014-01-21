@@ -27,10 +27,9 @@ class LinterTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
-            { 
-              "/mock-path/CMakeLists.txt" : "add_subdirectory(src)",
+            {
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
               "/mock-path/src/CMakeLists.txt" : """
-              project(mock)
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
@@ -53,3 +52,18 @@ class LinterTest(unittest.TestCase):
             }, checks=cc.all
         )
         self.assertEqual([ "DUPLICATE_SUBDIR" ], result)
+
+        result = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : """
+              project(mock)
+              find_package(catkin REQUIRED)
+              catkin_package()
+              add_subdirectory(src)
+              """,
+              "/mock-path/src/CMakeLists.txt" : """
+              project(submock)
+              """
+            }, checks=cc.all
+        )
+        self.assertEqual([ "SUBPROJECT" ], result)
