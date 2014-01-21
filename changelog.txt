@@ -1,3 +1,10 @@
+Version 1.2.5
+
+  * Warn about subprojects
+  * Support for add_subdirectory() commands
+  * Support for multi-line strings
+  * Add common path functions to LintInfo
+
 Version 1.2.4
 
   * Parser support for escaped characters
