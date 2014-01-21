@@ -128,6 +128,53 @@ of the defined diagnostic messages. Certain messages have placeholder
 variables that must be specified, e.g. ``cmd`` for the command name.
 
 
+package_path()
+--------------
+
+::
+
+    info.package_path(path)
+
+Returns a path relative to the package source directory or
+an absolute path if the path is not within the package. Can handle
+``${CMAKE_CURRENT_SOURCE_DIR}`` correctly.
+
+
+real_path()
+-----------
+
+::
+
+    info.real_path(path)
+
+Returns the actual file system path for relative package path as
+returned by ``package_path()``.
+
+
+is_internal_path(path)
+----------------------
+
+::
+
+    info.is_internal_path(path)
+
+Returns ``True`` if the path is either below the package source
+directory or the package build directory.
+
+
+is_catkin_target()
+------------------
+
+::
+
+    info.is_catkin_target(path, subdir=None)
+
+Returns ``True`` if the path points to the install space of
+the catkin workspace. If ``subdir`` is not ``None``, it checks
+if the path points to the specified subdirectory in the install
+space.
+
+
 CatkinEnvironment object
 ========================
 

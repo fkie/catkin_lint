@@ -57,6 +57,9 @@ class Message(object):
 
 class LintInfo(object):
 
+    _pkg_source = "%spkg-source" % os.path.sep
+    _pkg_build = "%spkg-build" % os.path.sep
+
     def __init__(self, env):
         self.env = env
         self.path = None
@@ -82,6 +85,25 @@ class LintInfo(object):
             text=text,
             description=description
         ))
+
+    def package_path(self, path):
+        if not path: return ""
+        new_path = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
+        if new_path.startswith(self._pkg_source):
+            new_path = new_path[len(self._pkg_source)+1:]
+        return new_path
+
+    def real_path(self, path):
+        return os.path.normpath(os.path.join(self.path, path))
+
+    def is_internal_path(self, path):
+        tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
+        return tmp.startswith(self._pkg_source) or tmp.startswith(self._pkg_build)
+
+    def is_catkin_target(self, path, subdir=None):
+        catkin_dir = "/catkin-target"
+        if subdir is not None: catkin_dir = os.path.join(catkin_dir, subdir)
+        return os.path.normpath(path).startswith(os.path.normpath(catkin_dir))
 
 class CMakeLinter(object):
     def __init__(self, env):
@@ -123,12 +145,11 @@ class CMakeLinter(object):
 
     def _include_file(self, info, args):
         opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
-        incl_file = args[0]
-        if not "/" in incl_file and not "." in incl_file:
+        if not "/" in args[0] and not "." in args[0]:
             incl_file = "NOTFOUND"
         else:
-            if incl_file.startswith("/find-path"): return
-            if incl_file.startswith("/pkg-source/"): incl_file = incl_file[12:]
+            incl_file = info.package_path(args[0])
+            if incl_file.startswith("%sfind-path" % os.path.sep): return
             skip_parsing = False
             if info.manifest.name in self._include_blacklist:
                 for glob_pattern in self._include_blacklist[info.manifest.name]:
