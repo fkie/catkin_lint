@@ -1,3 +1,19 @@
+Version 1.2.5
+
+  * Warn about subprojects
+  * Support for add_subdirectory() commands
+  * Support for multi-line strings
+  * Add common path functions to LintInfo
+
+Version 1.2.4
+
+  * Parser support for escaped characters
+  * Add option to run additional lint checks
+  * Parser support for include()
+  * Fix improper handling of Windows EOL
+  * Build check for existing source files
+  * Move debian folder to its own branch
+
 Version 1.2.3
 
   * Allow parentheses in command arguments

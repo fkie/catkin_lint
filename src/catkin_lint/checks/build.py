@@ -37,12 +37,12 @@ def includes(linter):
         info.build_includes = set([])
     def on_include_directories(info, cmd, args):
         _, args = cmake_argparse(args, { "AFTER" : "-", "BEFORE" : "-", "SYSTEM" : "-" })
-        info.build_includes |= set([ os.path.normpath(os.path.join("/pkg-source", d)) for d in args])
+        info.build_includes |= set([ info.package_path(d) for d in args])
     def on_final(info):
         for incl in info.build_includes:
-            if not incl.startswith("/pkg-source"): continue
-            if not os.path.isdir(os.path.join(info.path, incl[12:])):
-                info.report (ERROR, "MISSING_BUILD_INCLUDE_PATH", path="./%s" % incl[12:])
+            if os.path.isabs(incl) or not incl: continue
+            if not os.path.isdir(info.real_path(incl)):
+                info.report (ERROR, "MISSING_BUILD_INCLUDE_PATH", path="%s" % incl)
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("include_directories", on_include_directories)
@@ -74,9 +74,9 @@ def targets(linter):
             info.target_links[args[0]] = set([])
     def on_target_link_libraries(info, cmd, args):
         if not args[0] in info.target_links: info.target_links[args[0]] = set([])
-        info.target_links[args[0]] |= set([ d for d in args[1:] if not d.startswith("/") ])
+        info.target_links[args[0]] |= set([ d for d in args[1:] if not os.path.isabs(d) ])
     def on_final(info):
-        if (info.executables or info.libraries) and info.catkin_components and not "/catkin-includes" in info.build_includes:
+        if (info.executables or info.libraries) and info.catkin_components and not os.path.normpath("/catkin-includes") in info.build_includes:
             info.report(ERROR, "MISSING_CATKIN_INCLUDE")
 
     linter.require(includes)
@@ -95,18 +95,16 @@ def source_files(linter):
         opts, args = cmake_argparse(args, { "WIN32": "-", "MACOSX_BUNDLE": "-", "EXCLUDE_FROM_ALL": "-"})
         for source_file in args[1:]:
             if not source_file: continue
-            if source_file.startswith("/pkg-source"):
-                source_file = source_file[12:]
+            source_file = info.package_path(source_file)
             if os.path.isabs(source_file): continue
-            if not os.path.isfile(os.path.join(info.path, source_file)):
+            if not os.path.isfile(info.real_path(source_file)):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
     def on_add_library(info, cmd, args):
         if "IMPORTED" in args: return
         opts, args = cmake_argparse(args, { "STATIC": "-", "SHARED": "-", "MODULE": "-", "EXCLUDE_FROM_ALL": "-"})
         for source_file in args[1:]:
             if not source_file: continue
-            if source_file.startswith("/pkg-source"):
-                source_file = source_file[12:]
+            source_file = info.package_path(source_file)
             if os.path.isabs(source_file): continue
             if not os.path.isfile(os.path.join(info.path, source_file)):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
@@ -117,7 +115,7 @@ def source_files(linter):
 
 def link_directories(linter):
     def on_link_directories(info, cmd, args):
-        externals = [ p for p in args if os.path.isabs(p) and not p.startswith("/pkg-") ]
+        externals = [ p for p in args if not info.is_internal_path(p) ]
         if externals:
             info.report (ERROR, "EXTERNAL_LINK_DIRECTORY")
         else:
@@ -180,12 +178,12 @@ def exports(linter):
                 info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
             elif not pkg in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
                 info.report(ERROR, "UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg)
-        includes = [ os.path.join("/pkg-source", d) for d in opts["INCLUDE_DIRS"] ]
-        ext_includes = [ d for d in includes if not d.startswith("/pkg-") ]
+        includes = [ info.package_path(d) for d in opts["INCLUDE_DIRS"] ]
+        ext_includes = [ d for d in includes if not info.is_internal_path(d) ]
         if ext_includes:
             info.report(ERROR, "EXTERNAL_INCLUDE_PATH")
         info.export_libs |= set(opts["LIBRARIES"])
-        info.export_includes |= set([os.path.normpath(d) for d in includes if d.startswith("/pkg-source") ])
+        info.export_includes |= set([d for d in includes if not os.path.isabs(d) ])
         info.export_packages |= set(opts["CATKIN_DEPENDS"])
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
     def on_final(info):
@@ -197,8 +195,8 @@ def exports(linter):
         if info.export_includes and info.libraries and not info.export_libs:
             info.report(WARNING, "MISSING_EXPORT_LIB")
         for incl in info.export_includes:
-            if not os.path.isdir(os.path.join(info.path, incl[12:])):
-                info.report (ERROR, "MISSING_EXPORT_INCLUDE_PATH", path="./%s" % incl[12:])
+            if not os.path.isdir(info.real_path(incl)):
+                info.report (ERROR, "MISSING_EXPORT_INCLUDE_PATH", path=incl)
         for lib in info.export_libs:
             if not lib in info.targets: continue
             if info.target_outputs[lib] != lib:
@@ -250,15 +248,15 @@ def installs(linter):
             install_type = "DIRECTORY"
         if opts["FILES"]:
             install_type = "FILES"
-            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], f)) for f in opts["FILES"] ])
+            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], info.package_path(f))) for f in opts["FILES"] ])
         if opts["TARGETS"]:
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
         for dest in [ "DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION" ]:
             if opts[dest] is None: continue
-            if not opts[dest].startswith("/catkin-target/"):
+            if not info.is_catkin_target(opts[dest]):
                 info.report(WARNING, "INSTALL_DESTINATION", type=install_type, dest=dest)
-            if opts[dest].startswith("/catkin-target/include"):
+            if info.is_catkin_target(opts[dest], "include"):
                 info.install_includes = True
     def on_final(info):
         for lib in info.export_libs:
@@ -270,7 +268,7 @@ def installs(linter):
             info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
         if info.executables or info.libraries:
             for incl in info.export_includes - info.build_includes:
-                info.report (WARNING, "MISSING_BUILD_INCLUDE", path="./%s" % incl[12:])
+                info.report (WARNING, "MISSING_BUILD_INCLUDE", path="%s" % incl[12:])
         if info.export_includes and not info.install_includes:
             info.report (ERROR if "install" in info.commands else NOTICE, "MISSING_INSTALL_INCLUDE")
         for target, depends in iteritems(info.target_links):

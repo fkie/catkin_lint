@@ -318,6 +318,21 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(other_catkin)
             find_package(other_system)
             catkin_package(
+            INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
+            CATKIN_DEPENDS other_catkin
+            DEPENDS other_system
+            )
+            """,
+        checks=cc.exports)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin)
+            find_package(other_system)
+            catkin_package(
             INCLUDE_DIRS missing_include
             CATKIN_DEPENDS other_catkin
             DEPENDS other_system

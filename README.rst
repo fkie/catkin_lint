@@ -12,7 +12,8 @@ an ongoing effort to aid developers with their ROS packaging
 Installation
 ============
 
-**catkin_lint** is available as `PyPI package <https://pypi.python.org/pypi/catkin_lint>`_.
+**catkin_lint** is available as `PyPI package <https://pypi.python.org/pypi/catkin_lint>`_
+and `Ubuntu PPA package <https://launchpad.net/~roehling/+archive/latest>`_.
 It can also be downloaded from `GitHub <https://github.com/fkie/catkin_lint>`_
 and installed manually with ``python setup.py install``.
 
