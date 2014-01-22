@@ -6,6 +6,7 @@ sys.stderr = sys.stdout
 from catkin_lint.linter import CMakeLinter
 from .helper import create_env, create_manifest, mock_lint
 import catkin_lint.checks.build as cc
+from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
 
 try:
     from mock import patch
@@ -32,6 +33,35 @@ class LinterTest(unittest.TestCase):
             }, checks=cc.all
         )
         self.assertEqual([], result)
+
+    def test_macro(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            macro(fun) endmacro()
+            """, checks=cc.all
+        )
+        self.assertEqual([ "UNSUPPORTED_CMD" ], result)
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "macro()")
+
+
+    def test_function(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            function(fun) endfunction()
+            """, checks=cc.all
+        )
+        self.assertEqual([ "UNSUPPORTED_CMD" ], result)
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "function()")
 
     @patch("os.path.isdir", lambda x: x in [ "/mock-path/src", "/mock-path/include" ])
     @patch("os.path.isfile", lambda x: x in  [ "/other-path/CMakeLists.txt", "/mock-path/src/CMakeLists.txt", "/mock-path/src/mock.cpp" ])
