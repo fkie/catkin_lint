@@ -57,9 +57,6 @@ class Message(object):
 
 class LintInfo(object):
 
-    _pkg_source = "%spkg-source" % os.path.sep
-    _pkg_build = "%spkg-build" % os.path.sep
-
     def __init__(self, env):
         self.env = env
         self.path = None
@@ -75,6 +72,8 @@ class LintInfo(object):
         self.libraries = set([])
         self.var = {}
         self.messages = []
+        self._pkg_source = os.path.normpath("/pkg-source")
+        self._pkg_build = os.path.normpath("/pkg-build")
 
     def report(self, level, msg_id, **kwargs):
         id, text, description = msg(msg_id, **kwargs)
@@ -151,7 +150,7 @@ class CMakeLinter(object):
             incl_file = "NOTFOUND"
         else:
             incl_file = info.package_path(args[0])
-            if incl_file.startswith("%sfind-path" % os.path.sep): return
+            if incl_file.startswith(os.path.normpath("/find-path")): return
             skip_parsing = False
             if info.manifest.name in self._include_blacklist:
                 for glob_pattern in self._include_blacklist[info.manifest.name]:
