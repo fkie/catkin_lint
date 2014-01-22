@@ -32,7 +32,7 @@ setup(
                     "License :: OSI Approved :: BSD License",
                     "Topic :: Software Development :: Quality Assurance",
                     "Environment :: Console",
-                    "Operating System :: POSIX",
+                    "Operating System :: OS Independent",
                     "Programming Language :: Python",
                     "Programming Language :: Python :: 3"
                   ]
