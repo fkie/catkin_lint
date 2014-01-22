@@ -10,6 +10,10 @@ try:
 except ImportError:
     from unittest.mock import patch
 
+import os.path
+import posixpath
+import ntpath
+
 
 class ChecksMiscTest(unittest.TestCase):
 
@@ -43,8 +47,8 @@ class ChecksMiscTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) project(mock2)", checks=cc.singleton_commands)
         self.assertEqual([ "DUPLICATE_CMD" ], result)
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/FindLocal.cmake")
-    def test_cmake_includes(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/FindLocal.cmake"))
+    def do_cmake_includes(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, 
@@ -68,3 +72,11 @@ class ChecksMiscTest(unittest.TestCase):
             """,
         checks=cc.cmake_includes)
         self.assertEqual([ "FIND_BY_INCLUDE" ], result)
+
+    @patch("os.path", posixpath)
+    def test_posix(self):
+        self.do_cmake_includes()
+
+    @patch("os.path", ntpath)
+    def test_windows(self):
+        self.do_cmake_includes()

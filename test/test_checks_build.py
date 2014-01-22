@@ -5,6 +5,10 @@ from .helper import create_env, create_manifest, mock_lint
 import sys
 sys.stderr = sys.stdout
 
+import os.path
+import posixpath
+import ntpath
+
 try:
     from mock import patch
 except ImportError:
@@ -12,8 +16,8 @@ except ImportError:
 
 class ChecksBuildTest(unittest.TestCase):
 
-    @patch("os.path.isdir", lambda x: x == "/mock-path/include")
-    def test_includes(self):
+    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
+    def do_includes(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "include_directories(include)", checks=cc.includes)
@@ -24,8 +28,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/src/existing.cpp")
-    def test_source_files(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/existing.cpp"))
+    def do_source_files(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "add_executable(mock src/existing.cpp) add_library(mock_lib src/existing.cpp)", checks=cc.source_files)
@@ -38,8 +42,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_FILE" ], result)
 
 
-    @patch("os.path.isdir", lambda x: x == "/mock-path/in_package")
-    def test_link_directories(self):
+    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/in_package"))
+    def do_link_directories(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "link_directories(in_package)", checks=cc.link_directories)
@@ -48,8 +52,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "EXTERNAL_LINK_DIRECTORY" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/FindLocal.cmake")
-    def test_depends(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/FindLocal.cmake"))
+    def do_depends(self):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ])
 
@@ -113,8 +117,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNCONFIGURED_BUILD_DEPEND" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/src/mock.cpp")
-    def test_targets(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
+    def do_targets(self):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ], run_depends=[ "other_catkin" ])
         result = mock_lint(env, pkg,
@@ -177,8 +181,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "INVALID_META_COMMAND" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/src/mock.cpp")
-    def test_name_check(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
+    def do_name_check(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -214,9 +218,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "REDUNDANT_LIB_PREFIX" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x in [ "/mock-path/bin/script", "/mock-path/share/file", "/mock-path/src/mock.cpp" ])
-    @patch("os.path.isdir", lambda x: x == "/mock-path/include")
-    def test_installs(self):
+    @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/mock.cpp") ])
+    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
+    def do_installs(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -289,9 +293,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNINSTALLED_DEPEND" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/src/mock.cpp")
-    @patch("os.path.isdir", lambda x: x == "/mock-path/include")
-    def test_exports(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
+    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
+    def do_exports(self):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin", "other_system" ], run_depends=[ "other_catkin", "other_system" ])
         result = mock_lint(env, pkg,
@@ -466,6 +470,45 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "EXPORT_LIB_NOT_LIB" ], result)
 
 
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/config.xml"))
+    def do_plugins(self):
+        from catkin_pkg.package import Export
+        env = create_env()
+        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg, "", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
+
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
+
+        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_EXPORT_PREFIX" ], result)
+
+        pkg = create_manifest("mock")
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_DEPEND" ], result)
+
+        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
+        plugin = Export("other_catkin")
+        plugin.attributes = { "plugin": "${prefix}/missing_config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
+
+
     def test_message_generation(self):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "message_generation", "other_catkin" ], run_depends=[ "message_runtime", "other_catkin" ])
@@ -610,40 +653,26 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/config.xml")
-    def test_plugins(self):
-        from catkin_pkg.package import Export
-        env = create_env()
-        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
-        plugin = Export("other_catkin")
-        plugin.attributes = { "plugin": "${prefix}/config.xml" }
-        pkg.exports += [ plugin ]
-        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
-        self.assertEqual([], result)
+    @patch("os.path", posixpath)
+    def test_posix(self):
+        self.do_includes()
+        self.do_source_files()
+        self.do_link_directories()
+        self.do_depends()
+        self.do_targets()
+        self.do_name_check()
+        self.do_installs()
+        self.do_exports()
+        self.do_plugins()
 
-        result = mock_lint(env, pkg, "", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
-
-        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
-
-        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
-        plugin = Export("other_catkin")
-        plugin.attributes = { "plugin": "config.xml" }
-        pkg.exports += [ plugin ]
-        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_EXPORT_PREFIX" ], result)
-
-        pkg = create_manifest("mock")
-        plugin = Export("other_catkin")
-        plugin.attributes = { "plugin": "${prefix}/config.xml" }
-        pkg.exports += [ plugin ]
-        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_DEPEND" ], result)
-
-        pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
-        plugin = Export("other_catkin")
-        plugin.attributes = { "plugin": "${prefix}/missing_config.xml" }
-        pkg.exports += [ plugin ]
-        result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
+    @patch("os.path", ntpath)
+    def test_windows(self):
+        self.do_includes()
+        self.do_source_files()
+        self.do_link_directories()
+        self.do_depends()
+        self.do_targets()
+        self.do_name_check()
+        self.do_installs()
+        self.do_exports()
+        self.do_plugins()

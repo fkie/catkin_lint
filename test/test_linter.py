@@ -8,6 +8,10 @@ from .helper import create_env, create_manifest, mock_lint
 import catkin_lint.checks.build as cc
 from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
 
+import os.path
+import posixpath
+import ntpath
+
 try:
     from mock import patch
 except ImportError:
@@ -22,8 +26,8 @@ class LinterTest(unittest.TestCase):
         linter = CMakeLinter(create_env())
         self.assertRaises(RuntimeError, linter.require, a)
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/broken.cmake")
-    def test_blacklist(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
+    def do_blacklist(self):
         env = create_env()
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg,
@@ -63,9 +67,9 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([ "UNSUPPORTED_CMD" ], result)
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "function()")
 
-    @patch("os.path.isdir", lambda x: x in [ "/mock-path/src", "/mock-path/include" ])
-    @patch("os.path.isfile", lambda x: x in  [ "/other-path/CMakeLists.txt", "/mock-path/src/CMakeLists.txt", "/mock-path/src/mock.cpp" ])
-    def test_subdir(self):
+    @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])
+    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/mock.cpp") ])
+    def do_subdir(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -130,3 +134,14 @@ class LinterTest(unittest.TestCase):
             }, checks=cc.all
         )
         self.assertEqual([ "SUBPROJECT" ], result)
+
+
+    @patch("os.path", posixpath)
+    def test_posix(self):
+        self.do_blacklist()
+        self.do_subdir()
+
+    @patch("os.path", ntpath)
+    def test_windows(self):
+        self.do_blacklist()
+        self.do_subdir()
