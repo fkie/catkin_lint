@@ -3,8 +3,7 @@ python:
   - "2.7"
   - "3.3"
 install:
-  - pip install nose coverage argparse catkin_pkg
+  - pip install -M coverage argparse catkin_pkg
 script:
-  - coverage run `which nosetests` -s --tests test
-  - coverage report `find src -name "*.py"`
+  - nosetests --with-coverage --cover-package=catkin_lint test
 
