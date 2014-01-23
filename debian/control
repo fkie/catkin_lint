@@ -4,7 +4,7 @@ Priority: extra
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
 Build-Depends: debhelper (>= 8.0.0), python-all, python3-all
 Homepage: https://github.com/fkie/catkin_lint
-X-Python-Version: >= 2.6
+X-Python-Version: >= 2.7
 X-Python3-Version: >= 3.2
 Standards-Version: 3.9.4
 
