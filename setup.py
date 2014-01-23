@@ -25,7 +25,7 @@ setup(
   scripts       = [ "bin/catkin_lint" ],
   data_files    = [ ( "/etc/bash_completion.d", ["bash/catkin_lint"] ) ],
   version       = catkin_lint_version,
-  requires      = [ "argparse", "catkin_pkg" ],
+  requires      = [ "catkin_pkg" ],
   classifiers   = [
                     "Development Status :: 4 - Beta",
                     "Intended Audience :: Developers",
