@@ -1,7 +1,10 @@
 language: python
 python:
+  - "2.6"
   - "2.7"
+  - "3.2"
   - "3.3"
+  - "pypy"
 install:
   - pip install -M coverage argparse catkin_pkg
 script:
