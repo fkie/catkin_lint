@@ -331,7 +331,7 @@ class CatkinEnvironment(object):
             for e in m.exports:
                 if e.tagname == "build_type" and e.content != "catkin":
                     is_catkin = False
-                break
+                    break
             if is_catkin:
                 self.known_catkin_pkgs.add(m.name)
                 pm = ( os.path.join(path, p), m )
