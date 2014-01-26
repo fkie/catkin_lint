@@ -1,3 +1,10 @@
+catkin-lint (1.2.6-1) unstable; urgency=low
+
+  * New release
+  * Bump required Python version to 2.7
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Sun, 26 Jan 2014 23:29:11 +0100
+
 catkin-lint (1.2.5-1) unstable; urgency=low
 
   * Warn about subprojects
