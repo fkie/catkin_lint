@@ -5,6 +5,10 @@ from .helper import create_env, create_manifest, mock_lint
 import sys
 sys.stderr = sys.stdout
 
+import os.path
+import posixpath
+import ntpath
+
 try:
     from mock import patch
 except ImportError:
@@ -23,8 +27,8 @@ class ChecksPythonTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_python_setup()", checks=cc.setup)
         self.assertEqual([ "MISSING_FILE" ], result)
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/setup.py")
-    def test_setup_with_setup_py(self):
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/setup.py"))
+    def do_setup_with_setup_py(self):
         env = create_env()
         pkg = create_manifest("mock")
 
@@ -41,3 +45,10 @@ class ChecksPythonTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(catkin) catkin_python_setup()", checks=cc.setup)
         self.assertEqual([], result)
 
+    @patch("os.path", posixpath)
+    def test_posix(self):
+        self.do_setup_with_setup_py()
+
+    @patch("os.path", ntpath)
+    def test_windows(self):
+        self.do_setup_with_setup_py()

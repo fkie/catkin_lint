@@ -60,7 +60,7 @@ class ExplainedTextOutput(TextOutput):
         TextOutput.message(self, msg, file)
         if not msg.id in self.explained:
             self.explained.add(msg.id)
-            sys.stdout.write("%s\n" % textwrap.fill(msg.description, initial_indent="     * ", subsequent_indent="     * "))
+            file.write("%s\n" % textwrap.fill(msg.description, initial_indent="     * ", subsequent_indent="     * "))
 
 
 class XmlOutput(object):

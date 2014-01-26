@@ -1,6 +1,9 @@
 from catkin_lint.linter import CatkinEnvironment, CMakeLinter 
 from catkin_pkg.package import Package, Dependency, Person, Export
 from catkin_lint.checks import all
+from catkin_lint.util import iteritems
+
+import os
 
 def create_env(catkin_pkgs=[ "catkin", "message_generation", "message_runtime", "other_catkin", "other_msgs" ], system_pkgs=[ "other_system" ]):
     env = CatkinEnvironment(rosdep_view={ "#" : "#" })
@@ -25,6 +28,11 @@ def create_manifest(name, description="", buildtool_depends=[ "catkin" ], build_
 
 def mock_lint(env, manifest, cmakelist, checks=all, full_result=False):
     linter = CMakeLinter(env)
+    if type(cmakelist) is dict:
+        tmp = {}
+        for key, value in iteritems(cmakelist):
+            tmp[os.path.normpath(key)] = value
+        cmakelist = tmp
     def get_cmakelist(filename):
         if type(cmakelist) is dict:
             if filename in cmakelist:
@@ -32,11 +40,11 @@ def mock_lint(env, manifest, cmakelist, checks=all, full_result=False):
             else:
                 return ""
         else:
-            if filename == "/mock-path/CMakeLists.txt": return cmakelist
+            if filename == os.path.normpath("/mock-path/CMakeLists.txt"): return cmakelist
             return ""
     linter._read_file = get_cmakelist
     linter.require(checks)
-    linter.lint ("/mock-path", manifest)
+    linter.lint (os.path.normpath("/mock-path"), manifest)
     if full_result:
         return linter.messages
     else:

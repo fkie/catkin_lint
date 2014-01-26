@@ -45,12 +45,17 @@ _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), 
 class SyntaxError(RuntimeError):
     pass
 
+def _escape(s):
+    return re.sub(r'([\\$"])',r"\\\1", s)
+
+def _unescape(s):
+    return re.sub(r'\\(.)', r"\1", s)
+
 def _resolve(s, var):
     mo = _find_var(s)
     while mo is not None:
-        key = mo.group(1)
-        value = var[key] if key in var else ""
-        value = re.sub(r"([\\$])", r"\\\1", value)
+        key = _unescape(mo.group(1))
+        value = _escape(var[key]) if key in var else ""
         s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = _find_var(s)
     return s
@@ -73,8 +78,6 @@ def _lexer(s):
     if pos != len(s):
         raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
 
-def _unescape(s):
-    return re.sub(r'\\(.)', r"\1", s)
 
 def parse(s, var=None):
     state = 0
