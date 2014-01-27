@@ -108,7 +108,7 @@ of features:
 
 * Unit tests with full coverage
 * Check proper usage of external libraries (e.g. Qt)
-* Support for CMake functions and macros
+* Support for CMake functions
 
 If you would like to contribute, you are very welcome to do so.
 Please contact `@roehling <https://github.com/roehling>`_ first

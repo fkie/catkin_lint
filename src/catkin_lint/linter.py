@@ -29,7 +29,7 @@ import sys
 from functools import total_ordering
 from fnmatch import fnmatch
 from catkin_pkg.packages import find_packages
-from .cmake import parse as cmake_parse, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
+from .cmake import ParserContext, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
 from .util import iteritems
 
@@ -116,6 +116,7 @@ class CMakeLinter(object):
         self._added_checks = set([])
         self._catch_circular_deps = set([])
         self._include_blacklist = { "catkin" : [ "*" ]}
+        self._ctx = ParserContext()
 
     def require(self, check):
         if check in self._catch_circular_deps:
@@ -186,7 +187,7 @@ class CMakeLinter(object):
         old_src_dir = info.var["CMAKE_CURRENT_SOURCE_DIR"]
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info.var["CMAKE_CURRENT_SOURCE_DIR"], subdir)
-            info.subdir = subdir 
+            info.subdir = subdir
             self._parse_file (info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = old_src_dir
@@ -196,29 +197,13 @@ class CMakeLinter(object):
         save_file = info.file
         save_line = info.line
         try:
-            info.file = os.path.relpath(filename, info.path)
+            cur_file = os.path.relpath(filename, info.path)
+            info.file = cur_file
             info.line = 0
             content = self._read_file(filename)
-            in_macro = False
-            in_function = False
-            for cmd, args, line in cmake_parse(content, info.var):
+            for cmd, args, fname, line in self._ctx.parse(content, var=info.var, filename=cur_file):
+                info.file = fname
                 info.line = line
-                if in_macro:
-                    if cmd == "endmacro": in_macro = False
-                    continue
-                else:
-                    if cmd == "macro":
-                        in_macro = True
-                        info.report(NOTICE, "UNSUPPORTED_CMD", cmd="macro")
-                        continue
-                if in_function:
-                    if cmd == "endfunction": in_function = False
-                    continue
-                else:
-                    if cmd == "function":
-                        in_function = True
-                        info.report(NOTICE, "UNSUPPORTED_CMD", cmd="function")
-                        continue
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
                     if info.subdir:
@@ -256,12 +241,6 @@ class CMakeLinter(object):
                     info.var[args[0]] = "/find-libs/library.so"
                 if cmd == "find_file":
                     info.var[args[0]] = "/find-file/filename.ext"
-            if in_macro:
-                raise CMakeSyntaxError("unexpected end of file while looking for endmacro()")
-            if in_function:
-                raise CMakeSyntaxError("unexpected end of file while looking for endfunction()")
-        except CMakeSyntaxError as err:
-            raise CMakeSyntaxError ("%s: %s" % (info.file, str(err)))
         finally:
             info.file = save_file
             info.line = save_line
@@ -287,6 +266,7 @@ class CMakeLinter(object):
           "CATKIN_GLOBAL_PYTHON_DESTINATION" : "/catkin-target/lib/python",
           "CATKIN_GLOBAL_SHARE_DESTINATION" : "/catkin-target/share",
         }
+        self.ctx = ParserContext()
         try:
             for cb in self._init_hooks:
                 cb(info)

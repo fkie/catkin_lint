@@ -40,34 +40,6 @@ class LinterTest(unittest.TestCase):
         )
         self.assertEqual([], result)
 
-    def test_macro(self):
-        env = create_env()
-        pkg = create_manifest("mock")
-        result = mock_lint(env, pkg,
-            """
-            project(mock)
-            find_package(catkin REQUIRED)
-            catkin_package()
-            macro(fun) endmacro()
-            """, checks=cc.all
-        )
-        self.assertEqual([ "UNSUPPORTED_CMD" ], result)
-        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "macro()")
-
-
-    def test_function(self):
-        env = create_env()
-        pkg = create_manifest("mock")
-        result = mock_lint(env, pkg,
-            """
-            project(mock)
-            find_package(catkin REQUIRED)
-            catkin_package()
-            function(fun) endfunction()
-            """, checks=cc.all
-        )
-        self.assertEqual([ "UNSUPPORTED_CMD" ], result)
-        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "function()")
 
     @patch("os.path.isdir", lambda x: x == "/" or x == "\\")
     @patch("os.path.realpath", lambda x: x)

@@ -37,6 +37,13 @@ def word_split(s):
     result.append(s.lower())
     return result
 
+try:
+    from itertools import zip_longest
+except ImportError:
+    def zip_longest(*args):
+        return map(None, *args)
+
+
 # Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
 try:
     iteritems = dict.iteritems
