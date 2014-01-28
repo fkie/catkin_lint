@@ -189,6 +189,14 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd", [ "one", "two", "three" ], 1) ]
         )
         self.assertEqual(
+            self.parse_all("cmd(${missing})"),
+            [ ("cmd", [], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd("${missing}")'),
+            [ ("cmd", [ "" ], 1) ]
+        )
+        self.assertEqual(
             self.parse_all("${fun}()", { "fun" : "cmd"}),
             [ ("cmd", [], 1) ]
         )

@@ -147,6 +147,7 @@ class CMakeLinter(object):
 
     def _include_file(self, info, args):
         opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
+        if not args: return
         if not "/" in args[0] and not "." in args[0]:
             incl_file = "NOTFOUND"
         else:

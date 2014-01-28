@@ -90,7 +90,8 @@ def _resolve_args(arg_tokens, var):
             args.append(_unescape(val))
         elif typ == "WORD":
             val = _resolve_vars(val, var)
-            args += re.split(r";|[ \t]+", _unescape(val))
+            if val:
+                args += re.split(r";|[ \t]+", _unescape(val))
         elif typ != "SEMICOLON":
             args.append(val)
     return args
