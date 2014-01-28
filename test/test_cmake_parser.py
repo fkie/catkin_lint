@@ -76,6 +76,14 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd", [ "one", "two", "three" ], 1) ]
         )
         self.assertEqual(
+            self.parse_all('macro(test arg) cmd(${arg}) cmd(${ARGN}) endmacro() test(one;two;three)'),
+            [ ("cmd", [ "one" ], 1), ("cmd", [ "two", "three" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('macro(test arg1 arg2) cmd("${arg2}") cmd(${ARGN}) endmacro() test(one)'),
+            [ ("cmd", [ "" ], 1), ("cmd", [], 1) ]
+        )
+        self.assertEqual(
             self.parse_all('macro(test arg) cmd("${arg}") endmacro() test("one;two;three")'),
             [ ("cmd", [ "one;two;three" ], 1) ]
         )
