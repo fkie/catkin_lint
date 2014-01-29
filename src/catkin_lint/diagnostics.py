@@ -464,7 +464,8 @@ adds subdir B, which adds subdir A again.
 "SUBPROJECT" : ( "subdirectory '%(subdir)s' contains a subproject",
 """\
 Your package has an independent subproject. This can interact
-with catkin in unusual ways and is strongly discouraged.
+with catkin in unusual ways and is strongly discouraged. No
+further checks are performed in this subdirectory.
 """
 ),
 "ENV_VAR" : ( "environment variables should not be used",
