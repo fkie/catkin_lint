@@ -28,6 +28,18 @@ class LinterTest(unittest.TestCase):
         linter = CMakeLinter(create_env())
         self.assertRaises(RuntimeError, linter.require, a)
 
+    def test_env_var(self):
+        env = create_env()
+        pkg = create_manifest("catkin")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            set(bla $ENV{PATH})
+            """, checks=cc.all)
+        self.assertEqual([ "ENV_VAR"], result)
+
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
     def do_blacklist(self):
         env = create_env()

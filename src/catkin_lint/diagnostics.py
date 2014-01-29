@@ -467,6 +467,12 @@ Your package has an independent subproject. This can interact
 with catkin in unusual ways and is strongly discouraged.
 """
 ),
+"ENV_VAR" : ( "environment variables should not be used",
+"""\
+The behavior of your build should not depend on any
+environment variables.
+"""
+),
 "PKG_CONFIG" : ( "pkg-config should not be used",
 """\
 Although CMake can invoke pkg-config to detect other modules,

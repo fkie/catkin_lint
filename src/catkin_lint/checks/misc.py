@@ -80,7 +80,7 @@ def special_vars(linter):
         for key in critical_vars:
             info.var[key] = "@%s@" % key
     def on_set_or_unset(info, cmd, args):
-        if args[0] in immutable_vars:
+        if args[0] in immutable_vars or args[0].startswith("ENV{"):
             info.report(ERROR, "IMMUTABLE_VAR", var=args[0])
         if args[0] in critical_vars:
             value = ';'.join(args[1:])

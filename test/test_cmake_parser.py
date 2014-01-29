@@ -189,6 +189,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd("\\"")'),
             [ ("cmd", [ '"' ], 1) ]
         )
+        self.assertEqual(
+            self.parse_all("cmd(ENV{PATH})"),
+            [ ("cmd", [ "ENV{PATH}" ], 1) ]
+        )
         self.assertRaises(cmake.SyntaxError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
@@ -239,6 +243,10 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual(
             self.parse_all('cmd(fun ${args})', { "args" : "stuff"}),
             [ ("cmd", [ "fun", "stuff" ], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all("cmd($ENV{PATH})"),
+            [ ("cmd", [ "$ENV{PATH}" ], 1) ]
         )
 
     def test_comments(self):

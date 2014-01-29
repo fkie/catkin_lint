@@ -30,6 +30,8 @@ class ChecksMiscTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock)", checks=cc.special_vars)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg, "project(mock) set(ENV{PATH} wrong)", checks=cc.special_vars)
+        self.assertEqual([ "IMMUTABLE_VAR" ], result)
         result = mock_lint(env, pkg, "project(mock) set(CMAKE_BUILD_TYPE wrong)", checks=cc.special_vars)
         self.assertEqual([ "IMMUTABLE_VAR" ], result)
         result = mock_lint(env, pkg, "project(mock) set(CMAKE_CXX_FLAGS wrong)", checks=cc.special_vars)
