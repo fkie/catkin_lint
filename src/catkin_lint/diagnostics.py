@@ -467,6 +467,12 @@ Your package has an independent subproject. This can interact
 with catkin in unusual ways and is strongly discouraged.
 """
 ),
+"PKG_CONFIG" : ( "pkg-config should not be used",
+"""\
+Although CMake can invoke pkg-config to detect other modules,
+this does not work well with catkin, as pkg-config may require
+you to add link directories.
+"""),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\
 An operating system error has occured. This is not a linting problem per se but

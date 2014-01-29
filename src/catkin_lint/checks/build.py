@@ -234,6 +234,13 @@ def name_check(linter):
     linter.add_final_hook(on_final)
 
 
+def pkg_config(linter):
+    def on_pkg_check_modules(info, cmd, args):
+        info.report(WARNING, "PKG_CONFIG")
+
+    linter.add_command_hook("pkg_check_modules", on_pkg_check_modules)
+
+
 def installs(linter):
     def on_init(info):
         info.install_targets = set([])
@@ -370,6 +377,7 @@ def all(linter):
     linter.require(depends)
     linter.require(exports)
     linter.require(name_check)
+    linter.require(pkg_config)
     linter.require(installs)
     linter.require(plugins)
     linter.require(message_generation)
