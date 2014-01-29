@@ -72,6 +72,7 @@ class LintInfo(object):
         self.executables = set([])
         self.libraries = set([])
         self.var = {}
+        self.parent_var = {}
         self.messages = []
         self._pkg_source = os.path.normpath("/pkg-source")
         self._pkg_build = os.path.normpath("/pkg-build")
@@ -186,13 +187,16 @@ class CMakeLinter(object):
             return
         info.subdirs.add(subdir)
         old_subdir = info.subdir
-        old_var = copy(info.var)
+        old_parent_var = info.parent_var
+        info.parent_var = info.var
+        info.var = copy(info.var)
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, subdir)
             info.subdir = subdir
             self._parse_file (info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
-            info.var = old_var
+            info.var = info.parent_var
+            info.parent_var = old_parent_var
             info.subdir = old_subdir
 
     def _parse_file(self, info, filename):
@@ -216,8 +220,13 @@ class CMakeLinter(object):
                         cb(info, cmd, args)
                 info.commands.add(cmd)
                 if cmd == "set":
-                    info.var[args[0]] = ';'.join(args[1:])
+                    opts, args = cmake_argparse(args, { "PARENT_SCOPE" : "-", "FORCE": "-", "CACHE": "*"})
+                    if opts["PARENT_SCOPE"]:
+                        info.parent_var[args[0]] = ';'.join(args[1:])
+                    else:
+                        info.var[args[0]] = ';'.join(args[1:])
                 if cmd == "unset":
+                    opts, args = cmake_argparse(args, { "CACHE": "-"})
                     info.var[args[0]] = ""
                 if cmd == "include":
                     self._include_file(info, args)
