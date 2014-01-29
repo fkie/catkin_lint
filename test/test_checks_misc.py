@@ -41,6 +41,16 @@ class ChecksMiscTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} extra)", checks=cc.special_vars)
         self.assertEqual([ "CRITICAL_VAR_APPEND" ], result)
 
+    def test_global_vars(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) option(mock_option test OFF) set(mock_global CACHE STRING)", checks=cc.global_vars)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "project(mock) set(global CACHE STRING)", checks=cc.global_vars)
+        self.assertEqual([ "GLOBAL_VAR_COLLISION" ], result)
+        result = mock_lint(env, pkg, "project(mock) option(optional test OFF)", checks=cc.global_vars)
+        self.assertEqual([ "GLOBAL_VAR_COLLISION" ], result)
+
     def test_singleton_command(self):
         env = create_env()
         pkg = create_manifest("mock")

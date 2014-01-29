@@ -25,7 +25,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import re
-from ..linter import ERROR, WARNING
+from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
 
 
@@ -94,6 +94,20 @@ def special_vars(linter):
     linter.add_command_hook("unset", on_set_or_unset)
 
 
+def global_vars(linter):
+    def on_set(info, cmd, args):
+        if not "CACHE" in args: return
+        if not info.manifest.name in args[0]:
+            info.report(NOTICE, "GLOBAL_VAR_COLLISION", var=args[0])
+
+    def on_option(info, cmd, args):
+        if not info.manifest.name in args[0]:
+            info.report(NOTICE, "GLOBAL_VAR_COLLISION", var=args[0])
+
+    linter.add_command_hook("set", on_set)
+    linter.add_command_hook("option", on_option)
+
+
 def singleton_commands(linter):
     # Singleton commands may not appear more than once
     singleton_cmds = frozenset([
@@ -127,5 +141,6 @@ def cmake_includes(linter):
 def all(linter):
     linter.require(project)
     linter.require(special_vars)
+    linter.require(global_vars)
     linter.require(singleton_commands)
     linter.require(cmake_includes)

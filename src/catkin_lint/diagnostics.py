@@ -468,6 +468,13 @@ with catkin in unusual ways and is strongly discouraged. No
 further checks are performed in this subdirectory.
 """
 ),
+"GLOBAL_VAR_COLLISION" : ( "global variable '%(var)s' should contain project name",
+"""\
+Global variables and options are stored in the cache.
+You should prefix your variable names with the project name to
+avoid name collisions with other packages.
+"""
+),
 "ENV_VAR" : ( "environment variables should not be used",
 """\
 The behavior of your build should not depend on any
