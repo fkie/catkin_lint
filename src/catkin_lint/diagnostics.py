@@ -464,9 +464,29 @@ adds subdir B, which adds subdir A again.
 "SUBPROJECT" : ( "subdirectory '%(subdir)s' contains a subproject",
 """\
 Your package has an independent subproject. This can interact
-with catkin in unusual ways and is strongly discouraged.
+with catkin in unusual ways and is strongly discouraged. No
+further checks are performed in this subdirectory.
 """
 ),
+"GLOBAL_VAR_COLLISION" : ( "global variable '%(var)s' should contain project name",
+"""\
+Global variables and options are stored in the cache.
+You should prefix your variable names with the project name to
+avoid name collisions with other packages.
+"""
+),
+"ENV_VAR" : ( "environment variables should not be used",
+"""\
+The behavior of your build should not depend on any
+environment variables.
+"""
+),
+"PKG_CONFIG" : ( "pkg-config should not be used",
+"""\
+Although CMake can invoke pkg-config to detect other modules,
+this does not work well with catkin, as pkg-config may require
+you to add link directories.
+"""),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\
 An operating system error has occured. This is not a linting problem per se but

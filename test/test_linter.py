@@ -28,6 +28,18 @@ class LinterTest(unittest.TestCase):
         linter = CMakeLinter(create_env())
         self.assertRaises(RuntimeError, linter.require, a)
 
+    def test_env_var(self):
+        env = create_env()
+        pkg = create_manifest("catkin")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            set(bla $ENV{PATH})
+            """, checks=cc.all)
+        self.assertEqual([ "ENV_VAR"], result)
+
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
     def do_blacklist(self):
         env = create_env()
@@ -40,34 +52,6 @@ class LinterTest(unittest.TestCase):
         )
         self.assertEqual([], result)
 
-    def test_macro(self):
-        env = create_env()
-        pkg = create_manifest("mock")
-        result = mock_lint(env, pkg,
-            """
-            project(mock)
-            find_package(catkin REQUIRED)
-            catkin_package()
-            macro(fun) endmacro()
-            """, checks=cc.all
-        )
-        self.assertEqual([ "UNSUPPORTED_CMD" ], result)
-        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "macro()")
-
-
-    def test_function(self):
-        env = create_env()
-        pkg = create_manifest("mock")
-        result = mock_lint(env, pkg,
-            """
-            project(mock)
-            find_package(catkin REQUIRED)
-            catkin_package()
-            function(fun) endfunction()
-            """, checks=cc.all
-        )
-        self.assertEqual([ "UNSUPPORTED_CMD" ], result)
-        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "function()")
 
     @patch("os.path.isdir", lambda x: x == "/" or x == "\\")
     @patch("os.path.realpath", lambda x: x)
@@ -103,7 +87,7 @@ class LinterTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(mock_test2 src/mock.cpp)",
               "/mock-path/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)

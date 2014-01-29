@@ -25,9 +25,31 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import re
-from .util import iteritems
+from .util import iteritems, zip_longest
+from copy import copy
+
+class SyntaxError(RuntimeError):
+    pass
+
+
+def _escape(s):
+    return re.sub(r'([\\$"])',r"\\\1", s)
+
+
+def _unescape(s):
+    return re.sub(r'\\(.)', r"\1", s)
+
 
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
+def _resolve_vars(s, var):
+    mo = _find_var(s)
+    while mo is not None:
+        key = _unescape(mo.group(1))
+        value = _escape(var[key]) if key in var else ""
+        s = s[:mo.start(0)] + value + s[mo.end(0):]
+        mo = _find_var(s)
+    return s
+
 
 _token_spec = [
     ( 'NL', r'\r\n|\r|\n' ),
@@ -40,26 +62,6 @@ _token_spec = [
     ( 'COMMENT', r'#.*?$' ),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
-
-
-class SyntaxError(RuntimeError):
-    pass
-
-def _escape(s):
-    return re.sub(r'([\\$"])',r"\\\1", s)
-
-def _unescape(s):
-    return re.sub(r'\\(.)', r"\1", s)
-
-def _resolve(s, var):
-    mo = _find_var(s)
-    while mo is not None:
-        key = _unescape(mo.group(1))
-        value = _escape(var[key]) if key in var else ""
-        s = s[:mo.start(0)] + value + s[mo.end(0):]
-        mo = _find_var(s)
-    return s
-
 def _lexer(s):
     keywords = set([])
     line = 1
@@ -79,48 +81,186 @@ def _lexer(s):
         raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
 
 
-def parse(s, var=None):
+def _resolve_args(arg_tokens, var):
+    args = []
+    for typ, val in arg_tokens:
+        if typ == "STRING":
+            val = val[1:-1]
+            val = _resolve_vars(val, var)
+            args.append(_unescape(val))
+        elif typ == "WORD":
+            val = _resolve_vars(val, var)
+            if val:
+                args += re.split(r";|[ \t]+", _unescape(val))
+        elif typ != "SEMICOLON":
+            args.append(val)
+    return args
+
+
+class Command(object):
+    def __init__(self, name, args, filename, line):
+        self.name = name
+        self.args = args
+        self.filename = filename
+        self.line = line
+
+
+class BasicBlock(object):
+    def __init__(self):
+        self.commands = []
+
+
+class Callable(BasicBlock):
+    def __init__(self, params, new_context):
+        BasicBlock.__init__(self)
+        self.name = params[0]
+        self.params = params[1:]
+        self.new_context = new_context
+
+
+def _parse_commands(s, filename):
+    commands = []
     state = 0
-    cmd = None
-    cmdline = 0
+    line = 0
     for typ, val, line in _lexer(s):
         if typ == "COMMENT": continue
         if state == 0:
             if typ != "WORD":
-                raise SyntaxError("Expected command identifier and got '%s' on line %d" % (val, line))
-            cmd = val.lower()
-            if not re.match(r'^[a-z_][a-z_0-9]*$', cmd):
-                raise SyntaxError("Invalid command identifier '%s' on line %d" % (val, line))
-            args = []
-            state = 1
+                raise SyntaxError("%s(%d): expected command identifier and got '%s'" % (filename, line, val))
+            cmdname = val.lower()
+            cmdargs = []
             cmdline = line
+            state = 1
         elif state == 1:
             if typ != "LPAREN":
-                raise SyntaxError("Expected '(' and got '%s' on line %d" % (val, line))
+                raise SyntaxError("%s(%d): expected '(' and got '%s'" % (filename, line, val))
             paren = 1
             state = 2
         elif state == 2:
             if typ == "LPAREN":
                 paren += 1
-                args.append("(")
             elif typ == "RPAREN":
                 paren -= 1
                 if paren == 0:
-                    yield ( cmd, args, cmdline )
+                    commands.append(Command(cmdname, cmdargs, filename, cmdline))
                     state = 0
+                    continue
+            cmdargs.append((typ, val))
+    if state == 1:
+        raise SyntaxError("%s(%d): expected '(' and got end of file" % (filename, line))
+    if state == 2:
+        raise SyntaxError("%s(%d): expected ')' and got end of file" % (filename, line))
+    return commands
+
+
+def _parse_block(filename, cmds, block_name, result_type, *args):
+    result = result_type(*args)
+    while cmds:
+        cmd = cmds.pop(0)
+        if cmd.name == "end%s" % block_name: return result
+        result.commands.append(cmd)
+    raise SyntaxError("%s: expected 'end%s()' and got end of file" % (filename, block_name))
+
+
+class ParserContext(object):
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.callable = copy(parent.callable) if parent is not None else {}
+        self._call_stack = set([])
+
+    def call(self, name, args, var=None, skip_callable=False):
+        if name in self._call_stack: return
+        if var is None: var = {}
+        f = self.callable[name]
+        argn = []
+        save_vars = {}
+        try:
+            for key, value in zip_longest(f.params, args):
+                if key is None:
+                    argn.append(value)
+                elif key:
+                    save_vars[key] = var[key] if key in var else None
+                    var[key] = value if value is not None else ""
+            var["ARGN"] = ';'.join(argn)
+            cmds = copy(f.commands)
+            self._call_stack.add(name)
+            for cmd, args, fname, line in self._yield(cmds, var, skip_callable):
+                yield (cmd, args, fname, line)
+        finally:
+            self._call_stack.remove(name)
+            for key, value in iteritems(save_vars):
+                if value is not None:
+                    var[key] = value
                 else:
-                    args.append(")")
-            elif typ == "SEMICOLON":
-                pass
-            elif typ == "STRING":
-                val = val[1:-1]
-                if var is not None: val = _resolve(val, var)
-                args.append(_unescape(val))
+                    del var[key]
+            if "ARGN" in var: del var["ARGN"]
+
+    def _yield(self, cmds, var, skip_callable):
+        if var is None: var = {}
+        while cmds:
+            cmd = cmds.pop(0)
+            cmdname = _resolve_vars(cmd.name, var)
+            if not re.match(r'^[a-z_][a-z_0-9]*$', cmdname):
+                raise SyntaxError("%s(%d): invalid command identifier '%s'" % (cmd.filename, cmd.line, cmdname))
+            args = _resolve_args(cmd.args, var)
+            if cmd.name == "macro":
+                if not args:
+                    raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
+                f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, False)
+                self.callable[f.name] = f
+            elif cmd.name == "function":
+                if not args:
+                    raise SyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
+                f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
+                self.callable[f.name] = f
+            elif cmd.name == "foreach":
+                if not args:
+                    raise SyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
+                f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
+                loop_var = args.pop(0)
+                if not args: continue
+                if args[0] == "RANGE":
+                    try:
+                        if len(args) == 2:
+                            loop_args = range(int(args[1])+1)
+                        elif len(args) == 3:
+                            loop_args = range(int(args[1]), int(args[2])+1)
+                        elif len(args) == 4:
+                            loop_args = range(int(args[1]), int(args[2])+1, int(args[3]))
+                        else:
+                            raise SyntaxError("%s(%d): RANGE expects one, two, or three integers" % (cmd.filename, cmd.line))
+                    except ValueError:
+                        raise SyntaxError("%s(%d): invalid RANGE parameters" % (cmd.filename, cmd.line))
+                elif args[:2] == ["IN","LISTS"]:
+                    loop_args = []
+                    for l in args[2:]:
+                        if l in var:
+                            loop_args += var[l].split(";")
+                elif args[:2] == ["IN","ITEMS"]:
+                    loop_args = args[2:]
+                else:
+                    loop_args = args
+                for loop_value in loop_args:
+                    var[loop_var] = str(loop_value)
+                    loop_cmds = copy(f.commands)
+                    for cmd, args, fname, line in self._yield(loop_cmds, var, skip_callable):
+                        yield (cmd, args, fname, line)
+            elif cmdname in self.callable:
+                f = self.callable[cmdname]
+                if skip_callable or f.new_context:
+                    yield (cmdname, args, cmd.filename, cmd.line)
+                else:
+                    for cmd, args, fname, line in self.call(cmdname, args, var, skip_callable):
+                        yield (cmd, args, fname, line)
             else:
-                if var is not None: val = _resolve(val, var)
-                args += re.split(";|[ \t]+", _unescape(val))
-    if state != 0:
-        raise SyntaxError("Unexpected end of file")
+                yield (cmdname, args, cmd.filename, cmd.line)
+
+    def parse(self, s, var=None, filename=None, skip_callable=False):
+        if filename is None: filename = "<inline>"
+        cmds = _parse_commands(s, filename)
+        for cmd, args, fname, line in self._yield(cmds, var, skip_callable):
+            yield (cmd, args, fname, line)
+
 
 def argparse(args, opts):
     result = {}

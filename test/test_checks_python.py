@@ -38,6 +38,9 @@ class ChecksPythonTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) catkin_python_setup()", checks=cc.setup)
         self.assertEqual([ "CATKIN_ORDER_VIOLATION" ], result)
 
+        result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) generate_messages() catkin_python_setup()", checks=cc.setup)
+        self.assertEqual([ "ORDER_VIOLATION" ], result)
+
         result = mock_lint(env, pkg, "project(mock)", checks=cc.setup)
         self.assertEqual([ "MISSING_PYTHON_SETUP" ], result)
 

@@ -5,8 +5,8 @@ Overview
 ========
 
 **catkin_lint** checks package configurations for the
-`ROS Catkin <https://github.com/ros/catkin>`_ build system. It is part of
-an ongoing effort to aid developers with their ROS packaging
+`catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_. 
+It is part of an ongoing effort to aid developers with their ROS packaging
 (see also: `issue #153 <https://github.com/ros/catkin/issues/153>`_).
 
 Installation
@@ -44,8 +44,8 @@ Limitations
 ===========
 
 **catkin_lint** emulates a limited subset of CMake. It does not
-evaluate boolean expressions in ``if()`` clauses and ignores all
-``function()`` and ``macro()`` definitions.
+evaluate boolean expressions in ``if()`` clauses, emulates ``find_package()``
+calls with mock values, and ignores ``function()`` definitions.
 
 Catkin Build Integration
 ========================
@@ -82,7 +82,7 @@ Errors
 
 Errors are severe enough to break the build and/or produce unintended
 side effects. Usually, they violate the rules outlined in the
-`Catkin Manual <http://docs.ros.org/api/catkin/html/>`_
+`catkin manual <http://docs.ros.org/api/catkin/html/>`_
 
 Warnings
 --------
@@ -98,7 +98,7 @@ Notices
 Issues which are not objectionable from a technical view point but
 should  be addressed to improve the quality of the package. Many notices
 highlight violations of the recommendations and best practises from the
-Catkin Manual.
+catkin manual.
 
 Contribution
 ============
@@ -108,7 +108,7 @@ of features:
 
 * Unit tests with full coverage
 * Check proper usage of external libraries (e.g. Qt)
-* Support for CMake functions and macros
+* Support for CMake functions
 
 If you would like to contribute, you are very welcome to do so.
 Please contact `@roehling <https://github.com/roehling>`_ first
