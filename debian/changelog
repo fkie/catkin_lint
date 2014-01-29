@@ -1,3 +1,10 @@
+catkin-lint (1.3.0-1) unstable; urgency=low
+
+  * New release
+  * Clean up debian changelog
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Wed, 29 Jan 2014 23:18:47 +0100
+
 catkin-lint (1.2.6-1) unstable; urgency=low
 
   * New release
@@ -7,152 +14,118 @@ catkin-lint (1.2.6-1) unstable; urgency=low
 
 catkin-lint (1.2.5-1) unstable; urgency=low
 
-  * Warn about subprojects
-  * Support for add_subdirectory() commands
-  * Support for multi-line strings
-  * Add common path functions to LintInfo
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 21 Jan 2014 14:22:34 +0100
 
 catkin-lint (1.2.4-1) unstable; urgency=low
 
-  * Parser support for escaped characters
-  * Add option to run additional lint checks
-  * Parser support for include()
-  * Fix improper handling of Windows EOL
-  * Build check for existing source files
-  * Move debian folder to its own branch
+  * New release
+  * New package format 3.0 (quilt)
 
  -- Timo Röhling <timo.roehling@gmx.de>  Sun, 19 Jan 2014 22:37:41 +0100
 
 catkin-lint (1.2.3) unstable; urgency=low
 
-  * Allow parentheses in command arguments
-  * Allow catkin as run_depend or test_depend
-  * Use relative imports
-  * Special handling for catkin itself
-  * Include file name in error message if parsing fails
+  * New release
   * Let setup.py install bash auto completion code
 
  -- Timo Röhling <timo.roehling@gmx.de>  Tue, 14 Jan 2014 23:37:43 +0100
 
 catkin-lint (1.2.2) unstable; urgency=low
 
-  * Provide explicit sort order for lint messages
+  * New release
 
  -- Timo Röhling <timo.roehling@gmx.de>  Mon, 13 Jan 2014 23:35:04 +0100
 
 catkin-lint (1.2.1) unstable; urgency=low
 
-  * Move include path check to correct unit
-  * More unit tests for build checks
-  * Add more unit tests for build checks
-  * Add missing files to setup manifest
-  * Check for find_package() of message dependencies
-  * Add XML output format
-  * Link to author in README
-  * Convert README to rst markup
+  * New release
 
  -- Timo Röhling <timo.roehling@gmx.de>  Mon, 13 Jan 2014 23:18:34 +0100
 
 catkin-lint (1.2.0) unstable; urgency=low
 
+  * New release
   * Make package downloadable by easy_install
-  * Major rewrite
 
  -- Timo Röhling <timo.roehling@gmx.de>  Sun, 12 Jan 2014 02:42:29 +0100
 
 catkin-lint (1.1.13) unstable; urgency=low
 
-  * Support for ROS packages with non-catkin build type
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 19 Dec 2013 17:51:54 +0100
 
 catkin-lint (1.1.12) unstable; urgency=low
 
-  * Update documentation
-  * Check for invalid dependencies
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 11 Dec 2013 14:15:10 +0100
 
 catkin-lint (1.1.11) unstable; urgency=low
 
-  * Fix regression bug if --pkg is not used
-  * Label all diagnostics as errors in strict mode
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 10 Dec 2013 17:21:02 +0100
 
 catkin-lint (1.1.10) unstable; urgency=low
 
-  * Add --pkg option to check packages by name
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 10 Dec 2013 16:56:48 +0100
 
 catkin-lint (1.1.9) unstable; urgency=low
 
-  * Remove trailing whitespace
-  * New regex for message packages
-  * Check for CMAKE_BUILD_TYPE modifications
-  * Refactor buzzword list
-  * Make CATKIN_ variables critical
-  * Relax test exception for installed binaries
-  * Fix typo
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Mon, 09 Dec 2013 15:35:33 +0100
 
 catkin-lint (1.1.8) unstable; urgency=low
 
-  * Improve name collision check
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Fri, 06 Dec 2013 14:43:56 +0100
 
 catkin-lint (1.1.7) unstable; urgency=low
 
-  * Revert lib suffix check
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Fri, 06 Dec 2013 11:10:36 +0100
 
 catkin-lint (1.1.6) unstable; urgency=low
 
-  * Improve target name collision check
-  * Remove debug 'raise' which was left in accidentally
-  * Make include check more robust
-  * Reword a few diagnostic messages
-  * Check for redundant test depends
-  * Check for redundant lib prefixes and suffixes
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Fri, 06 Dec 2013 10:35:11 +0100
 
 catkin-lint (1.1.5) unstable; urgency=low
 
-  * Check include paths
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 05 Dec 2013 11:50:35 +0100
 
 catkin-lint (1.1.4) unstable; urgency=low
 
-  * Be more precise about ignored diagnostics
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 05 Dec 2013 11:04:07 +0100
 
 catkin-lint (1.1.3) unstable; urgency=low
 
-  * Reword include_directories() warning
-  * Distinguish between warnings and notices
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 05 Dec 2013 10:52:46 +0100
 
 catkin-lint (1.1.2) unstable; urgency=low
 
-  * Be more strict about include paths
-  * Check if exported libraries are actually libraries
-  * Check for include()s which should use find_package()
-  * Add support for upper-case prefix in find_package()
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 04 Dec 2013 17:45:31 +0100
 
 catkin-lint (1.1.1) unstable; urgency=low
 
+  * New release
   * Read version directly from module
   * Fix packaging bug
 
@@ -160,70 +133,56 @@ catkin-lint (1.1.1) unstable; urgency=low
 
 catkin-lint (1.1.0) unstable; urgency=low
 
-  * Refactor source code
-  * Add explanation to diagnostic messages
-  * Fix python installation path
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 04 Dec 2013 15:55:20 +0100
 
 catkin-lint (1.0.8) unstable; urgency=low
 
-  * Improve check of special variables
-  * Fix rosbuild_compat_fkie usage check
-  * Use better substitute values for includes and libs
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 03 Dec 2013 17:55:39 +0100
 
 catkin-lint (1.0.7) unstable; urgency=low
 
-  * Do not warn twice about not installed export libraries
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 03 Dec 2013 15:07:35 +0100
 
 catkin-lint (1.0.6) unstable; urgency=low
 
-  * Relax package version check
-  * Reword warnings and add more filler words
-  * Skip macro() and function() definitions
-  * Use os.pathsep instead of hardcoded colon
-  * Check output names of targets
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 03 Dec 2013 10:44:43 +0100
 
 catkin-lint (1.0.5) unstable; urgency=low
 
-  * Add support for rosrepo
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Fri, 29 Nov 2013 09:30:50 +0100
 
 catkin-lint (1.0.4) unstable; urgency=low
 
-  * Check package descriptions for typical filler words
-  * Forbid unset() of critical variables
-  * Refine header installation test
-  * Tweak filler word list
+  * New release
 
  -- Timo Röhling <timo.roehling@gmx.de>  Fri, 29 Nov 2013 09:17:14 +0100
 
 catkin-lint (1.0.3) unstable; urgency=low
 
-  * Reword rosbuild_compat_fkie warning
-  * Check plugin exports
-  * Warn about uninstalled executables
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 28 Nov 2013 14:10:35 +0100
 
 catkin-lint (1.0.2) unstable; urgency=low
 
-  * Fix typo
-  * Treat check_catkin_pkg() exceptions as lint errors
+  * New release
   * Add bash shell completion code
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 27 Nov 2013 12:53:42 +0100
 
 catkin-lint (1.0.1) unstable; urgency=low
 
-  * Support find_path() and find_library() for catkin_package() depends
+  * New release
 
  -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 26 Nov 2013 11:33:18 +0100
 
