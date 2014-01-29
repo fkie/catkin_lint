@@ -75,7 +75,7 @@ class LinterTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(mock_test2 src/mock.cpp)",
               "/mock-path/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)

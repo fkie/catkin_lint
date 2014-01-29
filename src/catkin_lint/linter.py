@@ -28,6 +28,7 @@ import os
 import sys
 from functools import total_ordering
 from fnmatch import fnmatch
+from copy import copy
 from catkin_pkg.packages import find_packages
 from .cmake import ParserContext, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
@@ -185,13 +186,13 @@ class CMakeLinter(object):
             return
         info.subdirs.add(subdir)
         old_subdir = info.subdir
-        old_src_dir = info.var["CMAKE_CURRENT_SOURCE_DIR"]
+        old_var = copy(info.var)
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, subdir)
             info.subdir = subdir
             self._parse_file (info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
-            info.var["CMAKE_CURRENT_SOURCE_DIR"] = old_src_dir
+            info.var = old_var
             info.subdir = old_subdir
 
     def _parse_file(self, info, filename):
