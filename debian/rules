@@ -46,7 +46,7 @@ make-patches:
 	rm -rf debian/patches
 	mkdir debian/patches
 	git format-patch -o debian/patches $(shell git merge-base debian $(PY_VERSION) )..master
-	ls debian/patches/[0-9]* > debian/patches/series
+	ls debian/patches/[0-9]* | sed -e 's/^debian\/patches\///' > debian/patches/series
 
 clean-patches:
 	rm -rf debian/patches

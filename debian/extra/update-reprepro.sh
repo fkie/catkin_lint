@@ -7,7 +7,7 @@ if [ "$build_type" = "3.0 (quilt)" ]
 then
 	debian/rules make-orig-tar
 fi
-dpkg-buildpackage -tc -us -uc -i"\\..*"
+dpkg-buildpackage -tc -us -uc -i"\\..*" "$@"
 changefile=$( readlink -f ../${pkgname}_${pkgversion}_*.changes )
 buildfiles=( $( grep -A999 Files: "${changefile}" | awk '{ print $5 }' ) )
 
