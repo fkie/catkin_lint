@@ -40,5 +40,14 @@ override_dh_auto_install:
 	dh_auto_install
 
 make-orig-tar:
-	git archive --prefix=catkin-lint-$(PY_VERSION)/ -o ../catkin-lint_$(PY_VERSION).orig.tar.gz $(shell git merge-base debian master )
+	git archive --prefix=catkin-lint-$(PY_VERSION)/ -o ../catkin-lint_$(PY_VERSION).orig.tar.gz $(shell git merge-base debian $(PY_VERSION) )
+
+make-patches:
+	rm -rf debian/patches
+	mkdir debian/patches
+	git format-patch -o debian/patches $(shell git merge-base debian $(PY_VERSION) )..master
+	ls debian/patches/[0-9]* > debian/patches/series
+
+clean-patches:
+	rm -rf debian/patches
 
