@@ -36,6 +36,9 @@ override_dh_auto_build:
 override_dh_auto_install:
 	set -e; for python in $(PYTHON3); do \
 		$$python setup.py install --install-layout=deb --root=debian/tmp; \
+		v=$${python#python}; \
+		mv debian/tmp/usr/bin/catkin_lint debian/tmp/usr/bin/catkin_lint$$v; \
+		sed -e 's/catkin_lint/catkin_lint'$$v'/g' debian/tmp/etc/bash_completion.d/catkin_lint > debian/tmp/etc/bash_completion.d/catkin_lint$$v; \
 	done
 	dh_auto_install
 
