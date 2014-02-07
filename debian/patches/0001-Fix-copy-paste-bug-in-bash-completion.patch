@@ -1,0 +1,24 @@
+From 3260ed29e3136bc91db30eebb9d24f999889afea Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Timo=20R=C3=B6hling?= <timo.roehling@gmx.de>
+Date: Fri, 7 Feb 2014 21:50:30 +0100
+Subject: [PATCH] Fix copy&paste bug in bash completion
+
+---
+ bash/catkin_lint | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bash/catkin_lint b/bash/catkin_lint
+index 79b9958..ab499f6 100644
+--- a/bash/catkin_lint
++++ b/bash/catkin_lint
+@@ -1,6 +1,6 @@
+ # *-* mode: shell-script;-*-
+ 
+-if type rosrepo &> /dev/null; then
++if type catkin_lint &> /dev/null; then
+ 
+ _catkin_lint_complete()
+ {
+-- 
+1.8.3.2
+
