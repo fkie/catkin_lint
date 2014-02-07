@@ -1,6 +1,6 @@
 # *-* mode: shell-script;-*-
 
-if type rosrepo &> /dev/null; then
+if type catkin_lint &> /dev/null; then
 
 _catkin_lint_complete()
 {
