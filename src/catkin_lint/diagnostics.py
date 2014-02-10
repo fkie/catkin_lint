@@ -85,6 +85,13 @@ The package cannot build without this dependency, so it should be
 marked as REQUIRED accordingly.
 """
 ),
+"MISSING_COMPONENTS" : ("missing COMPONENTS keyword before '%(pkg)s'",
+"""\
+The find_package(catkin) call can add other catkin packages as
+dependencies with the COMPONENTS keyword. The find_package() command
+lists additional packages but has no COMPONENTS keyword.
+"""
+),
 "NO_CATKIN_COMPONENT" : ("'%(pkg)s' in find_package(catkin) is not a catkin package",
 """\
 The find_package(catkin) call can list other catkin packages as
@@ -481,11 +488,12 @@ The behavior of your build should not depend on any
 environment variables.
 """
 ),
-"PKG_CONFIG" : ( "pkg-config should not be used",
+"EXPORTED_PKG_CONFIG" : ( "catkin_package() exports pkg-config module '%(pkg)s'",
 """\
 Although CMake can invoke pkg-config to detect other modules,
 this does not work well with catkin, as pkg-config may require
-you to add link directories.
+you to add link directories. Use the results of pkg_check_module()
+as hint for find_path() and find_library() instead.
 """),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\

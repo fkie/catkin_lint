@@ -145,6 +145,9 @@ def depends(linter):
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
+        for pkg in args[1:]:
+            if info.env.is_known_pkg(pkg):
+                info.report(ERROR, "MISSING_COMPONENTS", pkg=pkg)
         info.find_packages |= set(opts["COMPONENTS"])
         info.required_packages |= set(opts["COMPONENTS"])
         info.catkin_components |= set(opts["COMPONENTS"])
@@ -176,6 +179,8 @@ def exports(linter):
         for pkg in opts["DEPENDS"]:
             if info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
+            elif pkg in info.pkg_modules:
+                info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif not pkg in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
                 info.report(ERROR, "UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg)
         includes = [ info.package_path(d) for d in opts["INCLUDE_DIRS"] ]
@@ -205,6 +210,7 @@ def exports(linter):
                 info.report(ERROR, "EXPORT_LIB_NOT_LIB", target=lib)
 
     linter.require(manifest_depends)
+    linter.require(pkg_config)
     linter.require(targets)
     linter.add_init_hook(on_init)
     linter.add_command_hook("catkin_package", on_catkin_package)
@@ -235,9 +241,12 @@ def name_check(linter):
 
 
 def pkg_config(linter):
+    def on_init(info):
+        info.pkg_modules = set([])
     def on_pkg_check_modules(info, cmd, args):
-        info.report(WARNING, "PKG_CONFIG")
+        info.pkg_modules.add(args[0])
 
+    linter.add_init_hook(on_init)
     linter.add_command_hook("pkg_check_modules", on_pkg_check_modules)
 
 

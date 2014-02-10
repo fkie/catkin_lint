@@ -84,6 +84,14 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, 
             """
             project(mock)
+            find_package(catkin REQUIRED other_catkin)
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "MISSING_COMPONENTS", "UNCONFIGURED_BUILD_DEPEND" ], result)
+
+        result = mock_lint(env, pkg, 
+            """
+            project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             find_package(other_catkin)
             """,
@@ -217,12 +225,6 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.name_check)
         self.assertEqual([ "REDUNDANT_LIB_PREFIX" ], result)
 
-
-    def test_pkg_config(self):
-        env = create_env()
-        pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, "project(mock) pkg_check_modules(FOO foo)", checks=cc.pkg_config)
-        self.assertEqual([ "PKG_CONFIG"], result)
 
     @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/mock.cpp") ])
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
@@ -427,6 +429,16 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual([ "MISSING_DEPEND" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            pkg_check_modules(FOO foo)
+            catkin_package(DEPENDS FOO)
+            """, 
+        checks=cc.exports)
+        self.assertEqual([ "EXPORTED_PKG_CONFIG"], result)
 
         pkg = create_manifest("mock", build_depends=[ "other_msgs" ], run_depends=[ "other_msgs"])
         result = mock_lint(env, pkg,

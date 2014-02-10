@@ -1,3 +1,9 @@
+Version 1.3.1
+
+  * Fix copy&paste bug in bash completion
+  * Check for missing COMPONENTS keyword
+  * Refine pkg-config check
+
 Version 1.3.0
 
   * New CMake parser
