@@ -85,6 +85,13 @@ The package cannot build without this dependency, so it should be
 marked as REQUIRED accordingly.
 """
 ),
+"MISSING_COMPONENTS" : ("missing COMPONENTS keyword before '%(pkg)s'",
+"""\
+The find_package(catkin) call can add other catkin packages as
+dependencies with the COMPONENTS keyword. The find_package() command
+lists additional packages but has no COMPONENTS keyword.
+"""
+),
 "NO_CATKIN_COMPONENT" : ("'%(pkg)s' in find_package(catkin) is not a catkin package",
 """\
 The find_package(catkin) call can list other catkin packages as

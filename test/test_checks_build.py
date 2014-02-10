@@ -84,6 +84,14 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, 
             """
             project(mock)
+            find_package(catkin REQUIRED other_catkin)
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "MISSING_COMPONENTS", "UNCONFIGURED_BUILD_DEPEND" ], result)
+
+        result = mock_lint(env, pkg, 
+            """
+            project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             find_package(other_catkin)
             """,

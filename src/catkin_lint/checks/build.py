@@ -145,6 +145,9 @@ def depends(linter):
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
+        for pkg in args[1:]:
+            if info.env.is_known_pkg(pkg):
+                info.report(ERROR, "MISSING_COMPONENTS", pkg=pkg)
         info.find_packages |= set(opts["COMPONENTS"])
         info.required_packages |= set(opts["COMPONENTS"])
         info.catkin_components |= set(opts["COMPONENTS"])
