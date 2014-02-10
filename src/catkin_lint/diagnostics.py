@@ -488,11 +488,12 @@ The behavior of your build should not depend on any
 environment variables.
 """
 ),
-"PKG_CONFIG" : ( "pkg-config should not be used",
+"EXPORTED_PKG_CONFIG" : ( "catkin_package() exports pkg-config module '%(pkg)s'",
 """\
 Although CMake can invoke pkg-config to detect other modules,
 this does not work well with catkin, as pkg-config may require
-you to add link directories.
+you to add link directories. Use the results of pkg_check_module()
+as hint for find_path() and find_library() instead.
 """),
 "OS_ERROR" : ( "OS error: %(msg)s",
 """\
