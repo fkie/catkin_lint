@@ -280,7 +280,7 @@ def installs(linter):
             if not lib in info.install_targets:
                 info.report(ERROR if "install" in info.commands else NOTICE, "UNINSTALLED_EXPORT_LIB", target=lib)
         for tgt in info.executables - info.install_targets:
-            if "test" in tgt.lower(): continue
+            if "test" in tgt.lower() or "example" in tgt.lower(): continue
             info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
         if info.executables or info.libraries:
             for incl in info.export_includes - info.build_includes:
