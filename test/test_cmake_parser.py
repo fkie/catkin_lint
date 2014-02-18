@@ -139,6 +139,19 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('foreach(arg) cmd(${arg}) endforeach()'),
             [ ("foreach", ["arg"], 1), ("endforeach", [], 1) ]
         )
+        self.assertEqual(
+            self.parse_all('foreach(a 1 2) foreach(b 3 4) cmd(${a} ${b}) endforeach() endforeach()'),
+            [ ("foreach", ["a", "1", "2"], 1),
+              ("foreach", ["b", "3", "4"], 1),
+              ("cmd", [ "1", "3"], 1),
+              ("cmd", [ "1", "4"], 1),
+              ("endforeach", [], 1),
+              ("foreach", ["b", "3", "4"], 1),
+              ("cmd", [ "2", "3"], 1),
+              ("cmd", [ "2", "4"], 1),
+              ("endforeach", [], 1),
+              ("endforeach", [], 1) ]
+        )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg)")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg RANGE bla) endforeach()")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg RANGE 1 5 2 0) endforeach()")

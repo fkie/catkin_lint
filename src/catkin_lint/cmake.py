@@ -155,8 +155,12 @@ def _parse_commands(s, filename):
 
 def _parse_block(filename, cmds, block_name, result_type, *args):
     result = result_type(*args)
+    nesting = 1
     while cmds:
-        if cmds[0].name == "end%s" % block_name: return result
+        if cmds[0].name == block_name: nesting += 1
+        if cmds[0].name == "end%s" % block_name:
+            nesting -= 1
+            if nesting == 0: return result
         cmd = cmds.pop(0)
         result.commands.append(cmd)
     raise SyntaxError("%s: expected 'end%s()' and got end of file" % (filename, block_name))
