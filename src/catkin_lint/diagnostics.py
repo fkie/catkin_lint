@@ -501,6 +501,13 @@ An operating system error has occured. This is not a linting problem per se but
 might be caused by a missing or unreadable file.
 """
 ),
+"ENDBLOCK_ARGS" : ("extra arguments in %(cmd)s()",
+"""\
+The catkin manual recommends that %(cmd)s and other end-of-block statements
+have no arguments. If you have nested blocks, you should indent them
+properly instead.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
