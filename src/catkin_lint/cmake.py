@@ -156,8 +156,8 @@ def _parse_commands(s, filename):
 def _parse_block(filename, cmds, block_name, result_type, *args):
     result = result_type(*args)
     while cmds:
+        if cmds[0].name == "end%s" % block_name: return result
         cmd = cmds.pop(0)
-        if cmd.name == "end%s" % block_name: return result
         result.commands.append(cmd)
     raise SyntaxError("%s: expected 'end%s()' and got end of file" % (filename, block_name))
 
@@ -208,38 +208,41 @@ class ParserContext(object):
                     raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, False)
                 self.callable[f.name] = f
+                yield (cmdname, args, cmd.filename, cmd.line)
             elif cmd.name == "function":
                 if not args:
                     raise SyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
                 self.callable[f.name] = f
+                yield (cmdname, args, cmd.filename, cmd.line)
             elif cmd.name == "foreach":
                 if not args:
                     raise SyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
-                loop_var = args.pop(0)
-                if not args: continue
-                if args[0] == "RANGE":
+                yield (cmdname, args, cmd.filename, cmd.line)
+                loop_var = args[0]
+                if len(args) == 1: continue
+                if args[1] == "RANGE":
                     try:
-                        if len(args) == 2:
-                            loop_args = range(int(args[1])+1)
-                        elif len(args) == 3:
-                            loop_args = range(int(args[1]), int(args[2])+1)
+                        if len(args) == 3:
+                            loop_args = range(int(args[2])+1)
                         elif len(args) == 4:
-                            loop_args = range(int(args[1]), int(args[2])+1, int(args[3]))
+                            loop_args = range(int(args[2]), int(args[3])+1)
+                        elif len(args) == 5:
+                            loop_args = range(int(args[2]), int(args[3])+1, int(args[4]))
                         else:
                             raise SyntaxError("%s(%d): RANGE expects one, two, or three integers" % (cmd.filename, cmd.line))
                     except ValueError:
                         raise SyntaxError("%s(%d): invalid RANGE parameters" % (cmd.filename, cmd.line))
-                elif args[:2] == ["IN","LISTS"]:
+                elif args[1:3] == ["IN","LISTS"]:
                     loop_args = []
-                    for l in args[2:]:
+                    for l in args[3:]:
                         if l in var:
                             loop_args += var[l].split(";")
-                elif args[:2] == ["IN","ITEMS"]:
-                    loop_args = args[2:]
+                elif args[1:3] == ["IN","ITEMS"]:
+                    loop_args = args[3:]
                 else:
-                    loop_args = args
+                    loop_args = args[1:]
                 for loop_value in loop_args:
                     var[loop_var] = str(loop_value)
                     loop_cmds = copy(f.commands)
