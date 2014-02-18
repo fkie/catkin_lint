@@ -59,6 +59,28 @@ class ChecksMiscTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) project(mock2)", checks=cc.singleton_commands)
         self.assertEqual([ "DUPLICATE_CMD" ], result)
 
+    def test_endblock(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "foreach(a) endforeach()", checks=cc.endblock)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "if(a) else() endif()", checks=cc.endblock)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "macro(a) endmacro()", checks=cc.endblock)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "function(a) endfunction()", checks=cc.endblock)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "foreach(a) endforeach(a)", checks=cc.endblock)
+        self.assertEqual([ "ENDBLOCK_ARGS" ], result)
+        result = mock_lint(env, pkg, "if(a) else(a) endif()", checks=cc.endblock)
+        self.assertEqual([ "ENDBLOCK_ARGS" ], result)
+        result = mock_lint(env, pkg, "if(a) else() endif(a)", checks=cc.endblock)
+        self.assertEqual([ "ENDBLOCK_ARGS" ], result)
+        result = mock_lint(env, pkg, "macro(a) endmacro(a)", checks=cc.endblock)
+        self.assertEqual([ "ENDBLOCK_ARGS" ], result)
+        result = mock_lint(env, pkg, "function(a) endfunction(a)", checks=cc.endblock)
+        self.assertEqual([ "ENDBLOCK_ARGS" ], result)
+
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/FindLocal.cmake"))
     def do_cmake_includes(self):
         env = create_env()

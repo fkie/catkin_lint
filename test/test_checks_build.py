@@ -238,6 +238,8 @@ class ChecksBuildTest(unittest.TestCase):
             include_directories(include)
             catkin_package(INCLUDE_DIRS include)
             add_executable(mock src/mock.cpp)
+            add_executable(test_mock src/mock.cpp)
+            add_executable(mock_example src/mock.cpp)
             install(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             install(FILES share/file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
             install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

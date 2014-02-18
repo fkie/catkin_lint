@@ -138,9 +138,22 @@ def cmake_includes(linter):
     linter.add_command_hook("include", on_include)
 
 
+def endblock(linter):
+    def on_command(info, cmd, args):
+        if args:
+            info.report(NOTICE, "ENDBLOCK_ARGS", cmd=cmd)
+
+    linter.add_command_hook("else", on_command)
+    linter.add_command_hook("endif", on_command)
+    linter.add_command_hook("endmacro", on_command)
+    linter.add_command_hook("endfunction", on_command)
+    linter.add_command_hook("endforeach", on_command)
+
+
 def all(linter):
     linter.require(project)
     linter.require(special_vars)
     linter.require(global_vars)
     linter.require(singleton_commands)
     linter.require(cmake_includes)
+    linter.require(endblock)
