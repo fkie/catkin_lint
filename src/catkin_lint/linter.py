@@ -204,6 +204,7 @@ class CMakeLinter(object):
         save_line = info.line
         try:
             cur_file = os.path.relpath(filename, info.path)
+            info.var["CMAKE_CURRENT_LIST_FILE"] = cur_file
             info.file = cur_file
             info.line = 0
             content = self._read_file(filename)
@@ -214,6 +215,8 @@ class CMakeLinter(object):
                     info.report(WARNING, "ENV_VAR")
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
+                    info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
+                    info.var["PROJECT_BINARY_DIR"] = info.var["CMAKE_CURRENT_BINARY_DIR"]
                     if info.subdir:
                         info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
                         return
