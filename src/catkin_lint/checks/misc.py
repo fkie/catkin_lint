@@ -88,10 +88,20 @@ def special_vars(linter):
                 info.report(ERROR, "CRITICAL_VAR_OVERWRITE", var=args[0])
             else:
                 info.report(WARNING, "CRITICAL_VAR_APPEND", var=args[0])
+    def on_list(info, cmd, args):
+        if args[0] in ["LENGTH","GET","FIND"]: return
+        if args[1] in immutable_vars:
+            info.report(ERROR, "IMMUTABLE_VAR", var=args[1])
+        if args[1] in critical_vars:
+            if args[0] in ["APPEND","INSERT"]:
+                info.report(WARNING, "CRITICAL_VAR_APPEND", var=args[1])
+            else:
+                info.report(ERROR, "CRITICAL_VAR_OVERWRITE", var=args[1])
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("set", on_set_or_unset)
     linter.add_command_hook("unset", on_set_or_unset)
+    linter.add_command_hook("list", on_list)
 
 
 def global_vars(linter):
