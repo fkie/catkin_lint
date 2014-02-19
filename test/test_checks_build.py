@@ -57,14 +57,14 @@ class ChecksBuildTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ])
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             """,
         checks=cc.depends)
         self.assertEqual([ "ORDER_VIOLATION" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             project(mock)
             catkin_package()
@@ -73,7 +73,7 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.depends)
         self.assertEqual([ "ORDER_VIOLATION" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             project(mock)
             find_package(catkin COMPONENTS other_catkin)
@@ -81,7 +81,7 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.depends)
         self.assertEqual([ "MISSING_REQUIRED" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             project(mock)
             find_package(catkin REQUIRED other_catkin)
@@ -89,7 +89,7 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.depends)
         self.assertEqual([ "MISSING_COMPONENTS", "UNCONFIGURED_BUILD_DEPEND" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
@@ -98,7 +98,7 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.depends)
         self.assertEqual([ "DUPLICATE_FIND" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             project(mock)
             find_package(other_catkin)
@@ -438,7 +438,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             pkg_check_modules(FOO foo)
             catkin_package(DEPENDS FOO)
-            """, 
+            """,
         checks=cc.exports)
         self.assertEqual([ "EXPORTED_PKG_CONFIG"], result)
 

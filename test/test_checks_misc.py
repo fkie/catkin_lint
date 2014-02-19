@@ -85,7 +85,7 @@ class ChecksMiscTest(unittest.TestCase):
     def do_cmake_includes(self):
         env = create_env()
         pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             include(FindLocal.cmake)
             include(FindOptional.cmake OPTIONAL)
@@ -93,14 +93,14 @@ class ChecksMiscTest(unittest.TestCase):
         checks=cc.cmake_includes)
         self.assertEqual([], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             include(missing.cmake)
             """,
         checks=cc.cmake_includes)
         self.assertEqual([ "MISSING_FILE" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             include(FindStuff)
             """,

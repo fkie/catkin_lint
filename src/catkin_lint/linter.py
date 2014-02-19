@@ -80,8 +80,8 @@ class LintInfo(object):
     def report(self, level, msg_id, **kwargs):
         id, text, description = msg(msg_id, **kwargs)
         self.messages.append(Message(
-            package=self.manifest.name, 
-            file=self.file, 
+            package=self.manifest.name,
+            file=self.file,
             line=self.line,
             level=level,
             id=id,
