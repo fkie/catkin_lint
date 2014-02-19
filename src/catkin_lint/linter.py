@@ -211,7 +211,7 @@ class CMakeLinter(object):
             for cmd, args, fname, line in self._ctx.parse(content, var=info.var, filename=cur_file):
                 info.file = fname
                 info.line = line
-                if "$ENV{" in "".join(args):
+                if "$ENV{" in ";".join(args):
                     info.report(WARNING, "ENV_VAR")
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
