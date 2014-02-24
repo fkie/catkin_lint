@@ -128,6 +128,7 @@ def depends(linter):
     def on_init(info):
         info.required_packages = set([])
         info.catkin_components = set([])
+        info.checked_packages = set([])
     def on_find_package(info, cmd, args):
         opts, args = cmake_argparse(args, { "REQUIRED": "-", "COMPONENTS": "*" })
         if not "project" in info.commands:
@@ -140,6 +141,7 @@ def depends(linter):
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
         if not opts["REQUIRED"]:
             info.report(WARNING, "MISSING_REQUIRED", pkg="catkin")
+            info.required_packages.add("catkin")
         for pkg in opts["COMPONENTS"]:
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
@@ -151,10 +153,17 @@ def depends(linter):
         info.find_packages |= set(opts["COMPONENTS"])
         info.required_packages |= set(opts["COMPONENTS"])
         info.catkin_components |= set(opts["COMPONENTS"])
+    def on_if(info, cmd, args):
+        for arg in args:
+            if arg.endswith("_FOUND"):
+                info.checked_packages.add(arg[0:-6])
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep:
             if info.env.is_known_pkg(pkg):
                 info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build")
+        for pkg in info.find_packages - info.required_packages - info.checked_packages:
+            if info.env.is_catkin_pkg(pkg):
+                info.report(ERROR, "MISSING_REQUIRED", pkg=pkg)
         for pkg in info.build_dep - info.find_packages:
             if info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
@@ -162,6 +171,7 @@ def depends(linter):
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("find_package", on_find_package)
+    linter.add_command_hook("if", on_if)
     linter.add_final_hook(on_final)
 
 

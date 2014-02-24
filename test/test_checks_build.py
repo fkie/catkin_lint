@@ -101,7 +101,7 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg,
             """
             project(mock)
-            find_package(other_catkin)
+            find_package(other_catkin REQUIRED)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             """,
         checks=cc.depends)
@@ -111,7 +111,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_system)
-            find_package(other_catkin)
+            find_package(other_catkin REQUIRED)
             """,
         checks=cc.depends)
         self.assertEqual([ "NO_CATKIN_COMPONENT", "MISSING_DEPEND" ], result)
@@ -124,6 +124,25 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.depends)
         self.assertEqual([ "UNCONFIGURED_BUILD_DEPEND" ], result)
 
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin)
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "MISSING_REQUIRED" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin)
+            if(other_catkin_FOUND)
+            endif()
+            """,
+        checks=cc.depends)
+        self.assertEqual([], result)
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
     def do_targets(self):
@@ -312,8 +331,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
-            find_package(other_system)
+            find_package(other_catkin REQUIRED)
+            find_package(other_system REQUIRED)
             catkin_package(
             INCLUDE_DIRS include
             CATKIN_DEPENDS other_catkin
@@ -329,8 +348,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
-            find_package(other_system)
+            find_package(other_catkin REQUIRED)
+            find_package(other_system REQUIRED)
             catkin_package(
             INCLUDE_DIRS ${CMAKE_CURRENT_BINARY_DIR}
             CATKIN_DEPENDS other_catkin
@@ -344,7 +363,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
-            find_package(other_system)
+            find_package(other_system REQUIRED)
             find_path(Stuff_INCLUDE_DIRS stuff.h)
             find_library(Stuff_LIBRARIES stuff)
             catkin_package(
@@ -359,8 +378,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
-            find_package(other_system)
+            find_package(other_catkin REQUIRED)
+            find_package(other_system REQUIRED)
             catkin_package(
             INCLUDE_DIRS missing_include
             CATKIN_DEPENDS other_catkin
@@ -374,8 +393,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
-            find_package(other_system)
+            find_package(other_catkin REQUIRED)
+            find_package(other_system REQUIRED)
             catkin_package(
             DEPENDS other_catkin other_system
             )
@@ -387,8 +406,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
-            find_package(other_system)
+            find_package(other_catkin REQUIRED)
+            find_package(other_system REQUIRED)
             catkin_package(
             CATKIN_DEPENDS other_catkin other_system
             )
@@ -400,7 +419,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
+            find_package(other_catkin REQUIRED)
             catkin_package(
             CATKIN_DEPENDS other_catkin
             DEPENDS other_system
@@ -413,7 +432,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
+            find_package(other_catkin REQUIRED)
             catkin_package(
             CATKIN_DEPENDS other_catkin
             INCLUDE_DIRS /not/in/package
@@ -536,8 +555,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
@@ -549,8 +568,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             generate_messages(DEPENDENCIES other_catkin)
             add_message_files(FILES mock.msg)
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
@@ -562,8 +581,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
@@ -574,8 +593,8 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg,
             """
             project(mock)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             find_package(catkin REQUIRED)
@@ -588,8 +607,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS message_runtime)
@@ -601,8 +620,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
             """,
@@ -613,8 +632,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
             """,
@@ -625,8 +644,8 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(message_generation)
-            find_package(other_catkin)
+            find_package(message_generation REQUIRED)
+            find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS other_catkin)
@@ -652,7 +671,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            find_package(other_catkin)
+            find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS other_catkin message_runtime)

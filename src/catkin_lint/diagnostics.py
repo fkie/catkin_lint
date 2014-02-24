@@ -82,7 +82,8 @@ Rosbuild to Catkin. It is deprecated and should not be used any more.
 "MISSING_REQUIRED" : ( "find_package(%(pkg)s) has no REQUIRED option",
 """\
 The package cannot build without this dependency, so it should be
-marked as REQUIRED accordingly.
+marked as REQUIRED accordingly. Use if(%(pkg)s_FOUND) clauses to use
+optional packages.
 """
 ),
 "MISSING_COMPONENTS" : ("missing COMPONENTS keyword before '%(pkg)s'",
