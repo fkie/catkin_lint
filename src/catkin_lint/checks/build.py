@@ -106,7 +106,7 @@ def source_files(linter):
             if not source_file: continue
             source_file = info.package_path(source_file)
             if os.path.isabs(source_file): continue
-            if not os.path.isfile(os.path.join(info.path, source_file)):
+            if not os.path.isfile(info.real_path(source_file)):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
 
     linter.add_command_hook("add_executable", on_add_executable)
@@ -321,7 +321,7 @@ def plugins(linter):
                 if not plugin.startswith("${prefix}/"):
                     info.report (ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
                 else:
-                    if not os.path.isfile(os.path.join(info.path, plugin[10:])):
+                    if not os.path.isfile(info.real_path(plugin[10:])):
                         info.report (ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
                     if not os.path.normpath("/catkin-target/share/%s/%s" % (info.manifest.name, plugin[10:])) in info.install_files:
                         info.report (ERROR if "install" in info.commands else NOTICE, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
