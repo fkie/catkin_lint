@@ -274,7 +274,7 @@ def installs(linter):
             install_type = "DIRECTORY"
         if opts["FILES"]:
             install_type = "FILES"
-            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], info.package_path(f))) for f in opts["FILES"] ])
+            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"] ])
         if opts["TARGETS"]:
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
