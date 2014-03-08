@@ -27,7 +27,7 @@ class CMakeParserTest(unittest.TestCase):
         )
         self.assertEqual(
             self.parse_all("MiXeDCaSe()"),
-            [ ("mixedcase", [], 1)]
+            [ ("MiXeDCaSe", [], 1)]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "unbalanced(")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "invalid%=characters$()")
@@ -91,6 +91,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('macro(test arg) cmd(${arg} ${ARGN}) endmacro() test(arg extra stuff)'),
             [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "arg", "extra", "stuff" ], 1) ]
         )
+        self.assertEqual(
+            self.parse_all('macro(TEST arg) cmd(${arg}) endmacro() test(value)'),
+            [ ("macro", ["TEST", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "value" ], 1) ]
+        )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "macro() endmacro()")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "macro(fun)")
 
@@ -151,6 +155,19 @@ class CMakeParserTest(unittest.TestCase):
               ("cmd", [ "2", "4"], 1),
               ("endforeach", [], 1),
               ("endforeach", [], 1) ]
+        )
+        self.assertEqual(
+            self.parse_all('FOREACH(a 1 2) FOREACH(b 3 4) cmd(${a} ${b}) ENDFOREACH() ENDFOREACH()'),
+            [ ("FOREACH", ["a", "1", "2"], 1),
+              ("FOREACH", ["b", "3", "4"], 1),
+              ("cmd", [ "1", "3"], 1),
+              ("cmd", [ "1", "4"], 1),
+              ("ENDFOREACH", [], 1),
+              ("FOREACH", ["b", "3", "4"], 1),
+              ("cmd", [ "2", "3"], 1),
+              ("cmd", [ "2", "4"], 1),
+              ("ENDFOREACH", [], 1),
+              ("ENDFOREACH", [], 1) ]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg)")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg RANGE bla) endforeach()")

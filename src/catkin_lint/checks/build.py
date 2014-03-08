@@ -106,7 +106,7 @@ def source_files(linter):
             if not source_file: continue
             source_file = info.package_path(source_file)
             if os.path.isabs(source_file): continue
-            if not os.path.isfile(os.path.join(info.path, source_file)):
+            if not os.path.isfile(info.real_path(source_file)):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
 
     linter.add_command_hook("add_executable", on_add_executable)
@@ -128,6 +128,7 @@ def depends(linter):
     def on_init(info):
         info.required_packages = set([])
         info.catkin_components = set([])
+        info.checked_packages = set([])
     def on_find_package(info, cmd, args):
         opts, args = cmake_argparse(args, { "REQUIRED": "-", "COMPONENTS": "*" })
         if not "project" in info.commands:
@@ -140,6 +141,7 @@ def depends(linter):
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
         if not opts["REQUIRED"]:
             info.report(WARNING, "MISSING_REQUIRED", pkg="catkin")
+            info.required_packages.add("catkin")
         for pkg in opts["COMPONENTS"]:
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
@@ -151,10 +153,17 @@ def depends(linter):
         info.find_packages |= set(opts["COMPONENTS"])
         info.required_packages |= set(opts["COMPONENTS"])
         info.catkin_components |= set(opts["COMPONENTS"])
+    def on_if(info, cmd, args):
+        for arg in args:
+            if arg.endswith("_FOUND"):
+                info.checked_packages.add(arg[0:-6])
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep:
             if info.env.is_known_pkg(pkg):
                 info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build")
+        for pkg in info.find_packages - info.required_packages - info.checked_packages:
+            if info.env.is_catkin_pkg(pkg):
+                info.report(ERROR, "MISSING_REQUIRED", pkg=pkg)
         for pkg in info.build_dep - info.find_packages:
             if info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
@@ -162,6 +171,7 @@ def depends(linter):
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("find_package", on_find_package)
+    linter.add_command_hook("if", on_if)
     linter.add_final_hook(on_final)
 
 
@@ -264,7 +274,7 @@ def installs(linter):
             install_type = "DIRECTORY"
         if opts["FILES"]:
             install_type = "FILES"
-            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], info.package_path(f))) for f in opts["FILES"] ])
+            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"] ])
         if opts["TARGETS"]:
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
@@ -311,7 +321,7 @@ def plugins(linter):
                 if not plugin.startswith("${prefix}/"):
                     info.report (ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
                 else:
-                    if not os.path.isfile(os.path.join(info.path, plugin[10:])):
+                    if not os.path.isfile(info.real_path(plugin[10:])):
                         info.report (ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
                     if not os.path.normpath("/catkin-target/share/%s/%s" % (info.manifest.name, plugin[10:])) in info.install_files:
                         info.report (ERROR if "install" in info.commands else NOTICE, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])

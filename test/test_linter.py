@@ -28,6 +28,17 @@ class LinterTest(unittest.TestCase):
         linter = CMakeLinter(create_env())
         self.assertRaises(RuntimeError, linter.require, a)
 
+    def test_lower_case(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            PROJECT(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            """, checks=cc.all)
+        self.assertEqual([ "CMD_CASE"], result)
+
     def test_env_var(self):
         env = create_env()
         pkg = create_manifest("catkin")

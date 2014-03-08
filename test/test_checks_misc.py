@@ -40,6 +40,16 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "CRITICAL_VAR_OVERWRITE" ], result)
         result = mock_lint(env, pkg, "project(mock) set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} extra)", checks=cc.special_vars)
         self.assertEqual([ "CRITICAL_VAR_APPEND" ], result)
+        result = mock_lint(env, pkg, "project(mock) list(GET CMAKE_MODULE_PATH 0)", checks=cc.special_vars)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "project(mock) list(LENGTH CMAKE_MODULE_PATH len)", checks=cc.special_vars)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "project(mock) list(APPEND CMAKE_MODULE_PATH extra)", checks=cc.special_vars)
+        self.assertEqual(["CRITICAL_VAR_APPEND"], result)
+        result = mock_lint(env, pkg, "project(mock) list(REVERSE CMAKE_MODULE_PATH)", checks=cc.special_vars)
+        self.assertEqual(["CRITICAL_VAR_OVERWRITE"], result)
+        result = mock_lint(env, pkg, "project(mock) list(INSERT PROJECT_NAME 0 wrong)", checks=cc.special_vars)
+        self.assertEqual(["IMMUTABLE_VAR"], result)
 
     def test_global_vars(self):
         env = create_env()
@@ -85,7 +95,7 @@ class ChecksMiscTest(unittest.TestCase):
     def do_cmake_includes(self):
         env = create_env()
         pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             include(FindLocal.cmake)
             include(FindOptional.cmake OPTIONAL)
@@ -93,14 +103,14 @@ class ChecksMiscTest(unittest.TestCase):
         checks=cc.cmake_includes)
         self.assertEqual([], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             include(missing.cmake)
             """,
         checks=cc.cmake_includes)
         self.assertEqual([ "MISSING_FILE" ], result)
 
-        result = mock_lint(env, pkg, 
+        result = mock_lint(env, pkg,
             """
             include(FindStuff)
             """,

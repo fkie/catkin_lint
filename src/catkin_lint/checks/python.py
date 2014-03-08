@@ -35,10 +35,10 @@ def setup(linter):
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "generate_messages" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="generate_messages", second_cmd=cmd)
-        if not os.path.isfile(os.path.join(info.path, "setup.py")):
+        if not os.path.isfile(info.real_path("setup.py")):
             info.report(ERROR, "MISSING_FILE", cmd=cmd, file="setup.py")
     def on_final(info):
-        if not "catkin_python_setup" in info.commands and os.path.isfile(os.path.join(info.path, "setup.py")):
+        if not "catkin_python_setup" in info.commands and os.path.isfile(info.real_path("setup.py")):
             info.report(ERROR, "MISSING_PYTHON_SETUP")
 
     linter.require(project)
