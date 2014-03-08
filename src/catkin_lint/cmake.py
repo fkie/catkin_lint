@@ -127,7 +127,7 @@ def _parse_commands(s, filename):
         if state == 0:
             if typ != "WORD":
                 raise SyntaxError("%s(%d): expected command identifier and got '%s'" % (filename, line, val))
-            cmdname = val.lower()
+            cmdname = val
             cmdargs = []
             cmdline = line
             state = 1
@@ -157,8 +157,8 @@ def _parse_block(filename, cmds, block_name, result_type, *args):
     result = result_type(*args)
     nesting = 1
     while cmds:
-        if cmds[0].name == block_name: nesting += 1
-        if cmds[0].name == "end%s" % block_name:
+        if cmds[0].name.lower() == block_name.lower(): nesting += 1
+        if cmds[0].name.lower() == "end%s" % block_name.lower():
             nesting -= 1
             if nesting == 0: return result
         cmd = cmds.pop(0)
@@ -173,9 +173,10 @@ class ParserContext(object):
         self._call_stack = set([])
 
     def call(self, name, args, var=None, skip_callable=False):
-        if name in self._call_stack: return
+        lname = name.lower()
+        if lname in self._call_stack: return
         if var is None: var = {}
-        f = self.callable[name]
+        f = self.callable[lname]
         argn = []
         save_vars = {}
         try:
@@ -187,11 +188,11 @@ class ParserContext(object):
                     var[key] = value if value is not None else ""
             var["ARGN"] = ';'.join(argn)
             cmds = copy(f.commands)
-            self._call_stack.add(name)
+            self._call_stack.add(lname)
             for cmd, args, fname, line in self._yield(cmds, var, skip_callable):
                 yield (cmd, args, fname, line)
         finally:
-            self._call_stack.remove(name)
+            self._call_stack.remove(lname)
             for key, value in iteritems(save_vars):
                 if value is not None:
                     var[key] = value
@@ -204,22 +205,23 @@ class ParserContext(object):
         while cmds:
             cmd = cmds.pop(0)
             cmdname = _resolve_vars(cmd.name, var)
-            if not re.match(r'^[a-z_][a-z_0-9]*$', cmdname):
+            cmdname_lower = cmdname.lower()
+            if not re.match(r'^[a-z_][a-z_0-9]*$', cmdname_lower):
                 raise SyntaxError("%s(%d): invalid command identifier '%s'" % (cmd.filename, cmd.line, cmdname))
             args = _resolve_args(cmd.args, var)
-            if cmd.name == "macro":
+            if cmd.name.lower() == "macro":
                 if not args:
                     raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, False)
-                self.callable[f.name] = f
+                self.callable[f.name.lower()] = f
                 yield (cmdname, args, cmd.filename, cmd.line)
-            elif cmd.name == "function":
+            elif cmd.name.lower() == "function":
                 if not args:
                     raise SyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
-                self.callable[f.name] = f
+                self.callable[f.name.lower()] = f
                 yield (cmdname, args, cmd.filename, cmd.line)
-            elif cmd.name == "foreach":
+            elif cmd.name.lower() == "foreach":
                 if not args:
                     raise SyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
@@ -252,8 +254,8 @@ class ParserContext(object):
                     loop_cmds = copy(f.commands)
                     for cmd, args, fname, line in self._yield(loop_cmds, var, skip_callable):
                         yield (cmd, args, fname, line)
-            elif cmdname in self.callable:
-                f = self.callable[cmdname]
+            elif cmdname_lower in self.callable:
+                f = self.callable[cmdname_lower]
                 if skip_callable or f.new_context:
                     yield (cmdname, args, cmd.filename, cmd.line)
                 else:
