@@ -1,3 +1,10 @@
+Version 1.3.3
+
+  * Bugfix for incorrect file install destination
+  * Check if packages in find_package() need to be REQUIRED
+  * Check that command names are lower-case as recommended
+  * Minor code cleanup
+
 Version 1.3.2
 
   * Additional coding style checks
