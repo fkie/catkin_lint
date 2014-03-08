@@ -213,6 +213,9 @@ class CMakeLinter(object):
                 info.line = line
                 if "$ENV{" in ";".join(args):
                     info.report(WARNING, "ENV_VAR")
+                if cmd != cmd.lower():
+                    info.report(WARNING, "CMD_CASE", cmd=cmd)
+                    cmd = cmd.lower()
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
                     info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]

@@ -509,6 +509,11 @@ have no arguments. If you have nested blocks, you should indent them
 properly instead.
 """
 ),
+"CMD_CASE" : ("%(cmd)s() should be all lower-case",
+"""\
+The catkin manual recommends that all commands be written in lower case.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
