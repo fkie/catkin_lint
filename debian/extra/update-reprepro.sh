@@ -20,7 +20,7 @@ cleanup()
 trap cleanup EXIT
 
 cd $HOME/reprepro
-for dist in precise quantal raring saucy
+for dist in precise quantal raring saucy trusty
 do
 	reprepro include ${dist}-fkie ${changefile}
 done
