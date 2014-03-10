@@ -2,6 +2,7 @@ language: c
 compiler:
   - gcc
 install:
+  - sudo apt-get update
   - sudo apt-get install dpkg-dev debhelper python-all python3-all fakeroot
 before_script:
   - git fetch origin master:master
