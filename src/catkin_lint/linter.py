@@ -214,7 +214,7 @@ class CMakeLinter(object):
                 if "$ENV{" in ";".join(args):
                     info.report(WARNING, "ENV_VAR")
                 if cmd != cmd.lower():
-                    info.report(WARNING, "CMD_CASE", cmd=cmd)
+                    info.report(NOTICE, "CMD_CASE", cmd=cmd)
                     cmd = cmd.lower()
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
