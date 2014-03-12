@@ -42,7 +42,7 @@ def includes(linter):
         for incl in info.build_includes:
             if os.path.isabs(incl) or not incl: continue
             if not os.path.isdir(info.real_path(incl)):
-                info.report (ERROR, "MISSING_BUILD_INCLUDE_PATH", path="%s" % incl)
+                info.report (ERROR, "MISSING_BUILD_INCLUDE_PATH", path=incl)
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("include_directories", on_include_directories)
@@ -294,7 +294,7 @@ def installs(linter):
             info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
         if info.executables or info.libraries:
             for incl in info.export_includes - info.build_includes:
-                info.report (WARNING, "MISSING_BUILD_INCLUDE", path="%s" % incl[12:])
+                info.report (WARNING, "MISSING_BUILD_INCLUDE", path=incl)
         if info.export_includes and not info.install_includes:
             info.report (ERROR if "install" in info.commands else NOTICE, "MISSING_INSTALL_INCLUDE")
         for target, depends in iteritems(info.target_links):
