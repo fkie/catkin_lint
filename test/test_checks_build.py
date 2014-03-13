@@ -323,7 +323,7 @@ class ChecksBuildTest(unittest.TestCase):
 
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
-    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
+    @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/include"), os.path.normpath("/mock-path/include/mock") ])
     def do_exports(self):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin", "other_system" ], run_depends=[ "other_catkin", "other_system" ])
@@ -339,6 +339,7 @@ class ChecksBuildTest(unittest.TestCase):
             DEPENDS other_system
             LIBRARIES mock
             )
+            include_directories(include)
             add_library(mock src/mock.cpp)
             """,
         checks=cc.exports)
@@ -507,6 +508,27 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual([ "EXPORT_LIB_NOT_LIB" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package(INCLUDE_DIRS include)
+            add_executable(test_mock src/mock.cpp)
+            """,
+        checks=cc.exports)
+        self.assertEqual([ "MISSING_BUILD_INCLUDE" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package(INCLUDE_DIRS include)
+            include_directories(include/${PROJECT_NAME})
+            add_executable(test_mock src/mock.cpp)
+            """,
+        checks=cc.exports)
+        self.assertEqual([ "MISSING_BUILD_INCLUDE", "AMBIGUOUS_BUILD_INCLUDE" ], result)
 
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/config.xml"))

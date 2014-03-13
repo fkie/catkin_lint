@@ -237,6 +237,13 @@ catkin_package() command, but that path is not mentioned in any
 include_directories() call.
 """
 ),
+"AMBIGUOUS_BUILD_INCLUDE" : ("include paths '%(path)s' and '%(parent_path)s' are ambiguous",
+"""\
+You have used two include paths where one is a parent of
+the other. Thus the same headers can be included with two different include paths
+which may confuse users. It is recommended that you keep your include paths consistent.
+"""
+),
 "MISSING_EXPORT_INCLUDE_PATH" : ("exported include path '%(path)s' does not exist",
 """\
 You have listed an invalid include path in the INCLUDE_DIRS stanza of the
