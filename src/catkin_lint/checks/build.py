@@ -37,12 +37,13 @@ def includes(linter):
         info.build_includes = set([])
     def on_include_directories(info, cmd, args):
         _, args = cmake_argparse(args, { "AFTER" : "-", "BEFORE" : "-", "SYSTEM" : "-" })
-        info.build_includes |= set([ info.package_path(d) for d in args])
+        includes = set([ info.package_path(d) for d in args])
+        info.build_includes |= includes
     def on_final(info):
         for incl in info.build_includes:
             if os.path.isabs(incl) or not incl: continue
             if not os.path.isdir(info.real_path(incl)):
-                info.report (ERROR, "MISSING_BUILD_INCLUDE_PATH", path="%s" % incl)
+                info.report (ERROR, "MISSING_BUILD_INCLUDE_PATH", path=incl)
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("include_directories", on_include_directories)
@@ -209,9 +210,18 @@ def exports(linter):
                 info.report (WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg)
         if info.export_includes and info.libraries and not info.export_libs:
             info.report(WARNING, "MISSING_EXPORT_LIB")
+        if info.executables or info.libraries:
+            for incl in info.export_includes - info.build_includes:
+                info.report (WARNING, "MISSING_BUILD_INCLUDE", path=incl)
         for incl in info.export_includes:
             if not os.path.isdir(info.real_path(incl)):
                 info.report (ERROR, "MISSING_EXPORT_INCLUDE_PATH", path=incl)
+        includes = info.build_includes | info.export_includes
+        for d1 in includes:
+            if not os.path.isabs(d1):
+                for d2 in includes:
+                    if d1.startswith("%s%s" % (d2, os.path.sep)):
+                        info.report(WARNING, "AMBIGUOUS_BUILD_INCLUDE", path=d1, parent_path=d2)
         for lib in info.export_libs:
             if not lib in info.targets: continue
             if info.target_outputs[lib] != lib:
@@ -221,6 +231,7 @@ def exports(linter):
 
     linter.require(manifest_depends)
     linter.require(pkg_config)
+    linter.require(includes)
     linter.require(targets)
     linter.add_init_hook(on_init)
     linter.add_command_hook("catkin_package", on_catkin_package)
@@ -292,9 +303,6 @@ def installs(linter):
         for tgt in info.executables - info.install_targets:
             if "test" in tgt.lower() or "example" in tgt.lower(): continue
             info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
-        if info.executables or info.libraries:
-            for incl in info.export_includes - info.build_includes:
-                info.report (WARNING, "MISSING_BUILD_INCLUDE", path="%s" % incl[12:])
         if info.export_includes and not info.install_includes:
             info.report (ERROR if "install" in info.commands else NOTICE, "MISSING_INSTALL_INCLUDE")
         for target, depends in iteritems(info.target_links):
