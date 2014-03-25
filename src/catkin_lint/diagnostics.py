@@ -79,6 +79,13 @@ This construct was intended to facilitate the migration from
 Rosbuild to Catkin. It is deprecated and should not be used any more.
 """
 ),
+"DEPRECATED_CMD" : ( "%(old_cmd)s() is deprecated, use %(new_cmd)s() instead",
+"""\
+Some macros have been deprecated and replaced by newer versions.
+Please upgrade your CMakeLists.txt to ensure compatibility with
+future caktin versions.
+"""
+),
 "MISSING_REQUIRED" : ( "find_package(%(pkg)s) has no REQUIRED option",
 """\
 The package cannot build without this dependency, so it should be

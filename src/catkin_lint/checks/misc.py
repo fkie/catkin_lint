@@ -160,6 +160,18 @@ def endblock(linter):
     linter.add_command_hook("endforeach", on_command)
 
 
+def deprecated(linter):
+    def on_catkin_command(info, cmd, args):
+        info.report(ERROR, "DEPRECATED_CMD", old_cmd=cmd, new_cmd="catkin_%s"%cmd)
+    def on_cmake_command(info, cmd, args):
+        info.report(ERROR, "DEPRECATED_CMD", old_cmd=cmd, new_cmd="cmake_%s"%cmd)
+
+    linter.add_command_hook("add_gtest", on_catkin_command)
+    linter.add_command_hook("add_nosetests", on_catkin_command)
+    linter.add_command_hook("download_test_data", on_catkin_command)
+    linter.add_command_hook("parse_arguments", on_cmake_command)
+
+
 def all(linter):
     linter.require(project)
     linter.require(special_vars)
@@ -167,3 +179,4 @@ def all(linter):
     linter.require(singleton_commands)
     linter.require(cmake_includes)
     linter.require(endblock)
+    linter.require(deprecated)

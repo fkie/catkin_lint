@@ -69,6 +69,19 @@ class ChecksMiscTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) project(mock2)", checks=cc.singleton_commands)
         self.assertEqual([ "DUPLICATE_CMD" ], result)
 
+    def test_deprecated(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "add_gtest()", checks=cc.deprecated)
+        self.assertEqual([ "DEPRECATED_CMD" ], result)
+        result = mock_lint(env, pkg, "add_nosetests()", checks=cc.deprecated)
+        self.assertEqual([ "DEPRECATED_CMD" ], result)
+        result = mock_lint(env, pkg, "download_test_data()", checks=cc.deprecated)
+        self.assertEqual([ "DEPRECATED_CMD" ], result)
+        result = mock_lint(env, pkg, "parse_arguments()", checks=cc.deprecated)
+        self.assertEqual([ "DEPRECATED_CMD" ], result)
+        
+
     def test_endblock(self):
         env = create_env()
         pkg = create_manifest("mock")
