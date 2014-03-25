@@ -80,7 +80,12 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "DEPRECATED_CMD" ], result)
         result = mock_lint(env, pkg, "parse_arguments()", checks=cc.deprecated)
         self.assertEqual([ "DEPRECATED_CMD" ], result)
-        
+
+    def test_cmake_modules(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "project(mock) find_package(Eigen)", checks=cc.cmake_modules)
+        self.assertEqual([ "MISSING_CMAKE_MODULES" ], result)
 
     def test_endblock(self):
         env = create_env()

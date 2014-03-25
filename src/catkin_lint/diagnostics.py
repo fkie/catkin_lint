@@ -86,6 +86,12 @@ Please upgrade your CMakeLists.txt to ensure compatibility with
 future caktin versions.
 """
 ),
+"MISSING_CMAKE_MODULES" : ( "find_package(%(pkg)s) before find_package(cmake_modules)",
+"""\
+You need to find_package() cmake_modules before you can use
+one of its custom configuration modules.
+"""
+),
 "MISSING_REQUIRED" : ( "find_package(%(pkg)s) has no REQUIRED option",
 """\
 The package cannot build without this dependency, so it should be

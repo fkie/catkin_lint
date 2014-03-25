@@ -171,6 +171,21 @@ def deprecated(linter):
     linter.add_command_hook("download_test_data", on_catkin_command)
     linter.add_command_hook("parse_arguments", on_cmake_command)
 
+def cmake_modules(linter):
+    modules = set([
+        "Eigen",
+        "NUMPY",
+        "TBB",
+        "TinyXML",
+        "Xenomai",
+    ])
+    def on_find_package(info, cmd, args):
+        if args[0] in modules:
+            if not "cmake_modules" in info.find_packages:
+                info.report(WARNING, "MISSING_CMAKE_MODULES", pkg=args[0])
+
+    linter.add_command_hook("find_package", on_find_package)
+
 
 def all(linter):
     linter.require(project)
@@ -180,3 +195,5 @@ def all(linter):
     linter.require(cmake_includes)
     linter.require(endblock)
     linter.require(deprecated)
+    linter.require(cmake_modules)
+
