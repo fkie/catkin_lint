@@ -29,7 +29,7 @@ import sys
 from functools import total_ordering
 from fnmatch import fnmatch
 from copy import copy
-from catkin_pkg.packages import find_packages
+from .packages import find_packages
 from .cmake import ParserContext, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
 from .util import iteritems
