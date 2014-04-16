@@ -31,11 +31,14 @@ except ImportError:
     import pickle
 import tempfile
 from catkin_pkg.package import parse_package, PACKAGE_MANIFEST_FILENAME
+from .util import write_atomic
+
 
 class ManifestCacheItem(object):
     def __init__(self, manifest, last_modified):
         self.manifest = manifest
         self.last_modified = last_modified
+
 
 def find_packages(basepath):
     global _manifest_cache
@@ -98,22 +101,4 @@ def _store_manifest_cache():
     except:
         pass
     write_atomic(os.path.join(_manifest_cache_dir, "packages.pickle"), pickle.dumps(_manifest_cache, -1))
-
-
-def write_atomic(filepath, data):
-    fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + ".tmp.", dir=os.path.dirname(filepath))
-    with os.fdopen(fd, "wb") as f:
-        f.write(data)
-        f.close()
-    try:
-        os.rename (filepath_tmp, filepath)
-    except OSError:
-        try:
-            os.unlink(filepath)
-        except OSError:
-            pass
-        try:
-            os.rename(filepath_tmp, filepath)
-        except OSError:
-            os.unlink(filepath_tmp)
 
