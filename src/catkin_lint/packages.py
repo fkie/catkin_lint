@@ -29,7 +29,6 @@ try:
     import cPickle as pickle
 except ImportError:
     import pickle
-import tempfile
 from catkin_pkg.package import parse_package, PACKAGE_MANIFEST_FILENAME
 from .util import write_atomic
 
