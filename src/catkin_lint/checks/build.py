@@ -247,7 +247,7 @@ def name_check(linter):
             tgl = target.lower()
             tnc = True
             for nf in name_fragments:
-                if len(nf) < 3: continue
+                if len(nf) < 2: continue
                 if nf in tgl:
                     tnc = False
                     break
