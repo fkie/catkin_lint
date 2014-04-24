@@ -368,7 +368,7 @@ characters in its name. You probably forget to call set_target_properties(... PR
 OUTPUT_NAME ...)
 """
 ),
-"TARGET_NAME_COLLISION" : ("target '%(target)s' should contain package name",
+"TARGET_NAME_COLLISION" : ("target name '%(target)s' might not be sufficiently unique",
 """\
 The CMake build system requires all target identifiers to be globally unique.
 For this reason, it is highly recommended that you add the package name as in
