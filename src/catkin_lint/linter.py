@@ -66,6 +66,8 @@ class LintInfo(object):
         self.manifest = None
         self.file = ""
         self.line = 0
+        self.ignore_messages = set([])
+        self.ignored_messages = 0
         self.commands = set([])
         self.find_packages = set([])
         self.targets = set([])
@@ -78,6 +80,9 @@ class LintInfo(object):
         self._pkg_build = os.path.normpath("/pkg-build")
 
     def report(self, level, msg_id, **kwargs):
+        if msg_id in self.ignore_messages:
+            self.ignored_messages += 1
+            return
         id, text, description = msg(msg_id, **kwargs)
         self.messages.append(Message(
             package=self.manifest.name,
@@ -112,6 +117,8 @@ class CMakeLinter(object):
     def __init__(self, env):
         self.env = env
         self.messages = []
+        self.ignore_messages = set([])
+        self.ignored_messages = 0
         self._cmd_hooks = {}
         self._init_hooks = []
         self._final_hooks = []
@@ -266,6 +273,7 @@ class CMakeLinter(object):
 
     def lint(self, path, manifest):
         info = LintInfo(self.env)
+        info.ignore_messages = self.ignore_messages
         info.path = path
         info.manifest = manifest
         info.var = {
@@ -295,6 +303,7 @@ class CMakeLinter(object):
         except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
+        self.ignored_messages += info.ignored_messages
 
 class CatkinEnvironment(object):
     def __init__(self, rosdep_view=None):
