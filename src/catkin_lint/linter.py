@@ -29,7 +29,7 @@ import sys
 from functools import total_ordering
 from fnmatch import fnmatch
 from copy import copy
-from catkin_pkg.packages import find_packages
+from .packages import find_packages
 from .cmake import ParserContext, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
 from .util import iteritems
@@ -66,6 +66,8 @@ class LintInfo(object):
         self.manifest = None
         self.file = ""
         self.line = 0
+        self.ignore_messages = set([])
+        self.ignored_messages = 0
         self.commands = set([])
         self.find_packages = set([])
         self.targets = set([])
@@ -78,6 +80,9 @@ class LintInfo(object):
         self._pkg_build = os.path.normpath("/pkg-build")
 
     def report(self, level, msg_id, **kwargs):
+        if msg_id in self.ignore_messages:
+            self.ignored_messages += 1
+            return
         id, text, description = msg(msg_id, **kwargs)
         self.messages.append(Message(
             package=self.manifest.name,
@@ -112,6 +117,8 @@ class CMakeLinter(object):
     def __init__(self, env):
         self.env = env
         self.messages = []
+        self.ignore_messages = set([])
+        self.ignored_messages = 0
         self._cmd_hooks = {}
         self._init_hooks = []
         self._final_hooks = []
@@ -199,6 +206,62 @@ class CMakeLinter(object):
             info.parent_var = old_parent_var
             info.subdir = old_subdir
 
+    def _handle_list(self, info, args):
+        try:
+            op = args.pop(0)
+            name = args.pop(0)
+            items = info.var[name].split(';') if name in info.var and info.var[name] != "" else []
+            if op == "APPEND":
+                items += args
+            elif op == "INSERT":
+                pos = int(args.pop(0))
+                items[pos:pos] = args
+            elif op == "REVERSE":
+                items.reverse()
+            elif op == "SORT":
+                items.sort()
+            elif op == "REMOVE_ITEM":
+                for a in args:
+                    while a in items: items.remove(a)
+            elif op == "REMOVE_AT":
+                args = [ int(a) for a in args ]
+                args.sort()
+                args.reverse()
+                for a in args:
+                    try:
+                        del items[a]
+                    except IndexError:
+                        pass
+            elif op == "REMOVE_DUPLICATES":
+                new_items = []
+                for i in items:
+                    if not i in new_items: new_items.append(i)
+                items = new_items
+            elif op == "LENGTH":
+                output = args.pop(-1)
+                info.var[output] = str(len(items))
+                return
+            elif op == "GET":
+                output = args.pop(-1)
+                sub_list = []
+                for a in args:
+                    try:
+                        sub_list.append(items[int(a)])
+                    except IndexError:
+                        pass
+                info.var[output] = ';'.join(sub_list)
+                return
+            elif op == "FIND":
+                output = args.pop(-1)
+                a = args.pop(0)
+                info.var[output] = str(items.index(a)) if a in items else "-1"
+                return
+            else:
+                return
+            info.var[name] = ';'.join(items)
+        except:
+            pass
+
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
@@ -236,6 +299,8 @@ class CMakeLinter(object):
                 if cmd == "unset":
                     opts, args = cmake_argparse(args, { "CACHE": "-"})
                     info.var[args[0]] = ""
+                if cmd == "list":
+                    self._handle_list(info, args)
                 if cmd == "include":
                     self._include_file(info, args)
                 if cmd == "add_subdirectory":
@@ -266,6 +331,7 @@ class CMakeLinter(object):
 
     def lint(self, path, manifest):
         info = LintInfo(self.env)
+        info.ignore_messages = self.ignore_messages
         info.path = path
         info.manifest = manifest
         info.var = {
@@ -295,6 +361,7 @@ class CMakeLinter(object):
         except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
+        self.ignored_messages += info.ignored_messages
 
 class CatkinEnvironment(object):
     def __init__(self, rosdep_view=None):

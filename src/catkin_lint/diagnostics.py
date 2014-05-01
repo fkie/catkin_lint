@@ -79,6 +79,19 @@ This construct was intended to facilitate the migration from
 Rosbuild to Catkin. It is deprecated and should not be used any more.
 """
 ),
+"DEPRECATED_CMD" : ( "%(old_cmd)s() is deprecated, use %(new_cmd)s() instead",
+"""\
+Some macros have been deprecated and replaced by newer versions.
+Please upgrade your CMakeLists.txt to ensure compatibility with
+future caktin versions.
+"""
+),
+"MISSING_CMAKE_MODULES" : ( "find_package(%(pkg)s) before find_package(cmake_modules)",
+"""\
+You need to find_package() cmake_modules before you can use
+one of its custom configuration modules.
+"""
+),
 "MISSING_REQUIRED" : ( "find_package(%(pkg)s) has no REQUIRED option",
 """\
 The package cannot build without this dependency, so it should be
@@ -355,7 +368,7 @@ characters in its name. You probably forget to call set_target_properties(... PR
 OUTPUT_NAME ...)
 """
 ),
-"TARGET_NAME_COLLISION" : ("target '%(target)s' should contain package name",
+"TARGET_NAME_COLLISION" : ("target name '%(target)s' might not be sufficiently unique",
 """\
 The CMake build system requires all target identifiers to be globally unique.
 For this reason, it is highly recommended that you add the package name as in

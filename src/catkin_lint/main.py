@@ -52,6 +52,7 @@ def main():
         parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
         parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
         parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[ "all" ], help=argparse.SUPPRESS)
+        parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
         parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
         parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
         group = parser.add_mutually_exclusive_group()
@@ -94,6 +95,8 @@ def main():
         else:
             output = TextOutput()
         linter = CMakeLinter(env)
+        for a in args.ignore:
+            linter.ignore_messages |= set(a.upper().split(","))
         for check in args.check:
             try:
                 add_linter_check(linter, check)
@@ -127,6 +130,8 @@ def main():
             for level in [ ERROR, WARNING, NOTICE ]:
                 if suppressed[level] > 0:
                     sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
+            if linter.ignored_messages > 0:
+                sys.stderr.write ("catkin_lint: %d messages have been ignored explicitly\n" % linter.ignored_messages)
         sys.exit(exit_code)
     except Exception as err:
         sys.stderr.write("catkin_lint: internal error: %s\n\n" % str(err))

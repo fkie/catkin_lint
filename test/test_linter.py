@@ -3,7 +3,7 @@ import unittest
 import sys
 sys.stderr = sys.stdout
 
-from catkin_lint.linter import CMakeLinter
+from catkin_lint.linter import CMakeLinter, LintInfo
 from .helper import create_env, create_manifest, mock_lint
 import catkin_lint.checks.build as cc
 import catkin_lint.linter
@@ -38,6 +38,44 @@ class LinterTest(unittest.TestCase):
             catkin_package()
             """, checks=cc.all)
         self.assertEqual([ "CMD_CASE"], result)
+
+    def test_list(self):
+        env = create_env()
+        linter = CMakeLinter(env)
+        info = LintInfo(env)
+        linter._handle_list(info, ["APPEND", "test", "one" ])
+        self.assertEqual(info.var["test"], "one")
+        linter._handle_list(info, ["APPEND", "test", "three" ])
+        self.assertEqual(info.var["test"], "one;three")
+        linter._handle_list(info, ["INSERT", "test", "1", "two" ])
+        self.assertEqual(info.var["test"], "one;two;three")
+        linter._handle_list(info, ["GET", "test", "1", "result" ])
+        self.assertEqual(info.var["result"], "two")
+        linter._handle_list(info, ["GET", "test", "42", "result" ])
+        self.assertEqual(info.var["result"], "")
+        linter._handle_list(info, ["FIND", "test", "none", "result" ])
+        self.assertEqual(info.var["result"], "-1")
+        linter._handle_list(info, ["FIND", "test", "two", "result" ])
+        self.assertEqual(info.var["result"], "1")
+        info.var["test"] = "one;two;three;one;four;five"
+        linter._handle_list(info, ["REMOVE_DUPLICATES", "test"])
+        self.assertEqual(info.var["test"], "one;two;three;four;five")
+        linter._handle_list(info, ["REMOVE_AT", "test", "15", "0", "4", "2"])
+        self.assertEqual(info.var["test"], "two;four")
+        linter._handle_list(info, ["APPEND", "test", "two" ])
+        linter._handle_list(info, ["REMOVE_ITEM", "test", "two" ])
+        self.assertEqual(info.var["test"], "four")
+        info.var["test"] = "1;3;2;6;5;4"
+        linter._handle_list(info, ["SORT", "test"])
+        self.assertEqual(info.var["test"], "1;2;3;4;5;6")
+        linter._handle_list(info, ["REVERSE", "test"])
+        self.assertEqual(info.var["test"], "6;5;4;3;2;1")
+
+        info.var["test"] = "one;two;three"
+        linter._handle_list(info, ["UNKNOWN", "test"])
+        self.assertEqual(info.var["test"], "one;two;three")
+        linter._handle_list(info, [])
+        self.assertEqual(info.var["test"], "one;two;three")
 
     def test_env_var(self):
         env = create_env()

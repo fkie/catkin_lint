@@ -24,7 +24,9 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+import os
 import re
+import tempfile
 
 def word_split(s):
     ws = re.compile(r"(\W|_)+|(?<=[^A-Z])(?=[A-Z])|(?<=\w)(?=[A-Z][a-z])")
@@ -42,6 +44,24 @@ try:
 except ImportError:
     def zip_longest(*args):
         return map(None, *args)
+
+
+def write_atomic(filepath, data):
+    fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + ".tmp.", dir=os.path.dirname(filepath))
+    with os.fdopen(fd, "wb") as f:
+        f.write(data)
+        f.close()
+    try:
+        os.rename (filepath_tmp, filepath)
+    except OSError:
+        try:
+            os.unlink(filepath)
+        except OSError:
+            pass
+        try:
+            os.rename(filepath_tmp, filepath)
+        except OSError:
+            os.unlink(filepath_tmp)
 
 
 # Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
