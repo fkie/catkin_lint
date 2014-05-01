@@ -206,6 +206,62 @@ class CMakeLinter(object):
             info.parent_var = old_parent_var
             info.subdir = old_subdir
 
+    def _handle_list(self, info, args):
+        try:
+            op = args.pop(0)
+            name = args.pop(0)
+            items = info.var[name].split(';') if name in info.var and info.var[name] != "" else []
+            if op == "APPEND":
+                items += args
+            elif op == "INSERT":
+                pos = int(args.pop(0))
+                items[pos:pos] = args
+            elif op == "REVERSE":
+                items.reverse()
+            elif op == "SORT":
+                items.sort()
+            elif op == "REMOVE_ITEM":
+                for a in args:
+                    while a in items: items.remove(a)
+            elif op == "REMOVE_AT":
+                args = [ int(a) for a in args ]
+                args.sort()
+                args.reverse()
+                for a in args:
+                    try:
+                        del items[a]
+                    except IndexError:
+                        pass
+            elif op == "REMOVE_DUPLICATES":
+                new_items = []
+                for i in items:
+                    if not i in new_items: new_items.append(i)
+                items = new_items
+            elif op == "LENGTH":
+                output = args.pop(-1)
+                info.var[output] = str(len(items))
+                return
+            elif op == "GET":
+                output = args.pop(-1)
+                sub_list = []
+                for a in args:
+                    try:
+                        sub_list.append(items[int(a)])
+                    except IndexError:
+                        pass
+                info.var[output] = ';'.join(sub_list)
+                return
+            elif op == "FIND":
+                output = args.pop(-1)
+                a = args.pop(0)
+                info.var[output] = str(items.index(a)) if a in items else "-1"
+                return
+            else:
+                return
+            info.var[name] = ';'.join(items)
+        except:
+            pass
+
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
@@ -243,6 +299,8 @@ class CMakeLinter(object):
                 if cmd == "unset":
                     opts, args = cmake_argparse(args, { "CACHE": "-"})
                     info.var[args[0]] = ""
+                if cmd == "list":
+                    self._handle_list(info, args)
                 if cmd == "include":
                     self._include_file(info, args)
                 if cmd == "add_subdirectory":
