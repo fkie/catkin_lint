@@ -5,23 +5,72 @@ Overview
 ========
 
 **catkin_lint** checks package configurations for the
-`catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_. 
+`catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_.
 It is part of an ongoing effort to aid developers with their ROS packaging
 (see also: `issue #153 <https://github.com/ros/catkin/issues/153>`_).
 
 Installation
 ============
 
-**catkin_lint** is available as `PyPI package <https://pypi.python.org/pypi/catkin_lint>`_
-and `Ubuntu PPA package <https://launchpad.net/~roehling/+archive/latest>`_.
-It can also be downloaded from `GitHub <https://github.com/fkie/catkin_lint>`_
-and installed manually with ``python setup.py install``.
+Install Ubuntu Packages
+-----------------------
+
+Prebuilt packages are available from the `ROS repository <http://packages.ros.org/>`_.
+If you already have installed ROS, downloading **catkin_lint** is as simple as::
+
+    sudo apt-get install python-catkin-lint
+
+Alternatively, you can use `Timo's PPA <https://launchpad.net/~roehling/+archive/latest>`_ on Launchpad::
+
+    sudo add-apt-repository ppa:roehling/latest
+    sudo apt-get update
+    sudo apt-get install python-catkin-lint
+
+.. topic:: End-of-Life
+
+    Launchpad policy prevents me from uploading new versions once a distribution has reached its End-of-Life.
+    As of this writing, this concerns Ubuntu Raring and Quantal users. Please refer to the Ubuntu list of releases for
+    detailed information.
+
+Download from PyPI
+------------------
+
+The Python Package Index (`PyPI <https://pypi.python.org/pypi/catkin_lint>`_) is a repository of software
+for the Python programming language. You can download and install **catkin_lint** with::
+
+    sudo pip install catkin_lint
+
+Install from Source
+-------------------
+
+You can clone **catkin_lint** from `GitHub <https://github.com/fkie/catkin_lint>`_::
+
+    git clone https://github.com/fkie/catkin_lint
+    cd catkin_lint
+    sudo python setup.py install
 
 Build status of latest version:
 
 .. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=master
    :target: https://travis-ci.org/fkie/catkin_lint
 
+Build your own Debian packages
+------------------------------
+
+If your distribution is not supported, you can build your own packages::
+
+    sudo apt-get install dpkg-dev
+    git clone https://github.com/fkie/catkin_lint
+    cd catkin_lint
+    git checkout debian
+    ./debian/rules make-orig-tar
+    dpkg-buildpackage -tc -uc -us -i\\..*
+    sudo dpkg -i ../python-catkin-lint_*_all.deb
+
+Build status of packaging branch:
+
+.. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=debian
+   :target: https://travis-ci.org/fkie/catkin_lint
 
 Running
 =======
