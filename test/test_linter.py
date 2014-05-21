@@ -39,6 +39,18 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all)
         self.assertEqual([ "CMD_CASE"], result)
 
+    def test_pragma(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore cmd_case
+            PROJECT(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+
     def test_list(self):
         env = create_env()
         linter = CMakeLinter(env)

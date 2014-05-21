@@ -279,6 +279,12 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd", [ "$ENV{PATH}" ], 1) ]
         )
 
+    def test_pragma(self):
+        self.assertEqual(
+            self.parse_all("# catkin_lint: extra space\n#catkin_lint:\n#catkin_lint:   \n#catkin_lint:   one   two   three   \n#catkin_lint :\n"),
+            [ ("#catkin_lint", [], 2), ("#catkin_lint", [], 3), ("#catkin_lint", ["one","two","three"], 4) ]
+        )
+
     def test_comments(self):
         self.assertEqual(
             self.parse_all("""\
