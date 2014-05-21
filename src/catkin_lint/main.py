@@ -55,6 +55,7 @@ def main():
         parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
         parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
         parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
+        parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--text", action="store_true", help="output result as text (default)")
         group.add_argument("--explain", action="store_true", help="output result as text with explanations")
@@ -70,6 +71,9 @@ def main():
             else:
                 sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
                 sys.exit(0)
+        if args.package_path:
+            for path in args.package_path.split(os.pathsep):
+                env.add_path(path)
         if "ROS_PACKAGE_PATH" in os.environ:
             for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
                 env.add_path(path)
