@@ -61,6 +61,7 @@ class ExplainedTextOutput(TextOutput):
         if not msg.id in self.explained:
             self.explained.add(msg.id)
             file.write("%s\n" % textwrap.fill(msg.description, initial_indent="     * ", subsequent_indent="     * "))
+            file.write("     * You can ignore this problem with --ignore %s\n" % msg.id.lower())
 
 
 class XmlOutput(object):
