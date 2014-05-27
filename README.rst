@@ -152,14 +152,6 @@ catkin manual.
 Contribution
 ============
 
-**catkin_lint** is still under active development and lacks a number
-of features:
-
-* Support for upcoming package.xml format 2
-* Unit tests with full coverage
-* Check proper usage of external libraries (e.g. Qt)
-* Support for CMake functions
-
 If you would like to contribute, you are very welcome to do so.
 Please contact `@roehling <https://github.com/roehling>`_ first
 to avoid any duplication of work.
