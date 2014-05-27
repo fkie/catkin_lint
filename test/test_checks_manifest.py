@@ -1,6 +1,6 @@
 import unittest
 import catkin_lint.checks.manifest as cc
-from .helper import create_env, create_manifest, mock_lint
+from .helper import create_env, create_manifest, create_manifest2, mock_lint
 
 import sys
 sys.stderr = sys.stdout
@@ -31,6 +31,18 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([ "UNKNOWN_DEPEND" ], result)
 
+        pkg = create_manifest2("mock", build_export_depends=[ "invalid" ])
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+
+        pkg = create_manifest2("mock", buildtool_export_depends=[ "invalid" ])
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+
+        pkg = create_manifest2("mock", exec_depends=[ "invalid" ])
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+
         pkg = create_manifest("mock", run_depends=[ "other_catkin" ], meta=True)
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([], result)
@@ -42,10 +54,6 @@ class ChecksManifestTest(unittest.TestCase):
         pkg = create_manifest("mock", test_depends=[ "other_catkin" ], meta=True)
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([ "INVALID_META_DEPEND" ], result)
-
-        pkg = create_manifest("mock", run_depends=[ "other_catkin" ], test_depends=[ "other_catkin" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "REDUNDANT_TEST_DEPEND" ], result)
 
 
     def test_catkin_build(self):

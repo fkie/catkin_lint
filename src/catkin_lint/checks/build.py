@@ -203,9 +203,9 @@ def exports(linter):
         info.export_packages |= set(opts["CATKIN_DEPENDS"])
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
     def on_final(info):
-        for pkg in info.export_packages - info.run_dep:
-            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run")
-        for pkg in (info.find_packages & info.build_dep & info.run_dep) - info.export_packages:
+        for pkg in info.export_packages - info.export_dep:
+            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
+        for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
             if re.search(r"_(msg|message)s?(_|$)", pkg) and info.env.is_catkin_pkg(pkg):
                 info.report (WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg)
         if info.export_includes and info.libraries and not info.export_libs:
@@ -333,8 +333,8 @@ def plugins(linter):
                         info.report (ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
                     if not os.path.normpath("/catkin-target/share/%s/%s" % (info.manifest.name, plugin[10:])) in info.install_files:
                         info.report (ERROR if "install" in info.commands else NOTICE, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
-        for dep in plugin_dep - info.run_dep:
-            info.report (WARNING, "PLUGIN_DEPEND", export=dep, type="run", pkg=dep)
+        for dep in plugin_dep - info.exec_dep:
+            info.report (WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)
 
     linter.require(manifest_depends)
     linter.require(installs)
@@ -374,8 +374,8 @@ def message_generation(linter):
             info.report(ERROR, "MISSING_MSG_CATKIN", pkg=pkg)
         for pkg in info.msg_dep - info.build_dep:
             info.report (ERROR, "MISSING_MSG_DEPEND", pkg=pkg, type="build")
-        for pkg in info.msg_dep - info.run_dep:
-            info.report (ERROR, "MISSING_MSG_DEPEND", pkg=pkg, type="run")
+        for pkg in info.msg_dep - info.export_dep:
+            info.report (ERROR, "MISSING_MSG_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
         if info.declares_messages and not "generate_messages" in info.commands:
             info.report(ERROR, "MISSING_GENERATE_MSG")
         if not info.declares_messages and "generate_messages" in info.commands:
@@ -383,7 +383,7 @@ def message_generation(linter):
         if info.declares_messages and not "message_generation" in info.find_packages:
             info.report (ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg="message_generation")
         if info.declares_messages and not "message_runtime" in info.export_packages:
-            info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg="message_runtime")
+            info.report(ERROR, "MISSING_CATKIN_DEPEND", type="run" if info.manifest.package_format < 2 else "build_export", pkg="message_runtime")
 
     linter.require(manifest_depends)
     linter.require(depends)

@@ -113,7 +113,7 @@ dependencies with the COMPONENTS keyword. This is shorter than
 multiple find_package() calls, but does not work for system dependencies.
 """
 ),
-"MISSING_CATKIN_DEPEND" : ("run_depend '%(pkg)s' is not listed in catkin_package()",
+"MISSING_CATKIN_DEPEND" : ("%(type)s_depend '%(pkg)s' is not listed in catkin_package()",
 """\
 You have specified a catkin run dependency but failed to list
 it in the CATKIN_DEPENDS stanza of the catkin_package() call.
