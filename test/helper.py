@@ -16,11 +16,30 @@ def create_manifest(name, description="", buildtool_depends=[ "catkin" ], build_
     return Package(
         name=name,
         version="0.0.0",
+        package_format=1,
         description=description,
         maintainers=[ Person("John Foo", "foo@bar.com") ],
         buildtool_depends=[ Dependency(d) for d in buildtool_depends ],
         build_depends=[ Dependency(d) for d in build_depends ],
         run_depends=[ Dependency(d) for d in run_depends ],
+        test_depends=[ Dependency(d) for d in test_depends ],
+        exports=[ Export("metapackage") ] if meta else []
+    )
+
+
+def create_manifest2(name, description="", buildtool_depends=[ "catkin" ], build_depends=[], depends=[], buildtool_export_depends=[], build_export_depends=[], exec_depends=[], test_depends=[], meta=False):
+    return Package(
+        name=name,
+        version="0.0.0",
+        package_format=2,
+        description=description,
+        maintainers=[ Person("John Foo", "foo@bar.com") ],
+        depends=[ Dependency(d) for d in depends ],
+        buildtool_depends=[ Dependency(d) for d in buildtool_depends ],
+        build_depends=[ Dependency(d) for d in build_depends ],
+        buildtool_export_depends=[ Dependency(d) for d in buildtool_export_depends ],
+        build_export_depends=[ Dependency(d) for d in build_export_depends ],
+        exec_depends=[ Dependency(d) for d in exec_depends ],
         test_depends=[ Dependency(d) for d in test_depends ],
         exports=[ Export("metapackage") ] if meta else []
     )

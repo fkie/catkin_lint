@@ -34,11 +34,38 @@ def depends(linter):
     def on_init(info):
         info.buildtool_dep = set([ dep.name for dep in info.manifest.buildtool_depends ])
         info.build_dep = set([ dep.name for dep in info.manifest.build_depends ])
-        info.run_dep = set([ dep.name for dep in info.manifest.run_depends ])
+        info.export_dep = set([])
+        info.exec_dep = set([])
+        if info.manifest.package_format > 1 and hasattr(info.manifest, "build_export_depends"):
+            deps = set([ dep.name for dep in info.manifest.build_export_depends ])
+            if info.env.has_rosdep():
+                for pkg in deps:
+                    if not info.env.is_known_pkg(pkg):
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
+            info.export_dep.update(deps)
+        if info.manifest.package_format > 1 and hasattr(info.manifest, "buildtool_export_depends"):
+            deps = set([ dep.name for dep in info.manifest.buildtool_export_depends ])
+            if info.env.has_rosdep():
+                for pkg in deps:
+                    if not info.env.is_known_pkg(pkg):
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool_export")
+            info.export_dep.update(deps)
+        if info.manifest.package_format > 1 and hasattr(info.manifest, "exec_depends"):
+            deps = set([ dep.name for dep in info.manifest.exec_depends ])
+            if info.env.has_rosdep():
+                for pkg in deps:
+                    if not info.env.is_known_pkg(pkg):
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
+            info.exec_dep.update(deps)
+        if info.manifest.package_format < 2 and hasattr(info.manifest, "run_depends"):
+            deps = set([ dep.name for dep in info.manifest.run_depends ])
+            info.export_dep.update(deps)
+            info.exec_dep.update(deps)
+            if info.env.has_rosdep():
+                for pkg in deps:
+                    if not info.env.is_known_pkg(pkg):
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
         info.test_dep = set([ dep.name for dep in info.manifest.test_depends ])
-        for pkg in (info.build_dep | info.run_dep) & info.test_dep:
-            if info.env.is_known_pkg(pkg):
-                info.report (ERROR, "REDUNDANT_TEST_DEPEND", pkg=pkg)
         if info.env.has_rosdep():
             for pkg in info.buildtool_dep:
                 if not info.env.is_known_pkg(pkg):
@@ -46,9 +73,6 @@ def depends(linter):
             for pkg in info.build_dep:
                 if not info.env.is_known_pkg(pkg):
                     info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build")
-            for pkg in info.run_dep:
-                if not info.env.is_known_pkg(pkg):
-                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
             for pkg in info.test_dep:
                 if not info.env.is_known_pkg(pkg):
                     info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="test")

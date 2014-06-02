@@ -45,6 +45,7 @@ class OutputTest(unittest.TestCase):
         self.assertEqual(result,
           "mock: mock.cmake(1): error: short text\n"
           "     * long text\n"
+          "     * You can ignore this problem with --ignore mock_msg\n"
           "mock: mock.cmake(2): warning: short text\n"
           "mock: mock.cmake(3): notice: short text\n"
           "mock: error: short text\n"

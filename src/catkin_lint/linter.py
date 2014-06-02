@@ -262,6 +262,11 @@ class CMakeLinter(object):
         except:
             pass
 
+    def _handle_pragma(self, info, args):
+        pragma = args.pop(0)
+        if pragma == "ignore":
+            info.ignore_messages |= set([ a.upper() for a in args ])
+
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
@@ -274,6 +279,9 @@ class CMakeLinter(object):
             for cmd, args, fname, line in self._ctx.parse(content, var=info.var, filename=cur_file):
                 info.file = fname
                 info.line = line
+                if cmd == "#catkin_lint":
+                    self._handle_pragma(info, args)
+                    continue
                 if "$ENV{" in ";".join(args):
                     info.report(WARNING, "ENV_VAR")
                 if cmd != cmd.lower():

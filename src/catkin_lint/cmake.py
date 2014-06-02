@@ -59,6 +59,7 @@ _token_spec = [
     ( 'STRING', r'"[^\\"]*(?:\\.[^\\"]*)*"' ),
     ( 'SEMICOLON', r';'),
     ( 'WORD', r'[^\(\)"# \t\r\n;]+' ),
+    ( 'PRAGMA', r'#catkin_lint:.*?$' ),
     ( 'COMMENT', r'#.*?$' ),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
@@ -124,6 +125,10 @@ def _parse_commands(s, filename):
     line = 0
     for typ, val, line in _lexer(s):
         if typ == "COMMENT": continue
+        if typ == "PRAGMA":
+            args = re.split(r'\s+', val[13:])
+            commands.append(Command("#catkin_lint", [ ( "LITERAL", arg) for arg in args if len(arg)>0 ], filename, line))
+            continue
         if state == 0:
             if typ != "WORD":
                 raise SyntaxError("%s(%d): expected command identifier and got '%s'" % (filename, line, val))
@@ -206,7 +211,7 @@ class ParserContext(object):
             cmd = cmds.pop(0)
             cmdname = _resolve_vars(cmd.name, var)
             cmdname_lower = cmdname.lower()
-            if not re.match(r'^[a-z_][a-z_0-9]*$', cmdname_lower):
+            if not re.match(r'^#?[a-z_][a-z_0-9]*$', cmdname_lower):
                 raise SyntaxError("%s(%d): invalid command identifier '%s'" % (cmd.filename, cmd.line, cmdname))
             args = _resolve_args(cmd.args, var)
             if cmd.name.lower() == "macro":
