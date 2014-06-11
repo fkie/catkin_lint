@@ -55,6 +55,7 @@ def main():
         parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
         parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
         parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
+        parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
         parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
         group = parser.add_mutually_exclusive_group()
         group.add_argument("--text", action="store_true", help="output result as text (default)")
@@ -89,6 +90,7 @@ def main():
                 nothing_to_do = 1
                 continue
             pkgs_to_check.append(env.manifests[name])
+        pkgs_to_check = [ (p,m) for p,m in pkgs_to_check if not m.name in args.skip_pkg ]
         if not pkgs_to_check:
             sys.stderr.write ("catkin_lint: no packages to check\n")
             sys.exit(nothing_to_do)
