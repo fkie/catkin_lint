@@ -62,7 +62,15 @@ def main():
         group.add_argument("--explain", action="store_true", help="output result as text with explanations")
         group.add_argument("--xml", action="store_true", help="output result as XML")
         parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
+        parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
         args = parser.parse_args()
+        if args.list_check_ids:
+            from .diagnostics import message_list
+            ids = [ k.lower() for k in message_list.keys() ]
+            ids.sort()
+            sys.stdout.write("\n".join(ids))
+            sys.stdout.write("\n")
+            sys.exit(0)
         nothing_to_do = 0
         pkgs_to_check = []
         env = CatkinEnvironment()
