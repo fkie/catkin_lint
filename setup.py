@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from distutils.core import setup
+from setuptools import setup
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
@@ -34,6 +34,11 @@ setup(
                     "Operating System :: OS Independent",
                     "Programming Language :: Python",
                     "Programming Language :: Python :: 3"
-                  ]
+                  ],
+  entry_points  = {
+                    "catkin_tools.commands.catkin.verbs": [
+                      "lint = catkin_lint.main:description",
+                    ],
+                  },
 )
 

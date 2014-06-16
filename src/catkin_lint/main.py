@@ -44,111 +44,126 @@ def add_linter_check(linter, check):
     linter.require(getattr(check_module, func))
 
 
+def prepare_arguments(parser):
+    parser.add_argument("--version", action="version", version=catkin_lint_version)
+    parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
+    parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
+    parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
+    parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[ "all" ], help=argparse.SUPPRESS)
+    parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
+    parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
+    parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
+    parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--text", action="store_true", help="output result as text (default)")
+    group.add_argument("--explain", action="store_true", help="output result as text with explanations")
+    group.add_argument("--xml", action="store_true", help="output result as XML")
+    parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
+    return parser
+
+
+def run_linter(args):
+    if args.list_check_ids:
+        from .diagnostics import message_list
+        ids = [ k.lower() for k in message_list.keys() ]
+        ids.sort()
+        sys.stdout.write("\n".join(ids))
+        sys.stdout.write("\n")
+        return 0
+    nothing_to_do = 0
+    pkgs_to_check = []
+    env = CatkinEnvironment()
+    if not args.path and not args.pkg:
+        if os.path.isfile("package.xml"):
+            pkgs_to_check += env.add_path(os.getcwd())
+        else:
+            sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
+            return 0
+    if args.package_path:
+        for path in args.package_path.split(os.pathsep):
+            env.add_path(path)
+    if "ROS_PACKAGE_PATH" in os.environ:
+        for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
+            env.add_path(path)
+    for path in args.path:
+        if not os.path.isdir(path):
+            sys.stderr.write("catkin_lint: not a directory: %s\n" % path)
+            nothing_to_do = 1
+            continue
+        pkgs_to_check += env.add_path(path)
+    for name in args.pkg:
+        if not name in env.known_catkin_pkgs:
+            sys.stderr.write("catkin_lint: no such package: %s\n" % name)
+            nothing_to_do = 1
+            continue
+        pkgs_to_check.append(env.manifests[name])
+    pkgs_to_check = [ (p,m) for p,m in pkgs_to_check if not m.name in args.skip_pkg ]
+    if not pkgs_to_check:
+        sys.stderr.write ("catkin_lint: no packages to check\n")
+        return nothing_to_do
+    if args.xml:
+        output = XmlOutput()
+    elif args.explain:
+        output = ExplainedTextOutput()
+    else:
+        output = TextOutput()
+    linter = CMakeLinter(env)
+    for a in args.ignore:
+        linter.ignore_messages |= set(a.upper().split(","))
+    for check in args.check:
+        try:
+            add_linter_check(linter, check)
+        except Exception as err:
+            sys.stderr.write("catkin_lint: cannot import '%s': %s\n" % (check, str(err)))
+            if args.debug: raise
+            return 1
+    for path, manifest in pkgs_to_check:
+        try:
+            linter.lint(path, manifest)
+        except Exception as err:
+            sys.stderr.write("catkin_lint: cannot lint %s: %s\n" % (manifest.name, str(err)))
+            if args.debug: raise
+    suppressed = { ERROR: 0, WARNING: 0, NOTICE: 0 }
+    problems = 0
+    exit_code = 0
+    diagnostic_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
+    output.prolog(file=sys.stdout)
+    for msg in sorted(linter.messages):
+        if args.W < msg.level:
+            suppressed[msg.level] += 1
+            continue
+        if args.strict: msg.level = ERROR
+        if msg.level == ERROR:
+            exit_code = 1
+        output.message(msg, file=sys.stdout)
+        problems += 1
+    output.epilog(file=sys.stdout)
+    if not args.quiet:
+        sys.stderr.write ("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
+        for level in [ ERROR, WARNING, NOTICE ]:
+            if suppressed[level] > 0:
+                sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
+        if linter.ignored_messages > 0:
+            sys.stderr.write ("catkin_lint: %d messages have been ignored explicitly\n" % linter.ignored_messages)
+    return exit_code
+
 def main():
     try:
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--version", action="version", version=catkin_lint_version)
-        parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
-        parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
-        parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
-        parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[ "all" ], help=argparse.SUPPRESS)
-        parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
-        parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
-        parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
-        parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
-        parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
-        group = parser.add_mutually_exclusive_group()
-        group.add_argument("--text", action="store_true", help="output result as text (default)")
-        group.add_argument("--explain", action="store_true", help="output result as text with explanations")
-        group.add_argument("--xml", action="store_true", help="output result as XML")
-        parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
-        parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
+        parser = prepare_arguments(argparse.ArgumentParser())
         args = parser.parse_args()
-        if args.list_check_ids:
-            from .diagnostics import message_list
-            ids = [ k.lower() for k in message_list.keys() ]
-            ids.sort()
-            sys.stdout.write("\n".join(ids))
-            sys.stdout.write("\n")
-            sys.exit(0)
-        nothing_to_do = 0
-        pkgs_to_check = []
-        env = CatkinEnvironment()
-        if not args.path and not args.pkg:
-            if os.path.isfile("package.xml"):
-                pkgs_to_check += env.add_path(os.getcwd())
-            else:
-                sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
-                sys.exit(0)
-        if args.package_path:
-            for path in args.package_path.split(os.pathsep):
-                env.add_path(path)
-        if "ROS_PACKAGE_PATH" in os.environ:
-            for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
-                env.add_path(path)
-        for path in args.path:
-            if not os.path.isdir(path):
-                sys.stderr.write("catkin_lint: not a directory: %s\n" % path)
-                nothing_to_do = 1
-                continue
-            pkgs_to_check += env.add_path(path)
-        for name in args.pkg:
-            if not name in env.known_catkin_pkgs:
-                sys.stderr.write("catkin_lint: no such package: %s\n" % name)
-                nothing_to_do = 1
-                continue
-            pkgs_to_check.append(env.manifests[name])
-        pkgs_to_check = [ (p,m) for p,m in pkgs_to_check if not m.name in args.skip_pkg ]
-        if not pkgs_to_check:
-            sys.stderr.write ("catkin_lint: no packages to check\n")
-            sys.exit(nothing_to_do)
-        if args.xml:
-            output = XmlOutput()
-        elif args.explain:
-            output = ExplainedTextOutput()
-        else:
-            output = TextOutput()
-        linter = CMakeLinter(env)
-        for a in args.ignore:
-            linter.ignore_messages |= set(a.upper().split(","))
-        for check in args.check:
-            try:
-                add_linter_check(linter, check)
-            except Exception as err:
-                sys.stderr.write("catkin_lint: cannot import '%s': %s\n" % (check, str(err)))
-                if args.debug: raise
-                sys.exit(1)
-        for path, manifest in pkgs_to_check:
-            try:
-                linter.lint(path, manifest)
-            except Exception as err:
-                sys.stderr.write("catkin_lint: cannot lint %s: %s\n" % (manifest.name, str(err)))
-                if args.debug: raise
-        suppressed = { ERROR: 0, WARNING: 0, NOTICE: 0 }
-        problems = 0
-        exit_code = 0
-        diagnostic_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
-        output.prolog(file=sys.stdout)
-        for msg in sorted(linter.messages):
-            if args.W < msg.level:
-                suppressed[msg.level] += 1
-                continue
-            if args.strict: msg.level = ERROR
-            if msg.level == ERROR:
-                exit_code = 1
-            output.message(msg, file=sys.stdout)
-            problems += 1
-        output.epilog(file=sys.stdout)
-        if not args.quiet:
-            sys.stderr.write ("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
-            for level in [ ERROR, WARNING, NOTICE ]:
-                if suppressed[level] > 0:
-                    sys.stderr.write ("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (suppressed[level], diagnostic_label[level], level))
-            if linter.ignored_messages > 0:
-                sys.stderr.write ("catkin_lint: %d messages have been ignored explicitly\n" % linter.ignored_messages)
-        sys.exit(exit_code)
+        sys.exit(run_linter(args))
     except Exception as err:
         sys.stderr.write("catkin_lint: internal error: %s\n\n" % str(err))
         if args and args.debug: raise
         sys.exit(2)
+
+
+description = dict(
+    verb="lint",
+    description="Checks catkin packages for common errors",
+    main=run_linter,
+    prepare_arguments=prepare_arguments
+)
 
