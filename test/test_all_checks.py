@@ -3,6 +3,7 @@ from .helper import create_env, create_manifest, mock_lint
 
 import sys
 sys.stderr = sys.stdout
+import os
 
 try:
     from mock import patch
@@ -12,7 +13,7 @@ except ImportError:
 
 class AllChecksTest(unittest.TestCase):
 
-    @patch("os.path.isfile", lambda x: x == "/mock-path/src/test.cpp")
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/test.cpp"))
     def test_project(self):
         env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
         pkg = create_manifest("mock", description="Cool Worf", build_depends=[ "foo", "foo_msgs" ], run_depends=[ "foo_msgs" ])

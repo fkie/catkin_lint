@@ -242,7 +242,7 @@ def name_check(linter):
     def on_final(info):
         name_fragments = set(word_split(info.manifest.name))
         for target, output in iteritems(info.target_outputs):
-            if os.sep in output:
+            if "/" in output or "\\" in output:
                 info.report (ERROR, "INVALID_TARGET_OUTPUT", target=target)
             tgl = target.lower()
             tnc = True
