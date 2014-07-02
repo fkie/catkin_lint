@@ -35,8 +35,8 @@ Alternatively, you can use `Timo's PPA <https://launchpad.net/~roehling/+archive
 Download from PyPI
 ------------------
 
-The Python Package Index (`PyPI <https://pypi.python.org/pypi/catkin_lint>`_) is a repository of software
-for the Python programming language. You can download and install **catkin_lint** with::
+You can download and install **catkin_lint** from the `Python Package Index <https://pypi.python.org/pypi/catkin_lint>`_
+with::
 
     sudo pip install catkin_lint
 
@@ -105,9 +105,12 @@ to your ``$WSDIR/src`` folder manually (do not use ``catkin_init_workspace``).
 Then add the following ``CMakeLists.txt``::
 
     cmake_minimum_required(VERSION 2.8.3)
-    execute_process(COMMAND catkin_lint "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
-    if(NOT ${lint_result} EQUAL 0)
-        message(FATAL_ERROR "catkin_lint failed")
+    find_program(CATKIN_LINT catkin_lint)
+    if(CATKIN_LINT)
+        execute_process(COMMAND "${CATKIN_LINT}" "${CMAKE_SOURCE_DIR}" RESULT_VARIABLE lint_result)
+        if(NOT ${lint_result} EQUAL 0)
+            message(FATAL_ERROR "catkin_lint failed")
+        endif()
     endif()
     include(toplevel.cmake)
 

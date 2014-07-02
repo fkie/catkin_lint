@@ -6,13 +6,18 @@ _catkin_lint_complete()
 {
 	local arg="${COMP_WORDS[COMP_CWORD]}"
 	local prev="${COMP_WORDS[COMP_CWORD-1]}"
-	if [ "$prev" == "--pkg" ]
+	if [ "$prev" == "--pkg" -o "$prev" == "--skip-pkg" ]
 	then
 		COMPREPLY=( $( compgen -W "$( rospack list-names 2>/dev/null )" -- "$arg" ) )
 		return 0
 	fi
+	if [ "$prev" == "--ignore" ]
+	then
+		COMPREPLY=( $( compgen -W "$( catkin_lint --list-check-ids )" -- "$arg" ) )
+		return 0
+	fi
 	compopt -o filenames 2>/dev/null
-	COMPREPLY=( $( compgen -W "-h --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --pkg" -- "$arg" ) )
+	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --pkg --skip-pkg --ignore --package-path" -- "$arg" ) )
 	COMPREPLY+=( $( compgen -d -- "$arg" ) )
 	return 0
 }

@@ -38,7 +38,6 @@ class TextOutput(object):
 
     def message(self, msg, file=sys.stdout):
         loc = msg.package
-        explained = set([])
         if msg.file:
             if msg.line:
                 fn = "%s(%d)" % ( msg.file, msg.line )

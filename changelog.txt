@@ -1,3 +1,9 @@
+Version 1.3.7
+
+  * Entry point for integration with catkin_tools
+  * New command line option --skip-pkg
+  * Minor bugfixes and code cleanup
+
 Version 1.3.6
 
   * Support for #catkin_lint pragma comments
