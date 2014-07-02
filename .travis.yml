@@ -3,7 +3,7 @@ compiler:
   - gcc
 install:
   - sudo apt-get update
-  - sudo apt-get install dpkg-dev debhelper python-all python3-all fakeroot
+  - sudo apt-get install dpkg-dev debhelper python-all python3-all fakeroot python-setuptools python3-setuptools
 before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar

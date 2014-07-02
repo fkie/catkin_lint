@@ -2,7 +2,8 @@ Source: catkin-lint
 Section: devel
 Priority: extra
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
-Build-Depends: debhelper (>= 8.0.0), python-all, python3-all
+Build-Depends: debhelper (>= 8.0.0), python-all, python3-all,
+               python-setuptools, python3-setuptools
 Homepage: https://github.com/fkie/catkin_lint
 X-Python-Version: >= 2.7
 X-Python3-Version: >= 3.2
