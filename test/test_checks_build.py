@@ -101,6 +101,15 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg,
             """
             project(mock)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            find_package(unknown_package REQUIRED)
+            """,
+        checks=cc.depends)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
             find_package(other_catkin REQUIRED)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             """,
@@ -115,6 +124,15 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.depends)
         self.assertEqual([ "NO_CATKIN_COMPONENT", "MISSING_DEPEND" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS unknown_package)
+            find_package(other_catkin REQUIRED)
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -415,6 +433,19 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual([ "SYSTEM_AS_CATKIN_DEPEND" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin REQUIRED)
+            find_package(unknown_package REQUIRED)
+            catkin_package(
+            CATKIN_DEPENDS other_catkin unknown_package
+            )
+            """,
+        checks=cc.exports)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         result = mock_lint(env, pkg,
             """
