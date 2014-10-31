@@ -276,7 +276,7 @@ class CMakeLinter(object):
             info.file = cur_file
             info.line = 0
             content = self._read_file(filename)
-            for cmd, args, fname, line in self._ctx.parse(content, var=info.var, filename=cur_file):
+            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, filename=cur_file):
                 info.file = fname
                 info.line = line
                 if cmd == "#catkin_lint":
