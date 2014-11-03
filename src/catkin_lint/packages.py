@@ -25,6 +25,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
+import sys
 try:
     import cPickle as pickle
 except ImportError:
@@ -101,4 +102,12 @@ def _store_manifest_cache():
     except:
         pass
     write_atomic(os.path.join(_manifest_cache_dir, "packages.pickle"), pickle.dumps(_manifest_cache, -1))
+
+def _dump_manifest_cache():
+    global _manifest_cache
+    if _manifest_cache is None: _load_manifest_cache()
+    sys.stdout.write ("Cache version %d\n" % _manifest_cache[".VERSION."])
+    for pkg_dir in _manifest_cache:
+        if pkg_dir == ".VERSION.": continue
+        sys.stdout.write ("%s -> %s (%s)\n" % (pkg_dir, _manifest_cache[pkg_dir].manifest.name, _manifest_cache[pkg_dir].last_modified))
 
