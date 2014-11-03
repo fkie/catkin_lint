@@ -58,7 +58,7 @@ def find_packages(basepath):
                 dirnames.remove(dirname)
     cache_updated = False
     for path in package_paths:
-        pkg_dir = os.path.join(basepath, path)
+        pkg_dir = os.path.realpath(os.path.join(basepath, path))
         last_modified = os.path.getmtime(os.path.join(pkg_dir, PACKAGE_MANIFEST_FILENAME))
         known_modified = _manifest_cache[pkg_dir].last_modified if pkg_dir in _manifest_cache else 0
         if last_modified > known_modified:
@@ -87,9 +87,10 @@ def _load_manifest_cache():
     try:
         with open(os.path.join(_manifest_cache_dir, "packages.pickle"), "rb") as f:
             _manifest_cache = pickle.loads(f.read())
+            if _manifest_cache[".VERSION."] < 1: raise RuntimeError()
             f.close()
     except:
-        _manifest_cache = {}
+        _manifest_cache = { ".VERSION.": 1 }
 
 
 def _store_manifest_cache():
