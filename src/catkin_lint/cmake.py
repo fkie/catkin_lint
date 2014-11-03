@@ -66,16 +66,19 @@ _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), 
 def _lexer(s):
     keywords = set([])
     line = 1
+    col = 1
     mo = _next_token(s)
     pos = 0
     while mo is not None:
         typ = mo.lastgroup
         if typ == 'NL':
             line += 1
+            col = 1
         elif typ != 'SKIP':
             val = mo.group(typ)
             if val.upper() in keywords: typ = val.upper()
-            yield ( typ, val, line )
+            yield ( typ, val, line, col )
+        col += mo.end() - mo.start()
         pos = mo.end()
         mo = _next_token(s, pos)
     if pos != len(s):
@@ -99,11 +102,12 @@ def _resolve_args(arg_tokens, var):
 
 
 class Command(object):
-    def __init__(self, name, args, filename, line):
+    def __init__(self, name, args, filename, line, column):
         self.name = name
         self.args = args
         self.filename = filename
         self.line = line
+        self.column = column
 
 
 class BasicBlock(object):
@@ -123,11 +127,11 @@ def _parse_commands(s, filename):
     commands = []
     state = 0
     line = 0
-    for typ, val, line in _lexer(s):
+    for typ, val, line, col in _lexer(s):
         if typ == "COMMENT": continue
         if typ == "PRAGMA":
             args = re.split(r'\s+', val[13:])
-            commands.append(Command("#catkin_lint", [ ( "LITERAL", arg) for arg in args if len(arg)>0 ], filename, line))
+            commands.append(Command("#catkin_lint", [ ( "LITERAL", arg) for arg in args if len(arg)>0 ], filename, line, col))
             continue
         if state == 0:
             if typ != "WORD":
@@ -135,6 +139,7 @@ def _parse_commands(s, filename):
             cmdname = val
             cmdargs = []
             cmdline = line
+            cmdcol = col
             state = 1
         elif state == 1:
             if typ != "LPAREN":
@@ -147,7 +152,7 @@ def _parse_commands(s, filename):
             elif typ == "RPAREN":
                 paren -= 1
                 if paren == 0:
-                    commands.append(Command(cmdname, cmdargs, filename, cmdline))
+                    commands.append(Command(cmdname, cmdargs, filename, cmdline, cmdcol))
                     state = 0
                     continue
             cmdargs.append((typ, val))
@@ -194,8 +199,8 @@ class ParserContext(object):
             var["ARGN"] = ';'.join(argn)
             cmds = copy(f.commands)
             self._call_stack.add(lname)
-            for cmd, args, fname, line in self._yield(cmds, var, skip_callable):
-                yield (cmd, args, fname, line)
+            for cmd, args, loc in self._yield(cmds, var, skip_callable):
+                yield (cmd, args, loc)
         finally:
             self._call_stack.remove(lname)
             for key, value in iteritems(save_vars):
@@ -219,18 +224,18 @@ class ParserContext(object):
                     raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, False)
                 self.callable[f.name.lower()] = f
-                yield (cmdname, args, cmd.filename, cmd.line)
+                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
             elif cmd.name.lower() == "function":
                 if not args:
                     raise SyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
                 self.callable[f.name.lower()] = f
-                yield (cmdname, args, cmd.filename, cmd.line)
+                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
             elif cmd.name.lower() == "foreach":
                 if not args:
                     raise SyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
-                yield (cmdname, args, cmd.filename, cmd.line)
+                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
                 loop_var = args[0]
                 if len(args) == 1: continue
                 if args[1] == "RANGE":
@@ -257,23 +262,23 @@ class ParserContext(object):
                 for loop_value in loop_args:
                     var[loop_var] = str(loop_value)
                     loop_cmds = copy(f.commands)
-                    for cmd, args, fname, line in self._yield(loop_cmds, var, skip_callable):
-                        yield (cmd, args, fname, line)
+                    for cmd, args, loc in self._yield(loop_cmds, var, skip_callable):
+                        yield (cmd, args, loc)
             elif cmdname_lower in self.callable:
                 f = self.callable[cmdname_lower]
                 if skip_callable or f.new_context:
-                    yield (cmdname, args, cmd.filename, cmd.line)
+                    yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
                 else:
-                    for cmd, args, fname, line in self.call(cmdname, args, var, skip_callable):
-                        yield (cmd, args, fname, line)
+                    for cmd, args, loc in self.call(cmdname, args, var, skip_callable):
+                        yield (cmd, args, loc)
             else:
-                yield (cmdname, args, cmd.filename, cmd.line)
+                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
 
     def parse(self, s, var=None, filename=None, skip_callable=False):
         if filename is None: filename = "<inline>"
         cmds = _parse_commands(s, filename)
-        for cmd, args, fname, line in self._yield(cmds, var, skip_callable):
-            yield (cmd, args, fname, line)
+        for cmd, args, loc in self._yield(cmds, var, skip_callable):
+            yield (cmd, args, loc)
 
 
 def argparse(args, opts):

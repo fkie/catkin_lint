@@ -7,11 +7,16 @@ import catkin_lint.cmake as cmake
 
 class CMakeParserTest(unittest.TestCase):
 
-    def parse_all(self, s, var=None):
+    def parse_all(self, s, var=None, location=None):
         result = []
         ctxt = cmake.ParserContext()
-        for cmd, args, fname, line in ctxt.parse(s, var=var):
-            result.append( ( cmd, args, line) )
+        for cmd, args, (fname, line, column) in ctxt.parse(s, var=var):
+            if location is None:
+                result.append( ( cmd, args) )
+            elif location == 1:
+                result.append( ( cmd, args, line) )
+            elif location == 2:
+                result.append( ( cmd, args, line, column) )
         return result
 
     def test_empty(self):
@@ -23,11 +28,11 @@ class CMakeParserTest(unittest.TestCase):
     def test_command(self):
         self.assertEqual(
             self.parse_all("command()"),
-            [ ("command", [], 1)]
+            [ ("command", [])]
         )
         self.assertEqual(
             self.parse_all("MiXeDCaSe()"),
-            [ ("MiXeDCaSe", [], 1)]
+            [ ("MiXeDCaSe", [])]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "unbalanced(")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "invalid%=characters$()")
@@ -39,61 +44,61 @@ class CMakeParserTest(unittest.TestCase):
     def test_string(self):
         self.assertEqual(
             self.parse_all('cmd("simple string")'),
-            [ ("cmd", [ "simple string" ], 1) ]
+            [ ("cmd", [ "simple string" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("string with \\"quote\\"")'),
-            [ ("cmd", [ 'string with "quote"' ], 1) ]
+            [ ("cmd", [ 'string with "quote"' ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("string that spans\nmultiple lines")'),
-            [ ("cmd", [ 'string that spans\nmultiple lines' ], 1) ]
+            [ ("cmd", [ 'string that spans\nmultiple lines' ]) ]
         )
 
     def test_macro(self):
         self.assertEqual(
             self.parse_all("macro(test) cmd() endmacro() test()"),
-            [ ("macro", ["test"], 1), ("endmacro", [], 1), ("cmd", [], 1) ]
+            [ ("macro", ["test"]), ("endmacro", []), ("cmd", []) ]
         )
         self.assertEqual(
             self.parse_all("macro(test) cmd() test() endmacro() test()"),
-            [ ("macro", ["test"], 1), ("endmacro", [], 1), ("cmd", [], 1) ]
+            [ ("macro", ["test"]), ("endmacro", []), ("cmd", []) ]
         )
         self.assertEqual(
             self.parse_all("macro(test) cmd(${global}) test() endmacro() test()", { "global": "value"}),
-            [ ("macro", ["test"], 1), ("endmacro", [], 1), ("cmd", [ "value" ], 1) ]
+            [ ("macro", ["test"]), ("endmacro", []), ("cmd", [ "value" ]) ]
         )
         self.assertEqual(
             self.parse_all("macro(test arg) cmd(${arg}) endmacro() test(fun)"),
-            [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "fun" ], 1) ]
+            [ ("macro", ["test", "arg"]), ("endmacro", []), ("cmd", [ "fun" ]) ]
         )
         self.assertEqual(
             self.parse_all("macro(test arg) cmd(${arg}) endmacro() test(local) cmd(${arg})", { "arg": "global" }),
-            [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "local" ], 1), ("cmd", [ "global" ], 1) ]
+            [ ("macro", ["test", "arg"]), ("endmacro", []), ("cmd", [ "local" ]), ("cmd", [ "global" ]) ]
         )
         self.assertEqual(
             self.parse_all('macro(test arg) cmd(${arg}) endmacro() test("one;two;three")'),
-            [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("macro", ["test", "arg"]), ("endmacro", []), ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all('macro(test arg) cmd(${arg}) cmd(${ARGN}) endmacro() test(one;two;three)'),
-            [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "one" ], 1), ("cmd", [ "two", "three" ], 1) ]
+            [ ("macro", ["test", "arg"]), ("endmacro", []), ("cmd", [ "one" ]), ("cmd", [ "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all('macro(test arg1 arg2) cmd("${arg2}") cmd(${ARGN}) endmacro() test(one)'),
-            [ ("macro", ["test", "arg1", "arg2"], 1), ("endmacro", [], 1), ("cmd", [ "" ], 1), ("cmd", [], 1) ]
+            [ ("macro", ["test", "arg1", "arg2"]), ("endmacro", []), ("cmd", [ "" ]), ("cmd", []) ]
         )
         self.assertEqual(
             self.parse_all('macro(test arg) cmd("${arg}") endmacro() test("one;two;three")'),
-            [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "one;two;three" ], 1) ]
+            [ ("macro", ["test", "arg"]), ("endmacro", []), ("cmd", [ "one;two;three" ]) ]
         )
         self.assertEqual(
             self.parse_all('macro(test arg) cmd(${arg} ${ARGN}) endmacro() test(arg extra stuff)'),
-            [ ("macro", ["test", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "arg", "extra", "stuff" ], 1) ]
+            [ ("macro", ["test", "arg"]), ("endmacro", []), ("cmd", [ "arg", "extra", "stuff" ]) ]
         )
         self.assertEqual(
             self.parse_all('macro(TEST arg) cmd(${arg}) endmacro() test(value)'),
-            [ ("macro", ["TEST", "arg"], 1), ("endmacro", [], 1), ("cmd", [ "value" ], 1) ]
+            [ ("macro", ["TEST", "arg"]), ("endmacro", []), ("cmd", [ "value" ]) ]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "macro() endmacro()")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "macro(fun)")
@@ -101,7 +106,7 @@ class CMakeParserTest(unittest.TestCase):
     def test_function(self):
         self.assertEqual(
             self.parse_all("function(test) cmd() endfunction() test()"),
-            [ ("function", ["test"], 1), ("endfunction", [], 1), ("test", [], 1) ]
+            [ ("function", ["test"]), ("endfunction", []), ("test", []) ]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "function() endfunction()")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "function(fun)")
@@ -109,65 +114,65 @@ class CMakeParserTest(unittest.TestCase):
     def test_foreach(self):
         self.assertEqual(
             self.parse_all('foreach(arg RANGE 2) cmd(${arg}) endforeach()'),
-            [ ("foreach", ["arg", "RANGE", "2"], 1), ("cmd", [ "0" ], 1), ("cmd", [ "1" ], 1), ("cmd", [ "2" ], 1), ("endforeach", [], 1)]
+            [ ("foreach", ["arg", "RANGE", "2"]), ("cmd", [ "0" ]), ("cmd", [ "1" ]), ("cmd", [ "2" ]), ("endforeach", [])]
         )
         self.assertEqual(
             self.parse_all('foreach(arg RANGE 1 3) cmd(${arg}) endforeach()'),
-            [ ("foreach", ["arg", "RANGE", "1", "3"], 1), ("cmd", [ "1" ], 1), ("cmd", [ "2" ], 1), ("cmd", [ "3" ], 1), ("endforeach", [], 1)]
+            [ ("foreach", ["arg", "RANGE", "1", "3"]), ("cmd", [ "1" ]), ("cmd", [ "2" ]), ("cmd", [ "3" ]), ("endforeach", [])]
         )
         self.assertEqual(
             self.parse_all('foreach(arg RANGE 1 5 2) cmd(${arg}) endforeach()'),
-            [ ("foreach", ["arg", "RANGE", "1", "5", "2"], 1), ("cmd", [ "1" ], 1), ("cmd", [ "3" ], 1), ("cmd", [ "5" ], 1), ("endforeach", [], 1) ]
+            [ ("foreach", ["arg", "RANGE", "1", "5", "2"]), ("cmd", [ "1" ]), ("cmd", [ "3" ]), ("cmd", [ "5" ]), ("endforeach", []) ]
         )
         self.assertEqual(
             self.parse_all('foreach(arg 1 2 3 4 5) endforeach()'),
-            [ ("foreach", ["arg", "1", "2", "3", "4", "5"], 1), ("endforeach", [], 1)]
+            [ ("foreach", ["arg", "1", "2", "3", "4", "5"]), ("endforeach", [])]
         )
         self.assertEqual(
             self.parse_all('foreach(arg one) cmd(${global}) endforeach()', { "global": "value" }),
-            [ ("foreach", ["arg", "one"], 1), ("cmd", ["value"], 1), ("endforeach", [], 1) ]
+            [ ("foreach", ["arg", "one"]), ("cmd", ["value"]), ("endforeach", []) ]
         )
         self.assertEqual(
             self.parse_all('foreach(arg IN LISTS dummy) cmd(${arg}) endforeach()', { "dummy": "one;two;three" }),
-            [ ("foreach", ["arg", "IN", "LISTS", "dummy"], 1), ("cmd", [ "one" ], 1), ("cmd", [ "two" ], 1), ("cmd", [ "three" ], 1), ("endforeach", [], 1)]
+            [ ("foreach", ["arg", "IN", "LISTS", "dummy"]), ("cmd", [ "one" ]), ("cmd", [ "two" ]), ("cmd", [ "three" ]), ("endforeach", [])]
         )
         self.assertEqual(
             self.parse_all('foreach(arg IN ITEMS ${dummy}) cmd(${arg}) endforeach()', { "dummy": "one;two;three" }),
-            [ ("foreach", ["arg", "IN", "ITEMS", "one", "two", "three"], 1), ("cmd", [ "one" ], 1), ("cmd", [ "two" ], 1), ("cmd", [ "three" ], 1), ("endforeach", [], 1) ]
+            [ ("foreach", ["arg", "IN", "ITEMS", "one", "two", "three"]), ("cmd", [ "one" ]), ("cmd", [ "two" ]), ("cmd", [ "three" ]), ("endforeach", []) ]
         )
         self.assertEqual(
             self.parse_all('foreach(arg ${dummy}) cmd(${arg}) endforeach()', { "dummy": "one;two;three" }),
-            [ ("foreach", ["arg", "one", "two", "three"], 1), ("cmd", [ "one" ], 1), ("cmd", [ "two" ], 1), ("cmd", [ "three" ], 1), ("endforeach", [], 1)]
+            [ ("foreach", ["arg", "one", "two", "three"]), ("cmd", [ "one" ]), ("cmd", [ "two" ]), ("cmd", [ "three" ]), ("endforeach", [])]
         )
         self.assertEqual(
             self.parse_all('foreach(arg) cmd(${arg}) endforeach()'),
-            [ ("foreach", ["arg"], 1), ("endforeach", [], 1) ]
+            [ ("foreach", ["arg"]), ("endforeach", []) ]
         )
         self.assertEqual(
             self.parse_all('foreach(a 1 2) foreach(b 3 4) cmd(${a} ${b}) endforeach() endforeach()'),
-            [ ("foreach", ["a", "1", "2"], 1),
-              ("foreach", ["b", "3", "4"], 1),
-              ("cmd", [ "1", "3"], 1),
-              ("cmd", [ "1", "4"], 1),
-              ("endforeach", [], 1),
-              ("foreach", ["b", "3", "4"], 1),
-              ("cmd", [ "2", "3"], 1),
-              ("cmd", [ "2", "4"], 1),
-              ("endforeach", [], 1),
-              ("endforeach", [], 1) ]
+            [ ("foreach", ["a", "1", "2"]),
+              ("foreach", ["b", "3", "4"]),
+              ("cmd", [ "1", "3"]),
+              ("cmd", [ "1", "4"]),
+              ("endforeach", []),
+              ("foreach", ["b", "3", "4"]),
+              ("cmd", [ "2", "3"]),
+              ("cmd", [ "2", "4"]),
+              ("endforeach", []),
+              ("endforeach", []) ]
         )
         self.assertEqual(
             self.parse_all('FOREACH(a 1 2) FOREACH(b 3 4) cmd(${a} ${b}) ENDFOREACH() ENDFOREACH()'),
-            [ ("FOREACH", ["a", "1", "2"], 1),
-              ("FOREACH", ["b", "3", "4"], 1),
-              ("cmd", [ "1", "3"], 1),
-              ("cmd", [ "1", "4"], 1),
-              ("ENDFOREACH", [], 1),
-              ("FOREACH", ["b", "3", "4"], 1),
-              ("cmd", [ "2", "3"], 1),
-              ("cmd", [ "2", "4"], 1),
-              ("ENDFOREACH", [], 1),
-              ("ENDFOREACH", [], 1) ]
+            [ ("FOREACH", ["a", "1", "2"]),
+              ("FOREACH", ["b", "3", "4"]),
+              ("cmd", [ "1", "3"]),
+              ("cmd", [ "1", "4"]),
+              ("ENDFOREACH", []),
+              ("FOREACH", ["b", "3", "4"]),
+              ("cmd", [ "2", "3"]),
+              ("cmd", [ "2", "4"]),
+              ("ENDFOREACH", []),
+              ("ENDFOREACH", []) ]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg)")
         self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg RANGE bla) endforeach()")
@@ -177,112 +182,112 @@ class CMakeParserTest(unittest.TestCase):
     def test_arguments(self):
         self.assertEqual(
             self.parse_all("cmd(one two three)"),
-            [ ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd(one two;three)"),
-            [ ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd(one;two;three)"),
-            [ ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd(one;two three)"),
-            [ ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("one;two" three)'),
-            [ ("cmd", [ "one;two", "three" ], 1) ]
+            [ ("cmd", [ "one;two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("one;two";three)'),
-            [ ("cmd", [ "one;two", "three" ], 1) ]
+            [ ("cmd", [ "one;two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(one;"two;three")'),
-            [ ("cmd", [ "one", "two;three" ], 1) ]
+            [ ("cmd", [ "one", "two;three" ]) ]
         )
         self.assertEqual(
             self.parse_all('if(NOT (A OR B)) endif()'),
-            [ ("if", [ "NOT", "(", "A", "OR", "B", ")" ], 1), ( "endif", [], 1) ]
+            [ ("if", [ "NOT", "(", "A", "OR", "B", ")" ]), ( "endif", []) ]
         )
         self.assertEqual(
             self.parse_all('cmd("(")'),
-            [ ("cmd", [ "(" ], 1) ]
+            [ ("cmd", [ "(" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(")")'),
-            [ ("cmd", [ ")" ], 1) ]
+            [ ("cmd", [ ")" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("\\"")'),
-            [ ("cmd", [ '"' ], 1) ]
+            [ ("cmd", [ '"' ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd(ENV{PATH})"),
-            [ ("cmd", [ "ENV{PATH}" ], 1) ]
+            [ ("cmd", [ "ENV{PATH}" ]) ]
         )
         self.assertRaises(cmake.SyntaxError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
         self.assertEqual(
             self.parse_all("cmd(${args})", { "args" : "one;two;three"}),
-            [ ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd(${missing})"),
-            [ ("cmd", [], 1) ]
+            [ ("cmd", []) ]
         )
         self.assertEqual(
             self.parse_all('cmd("${missing}")'),
-            [ ("cmd", [ "" ], 1) ]
+            [ ("cmd", [ "" ]) ]
         )
         self.assertEqual(
             self.parse_all("${fun}()", { "fun" : "cmd"}),
-            [ ("cmd", [], 1) ]
+            [ ("cmd", []) ]
         )
         self.assertEqual(
             self.parse_all("cmd(${args})", { "args" : "one two three"}),
-            [ ("cmd", [ "one", "two", "three" ], 1) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("${args}")', { "args" : "one;two;three"}),
-            [ ("cmd", [ "one;two;three" ], 1) ]
+            [ ("cmd", [ "one;two;three" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("\\${args}")', { "args" : "fail"}),
-            [ ("cmd", [ "${args}" ], 1) ]
+            [ ("cmd", [ "${args}" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(\\${args})', { "args" : "fail"}),
-            [ ("cmd", [ "${args}" ], 1) ]
+            [ ("cmd", [ "${args}" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(${args})', { "args" : "\\\\"}),
-            [ ("cmd", [ "\\\\" ], 1) ]
+            [ ("cmd", [ "\\\\" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(${args})', { "args" : "${looks_like_a_variable}"}),
-            [ ("cmd", [ "${looks_like_a_variable}" ], 1) ]
+            [ ("cmd", [ "${looks_like_a_variable}" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(${args})', { "args" : ")"}),
-            [ ("cmd", [ ")" ], 1) ]
+            [ ("cmd", [ ")" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd(fun ${args})', { "args" : "stuff"}),
-            [ ("cmd", [ "fun", "stuff" ], 1) ]
+            [ ("cmd", [ "fun", "stuff" ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd($ENV{PATH})"),
-            [ ("cmd", [ "$ENV{PATH}" ], 1) ]
+            [ ("cmd", [ "$ENV{PATH}" ]) ]
         )
 
     def test_pragma(self):
         self.assertEqual(
             self.parse_all("# catkin_lint: extra space\n#catkin_lint:\n#catkin_lint:   \n#catkin_lint:   one   two   three   \n#catkin_lint :\n"),
-            [ ("#catkin_lint", [], 2), ("#catkin_lint", [], 3), ("#catkin_lint", ["one","two","three"], 4) ]
+            [ ("#catkin_lint", []), ("#catkin_lint", []), ("#catkin_lint", ["one","two","three"]) ]
         )
 
     def test_comments(self):
@@ -296,7 +301,7 @@ class CMakeParserTest(unittest.TestCase):
             # commented-out command
             # cmd()
             """),
-            [ ("cmd", [ "one", "two", "three" ], 2) ]
+            [ ("cmd", [ "one", "two", "three" ]) ]
         )
 
     def test_line_numbering(self):
@@ -307,19 +312,19 @@ class CMakeParserTest(unittest.TestCase):
             )
             # Comment
             cmd3()
-            """),
+            """, location=1),
             [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 5) ]
         )
         self.assertEqual(
-            self.parse_all("cmd1()\rcmd2()\rcmd3()\r"),
+            self.parse_all("cmd1()\rcmd2()\rcmd3()\r", location=1),
             [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
         )
         self.assertEqual(
-            self.parse_all("cmd1()\ncmd2()\ncmd3()\n"),
+            self.parse_all("cmd1()\ncmd2()\ncmd3()\n", location=1),
             [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
         )
         self.assertEqual(
-            self.parse_all("cmd1()\r\ncmd2()\r\ncmd3()\r\n"),
+            self.parse_all("cmd1()\r\ncmd2()\r\ncmd3()\r\n", location=1),
             [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
         )
 

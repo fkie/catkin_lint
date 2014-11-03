@@ -60,6 +60,7 @@ def prepare_arguments(parser):
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
     group.add_argument("--xml", action="store_true", help="output result as XML")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--dump-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
     return parser
 
@@ -71,6 +72,10 @@ def run_linter(args):
         ids.sort()
         sys.stdout.write("\n".join(ids))
         sys.stdout.write("\n")
+        return 0
+    if args.dump_cache:
+        from .packages import _dump_manifest_cache
+        _dump_manifest_cache()
         return 0
     nothing_to_do = 0
     pkgs_to_check = []

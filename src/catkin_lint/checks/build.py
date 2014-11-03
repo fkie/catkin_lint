@@ -146,7 +146,9 @@ def depends(linter):
         for pkg in opts["COMPONENTS"]:
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
-            if not info.env.is_catkin_pkg(pkg):
+            if not info.env.is_known_pkg(pkg):
+                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+            elif not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         for pkg in args[1:]:
             if info.env.is_known_pkg(pkg):
@@ -185,7 +187,9 @@ def exports(linter):
     def on_catkin_package(info, cmd, args):
         opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
         for pkg in opts["CATKIN_DEPENDS"]:
-            if not info.env.is_catkin_pkg(pkg):
+            if not info.env.is_known_pkg(pkg):
+                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+            elif not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
         for pkg in opts["DEPENDS"]:
             if info.env.is_catkin_pkg(pkg):
@@ -204,7 +208,8 @@ def exports(linter):
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
     def on_final(info):
         for pkg in info.export_packages - info.export_dep:
-            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
+            if info.env.is_known_pkg(pkg):
+                info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
         for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
             if re.search(r"_(msg|message)s?(_|$)", pkg) and info.env.is_catkin_pkg(pkg):
                 info.report (WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg)

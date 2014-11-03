@@ -113,6 +113,11 @@ dependencies with the COMPONENTS keyword. This is shorter than
 multiple find_package() calls, but does not work for system dependencies.
 """
 ),
+"UNKNOWN_PACKAGE" : ("unknown package '%(pkg)s'",
+"""\
+You have listed a package which is neither a catkin package nor a known system
+dependency.
+"""),
 "MISSING_CATKIN_DEPEND" : ("%(type)s_depend '%(pkg)s' is not listed in catkin_package()",
 """\
 You have specified a catkin run dependency but failed to list

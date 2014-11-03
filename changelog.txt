@@ -1,3 +1,8 @@
+Version 1.3.8
+
+  * Fix cache corruption with relative paths
+  * Check for unknown packages where catkin packages are required
+
 Version 1.3.7
 
   * Entry point for integration with catkin_tools

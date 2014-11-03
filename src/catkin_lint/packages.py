@@ -25,6 +25,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
+import sys
 try:
     import cPickle as pickle
 except ImportError:
@@ -58,7 +59,7 @@ def find_packages(basepath):
                 dirnames.remove(dirname)
     cache_updated = False
     for path in package_paths:
-        pkg_dir = os.path.join(basepath, path)
+        pkg_dir = os.path.realpath(os.path.join(basepath, path))
         last_modified = os.path.getmtime(os.path.join(pkg_dir, PACKAGE_MANIFEST_FILENAME))
         known_modified = _manifest_cache[pkg_dir].last_modified if pkg_dir in _manifest_cache else 0
         if last_modified > known_modified:
@@ -87,9 +88,10 @@ def _load_manifest_cache():
     try:
         with open(os.path.join(_manifest_cache_dir, "packages.pickle"), "rb") as f:
             _manifest_cache = pickle.loads(f.read())
+            if _manifest_cache[".VERSION."] < 1: raise RuntimeError()
             f.close()
     except:
-        _manifest_cache = {}
+        _manifest_cache = { ".VERSION.": 1 }
 
 
 def _store_manifest_cache():
@@ -100,4 +102,12 @@ def _store_manifest_cache():
     except:
         pass
     write_atomic(os.path.join(_manifest_cache_dir, "packages.pickle"), pickle.dumps(_manifest_cache, -1))
+
+def _dump_manifest_cache():
+    global _manifest_cache
+    if _manifest_cache is None: _load_manifest_cache()
+    sys.stdout.write ("Cache version %d\n" % _manifest_cache[".VERSION."])
+    for pkg_dir in _manifest_cache:
+        if pkg_dir == ".VERSION.": continue
+        sys.stdout.write ("%s -> %s (%s)\n" % (pkg_dir, _manifest_cache[pkg_dir].manifest.name, _manifest_cache[pkg_dir].last_modified))
 
