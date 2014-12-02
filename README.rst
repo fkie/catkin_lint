@@ -16,7 +16,7 @@ Install Ubuntu Packages
 -----------------------
 
 Prebuilt packages are available from the `ROS repository <http://packages.ros.org/>`_.
-If you already have installed ROS, downloading **catkin_lint** is as simple as::
+If you have installed ROS already, downloading **catkin_lint** is as simple as::
 
     sudo apt-get install python-catkin-lint
 
@@ -25,12 +25,6 @@ Alternatively, you can use `Timo's PPA <https://launchpad.net/~roehling/+archive
     sudo add-apt-repository ppa:roehling/latest
     sudo apt-get update
     sudo apt-get install python-catkin-lint
-
-.. topic:: End-of-Life
-
-    Launchpad policy prevents me from uploading new versions once a distribution has reached its End-of-Life.
-    As of this writing, this concerns Ubuntu Raring and Quantal users. Please refer to the Ubuntu list of releases for
-    detailed information.
 
 Download from PyPI
 ------------------
@@ -158,4 +152,10 @@ Contribution
 If you would like to contribute, you are very welcome to do so.
 Please contact `@roehling <https://github.com/roehling>`_ first
 to avoid any duplication of work.
+
+Known Issues
+============
+
+* Ubuntu distributions which have reached their End-of-Life will no longer
+  receive updated package versions.
 
