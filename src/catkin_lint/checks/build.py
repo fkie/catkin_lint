@@ -128,6 +128,7 @@ def link_directories(linter):
 def depends(linter):
     def on_init(info):
         info.required_packages = set([])
+        info.test_packages = set([])
         info.catkin_components = set([])
         info.checked_packages = set([])
     def on_find_package(info, cmd, args):
@@ -137,6 +138,11 @@ def depends(linter):
         if args[0] in info.find_packages:
             info.report(ERROR, "DUPLICATE_FIND", pkg=args[0])
         if opts["REQUIRED"]: info.required_packages.add(args[0])
+        if info.condition_is_true("CATKIN_ENABLE_TESTING"):
+            info.test_packages.add(args[0])
+        else:
+            if args[0] in info.test_dep - info.build_dep - info.buildtool_dep:
+                info.report(ERROR, "UNGUARDED_TEST_DEPEND", pkg=args[0])
         if args[0] != "catkin": return
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
@@ -161,13 +167,13 @@ def depends(linter):
             if arg.endswith("_FOUND"):
                 info.checked_packages.add(arg[0:-6])
     def on_final(info):
-        for pkg in info.required_packages - info.build_dep - info.buildtool_dep:
+        for pkg in info.required_packages - info.build_dep - info.buildtool_dep - info.test_dep:
             if info.env.is_known_pkg(pkg):
                 info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build")
         for pkg in info.find_packages - info.required_packages - info.checked_packages:
             if info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "MISSING_REQUIRED", pkg=pkg)
-        for pkg in info.build_dep - info.find_packages:
+        for pkg in info.build_dep - (info.find_packages - info.test_packages):
             if info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
 
