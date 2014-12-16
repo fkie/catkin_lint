@@ -30,7 +30,7 @@ from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
 from ..util import word_split, iteritems
 from .manifest import depends as manifest_depends
-
+from functools import partial
 
 def includes(linter):
     def on_init(info):
@@ -182,6 +182,22 @@ def depends(linter):
     linter.add_command_hook("find_package", on_find_package)
     linter.add_command_hook("if", on_if)
     linter.add_final_hook(on_final)
+
+
+def tests(linter):
+    def on_test_cmd(info, cmd, args, dep=None):
+        if not info.condition_is_true("CATKIN_ENABLE_TESTING"):
+            info.report(ERROR, "UNGUARDED_TEST_CMD", cmd=cmd)
+        if dep is None: return
+        if not dep in info.test_dep | info.build_dep:
+            info.report(ERROR, "MISSING_DEPEND", type="test", pkg=dep)
+
+    linter.require(manifest_depends)
+    linter.add_command_hook("catkin_download_test_data", on_test_cmd)
+    linter.add_command_hook("catkin_add_gtest", partial(on_test_cmd, dep="rosunit"))
+    linter.add_command_hook("catkin_add_nosetests", partial(on_test_cmd, dep="unittest"))
+    linter.add_command_hook("add_rostest", partial(on_test_cmd, dep="rostest"))
+    linter.add_command_hook("add_rostest_gtest", partial(on_test_cmd, dep="rostest"))
 
 
 def exports(linter):
@@ -413,6 +429,7 @@ def all(linter):
     linter.require(source_files)
     linter.require(link_directories)
     linter.require(depends)
+    linter.require(tests)
     linter.require(exports)
     linter.require(name_check)
     linter.require(pkg_config)
