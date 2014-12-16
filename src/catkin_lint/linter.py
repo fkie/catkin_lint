@@ -73,6 +73,7 @@ class LintInfo(object):
         self.targets = set([])
         self.executables = set([])
         self.libraries = set([])
+        self.conditionals = []
         self.var = {}
         self.parent_var = {}
         self.messages = []
@@ -112,6 +113,23 @@ class LintInfo(object):
         catkin_dir = "/catkin-target"
         if subdir is not None: catkin_dir = os.path.join(catkin_dir, subdir)
         return os.path.normpath(path).startswith(os.path.normpath(catkin_dir))
+
+    def condition_is_true(self, expr):
+        ret = False
+        for c in self.conditionals:
+            if c.expr == expr and c.value == False: return False
+            if c.expr == expr and c.value == True: ret = True
+        return ret
+
+    def condition_is_false(self, expr):
+        return not self.condition_is_true(expr)
+
+
+class IfCondition(object):
+    def __init__(self, expr, value):
+        self.expr = expr
+        self.value = value
+
 
 class CMakeLinter(object):
     def __init__(self, env):
@@ -267,6 +285,16 @@ class CMakeLinter(object):
         if pragma == "ignore":
             info.ignore_messages |= set([ a.upper() for a in args ])
 
+    def _handle_if(self, info, cmd, args):
+        if cmd == "if":
+            info.conditionals.append(IfCondition(" ".join(args), True))
+        if cmd == "else":
+            if len(info.conditionals) > 0:
+                info.conditionals[-1].value = False
+        if cmd == "endif":
+            if len(info.conditionals) > 0:
+                info.conditionals.pop()
+
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
@@ -287,6 +315,8 @@ class CMakeLinter(object):
                 if cmd != cmd.lower():
                     info.report(NOTICE, "CMD_CASE", cmd=cmd)
                     cmd = cmd.lower()
+                if cmd in ["if", "else", "endif"]:
+                    self._handle_if(info, cmd, args)
                 if cmd == "project":
                     info.var["PROJECT_NAME"] = args[0]
                     info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
@@ -342,6 +372,7 @@ class CMakeLinter(object):
         info.ignore_messages = self.ignore_messages
         info.path = path
         info.manifest = manifest
+        info.conditionals = []
         info.var = {
           "CMAKE_CURRENT_SOURCE_DIR" : "/pkg-source",
           "CMAKE_CURRENT_BINARY_DIR" : "/pkg-build",

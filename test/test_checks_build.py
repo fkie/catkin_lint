@@ -161,6 +161,56 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.depends)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            if(CATKIN_ENABLE_TESTING)
+            find_package(other_catkin REQUIRED)
+            endif()
+            """,
+        checks=cc.depends)
+        self.assertEqual(["UNCONFIGURED_BUILD_DEPEND"], result)
+
+        pkg = create_manifest("mock", test_depends=[ "other_catkin" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            if(CATKIN_ENABLE_TESTING)
+            find_package(other_catkin REQUIRED)
+            endif()
+            """,
+        checks=cc.depends)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin REQUIRED)
+            """,
+        checks=cc.depends)
+        self.assertEqual(["UNGUARDED_TEST_DEPEND"], result)
+        pkg = create_manifest("mock", build_depends=[ "other_catkin"], test_depends=[ "other_catkin" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            if(CATKIN_ENABLE_TESTING)
+            find_package(other_catkin REQUIRED)
+            endif()
+            """,
+        checks=cc.depends)
+        self.assertEqual(["UNCONFIGURED_BUILD_DEPEND"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin REQUIRED)
+            """,
+        checks=cc.depends)
+        self.assertEqual([], result)
+
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
     def do_targets(self):
@@ -338,6 +388,29 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.installs)
         self.assertEqual([ "UNINSTALLED_DEPEND" ], result)
+
+
+    def test_tests(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_download_test_data()
+            """,
+        checks=cc.tests)
+        self.assertEqual(["UNGUARDED_TEST_CMD"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            if(CATKIN_ENABLE_TESTING)
+            add_rostest()
+            endif()
+            """,
+        checks=cc.tests)
+        self.assertEqual(["MISSING_DEPEND"], result)
 
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))

@@ -55,7 +55,7 @@ def depends(linter):
             if info.env.has_rosdep():
                 for pkg in deps:
                     if not info.env.is_known_pkg(pkg):
-                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="exec")
             info.exec_dep.update(deps)
         if info.manifest.package_format < 2 and hasattr(info.manifest, "run_depends"):
             deps = set([ dep.name for dep in info.manifest.run_depends ])

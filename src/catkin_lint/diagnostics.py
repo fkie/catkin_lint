@@ -539,6 +539,19 @@ properly instead.
 The catkin manual recommends that all commands be written in lower case.
 """
 ),
+"UNGUARDED_TEST_DEPEND" : ("test_depend '%(pkg)s' used without if(CATKIN_ENABLE_TESTING)",
+"""\
+You have used a test dependency without properly guarding it by a
+if(CATKIN_ENABLE_TESTING) block. You must add a proper build dependency if
+you wish to use this package even if tests are disabled.
+"""
+),
+"UNGUARDED_TEST_CMD" : ("%(cmd)s() used without if(CATKIN_ENABLE_TESTING)",
+"""\
+You have used a test command without properly guarding it by a
+if(CATKIN_ENABLE_TESTING) block.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
