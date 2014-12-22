@@ -1,6 +1,6 @@
 import unittest
 import catkin_lint.checks.build as cc
-from .helper import create_env, create_manifest, mock_lint
+from .helper import create_env, create_manifest, create_manifest2, mock_lint
 
 import sys
 sys.stderr = sys.stdout
@@ -816,6 +816,38 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.message_generation)
         self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
+
+    def test_format2_message_exports(self):
+        env = create_env()
+        pkg = create_manifest2("mock", build_depends=["message_generation"], exec_depends=["message_runtime"])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS message_generation)
+            catkin_package(CATKIN_DEPENDS message_runtime)
+            """,
+        checks=cc.exports)
+        self.assertEqual([], result)
+
+        pkg = create_manifest2("mock", build_depends=["message_generation"], build_export_depends=["message_runtime"])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS message_generation)
+            catkin_package(CATKIN_DEPENDS message_runtime)
+            """,
+        checks=cc.exports)
+        self.assertEqual([], result)
+
+        pkg = create_manifest2("mock", build_depends=["message_generation"])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS message_generation)
+            catkin_package(CATKIN_DEPENDS message_runtime)
+            """,
+        checks=cc.exports)
+        self.assertEqual(["MISSING_DEPEND"], result)
 
 
     @patch("os.path", posixpath)

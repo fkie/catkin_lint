@@ -229,11 +229,13 @@ def exports(linter):
         info.export_packages |= set(opts["CATKIN_DEPENDS"])
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
     def on_final(info):
-        for pkg in info.export_packages - info.export_dep - set(["message_runtime"]):
+        for pkg in info.export_packages - info.export_dep:
             if info.env.is_known_pkg(pkg):
-                info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
-        if "message_runtime" in info.export_packages and not "message_runtime" in info.exec_dep:
-            info.report(ERROR, "MISSING_DEPEND", pkg="message_runtime", type="run" if info.manifest.package_format < 2 else "exec")
+                if pkg == "message_runtime":
+                    if not pkg in info.exec_dep:
+                        info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "exec")
+                else:
+                    info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
         for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
             if re.search(r"_(msg|message)s?(_|$)", pkg) and info.env.is_catkin_pkg(pkg):
                 info.report (WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg)
