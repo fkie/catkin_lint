@@ -182,6 +182,9 @@ class ParserContext(object):
         self.callable = copy(parent.callable) if parent is not None else {}
         self._call_stack = set([])
 
+    def call_depth(self):
+        return len(self._call_stack)
+
     def call(self, name, args, var=None, skip_callable=False):
         lname = name.lower()
         if lname in self._call_stack: return
