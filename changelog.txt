@@ -1,3 +1,8 @@
+Version 1.3.10
+
+  * Improve handling of message_runtime in package format 2
+  * Check for sensible indentation
+
 Version 1.3.9
 
   * Improve handling of tests and their dependencies
