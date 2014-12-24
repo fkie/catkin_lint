@@ -45,7 +45,7 @@ def create_manifest2(name, description="", buildtool_depends=[ "catkin" ], build
     )
 
 
-def mock_lint(env, manifest, cmakelist, checks=all, full_result=False):
+def mock_lint(env, manifest, cmakelist, checks=all, full_result=False, indentation=False):
     linter = CMakeLinter(env)
     if type(cmakelist) is dict:
         tmp = {}
@@ -62,8 +62,10 @@ def mock_lint(env, manifest, cmakelist, checks=all, full_result=False):
             if filename == os.path.normpath("/mock-path/CMakeLists.txt"): return cmakelist
             return ""
     linter._read_file = get_cmakelist
-    linter.require(checks)
+    if checks is not None: linter.require(checks)
     linter.lint (os.path.normpath("/mock-path"), manifest)
+    if not indentation:
+        linter.messages = [ m for m in linter.messages if m.id != "INDENTATION" ]
     if full_result:
         return linter.messages
     else:

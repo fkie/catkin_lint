@@ -304,6 +304,10 @@ class CMakeLinter(object):
             info.file = cur_file
             info.line = 0
             content = self._read_file(filename)
+            # cur_col is a len(call_stack) list of indentation lists
+            # i.e. each function/macro invocation has its own indentation list
+            cur_col = [[None]]
+            cur_depth = 0
             for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, filename=cur_file):
                 info.file = fname
                 info.line = line
@@ -315,6 +319,32 @@ class CMakeLinter(object):
                 if cmd != cmd.lower():
                     info.report(NOTICE, "CMD_CASE", cmd=cmd)
                     cmd = cmd.lower()
+                depth = self._ctx.call_depth()
+                if depth > cur_depth:
+                    cur_col += [[None] * (depth-cur_depth)]
+                    cur_depth = depth
+                if depth < cur_depth:
+                    del cur_col[depth-cur_depth:]
+                    cur_depth = depth
+                if cmd == "else":
+                    if len(cur_col[-1]) < 2: raise CMakeSyntaxError("%s(%d): else() without if()" % (info.file, info.line))
+                    if column != cur_col[-1][-2]:
+                        info.report(NOTICE, "INDENTATION")
+                    cur_col[-1][-1] = None
+                elif cmd in ["endif", "endforeach"]:
+                    cur_col[-1].pop(-1)
+                    if len(cur_col[-1]) == 0: raise CMakeSyntaxError("%s(%d): %s() without %s()" % (info.file, info.line, cmd, cmd[3:]))
+                    if column != cur_col[-1][-1]:
+                        info.report(NOTICE, "INDENTATION")
+                else:
+                    if cur_col[-1][-1] is None: 
+                        cur_col[-1][-1] = column
+                        if len(cur_col[-1]) >= 2 and cur_col[-1][-2] >= cur_col[-1][-1]:
+                            info.report(NOTICE, "INDENTATION")
+                    if column != cur_col[-1][-1]:
+                        info.report(NOTICE, "INDENTATION")
+                if cmd in ["if", "foreach"]:
+                    cur_col[-1].append(None)
                 if cmd in ["if", "else", "endif"]:
                     self._handle_if(info, cmd, args)
                 if cmd == "project":

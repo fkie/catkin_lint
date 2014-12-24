@@ -6,8 +6,6 @@ Overview
 
 **catkin_lint** checks package configurations for the
 `catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_.
-It is part of an ongoing effort to aid developers with their ROS packaging
-(see also: `issue #153 <https://github.com/ros/catkin/issues/153>`_).
 
 Installation
 ============

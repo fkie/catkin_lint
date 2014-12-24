@@ -552,6 +552,12 @@ You have used a test command without properly guarding it by a
 if(CATKIN_ENABLE_TESTING) block.
 """
 ),
+"INDENTATION" : ("line is not indented properly",
+"""\
+For better readability, each command should be placed on its own line.
+if() and foreach() bodies should be indented by one or more extra spaces.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
