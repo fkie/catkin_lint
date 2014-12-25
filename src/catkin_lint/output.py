@@ -71,7 +71,7 @@ class XmlOutput(object):
         return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quote;')
 
     def prolog(self, file=sys.stdout):
-        file.write ('<catkin_lint version="%s">' % __version__)
+        file.write ('<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">' % {"version": __version__})
 
     def message(self, msg, file=sys.stdout):
         file.write('<%s><location><package>%s</package>' % (self.tag_label[msg.level], self._quote(msg.package)))
