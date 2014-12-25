@@ -321,7 +321,7 @@ class CMakeLinter(object):
                     cmd = cmd.lower()
                 depth = self._ctx.call_depth()
                 if depth > cur_depth:
-                    cur_col += [[None] * (depth-cur_depth)]
+                    cur_col += [[None]] * (depth-cur_depth)
                     cur_depth = depth
                 if depth < cur_depth:
                     del cur_col[depth-cur_depth:]
