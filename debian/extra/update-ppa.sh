@@ -2,7 +2,7 @@
 set -e
 sa="-sa"
 ./debian/rules make-orig-tar
-for distro in precise saucy trusty utopic vivid
+for distro in precise trusty utopic vivid
 do
     sed -i -e '1s/\(~[a-z]\+\)\?) [a-z]\+;/~'$distro') '$distro';/' debian/changelog
     dpkg-buildpackage -S $sa -i\\..*
