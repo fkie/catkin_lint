@@ -328,6 +328,12 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd1", [], 1), ("cmd2", [], 2), ("cmd3", [], 3) ]
         )
 
+    def test_line_columns(self):
+        self.assertEqual(
+            self.parse_all("cmd1()\n cmd2()\n  cmd3()\n", location=2),
+            [ ("cmd1", [], 1, 1), ("cmd2", [], 2, 2), ("cmd3", [], 3, 3) ]
+        )
+
     def test_argparse(self):
         self.assertRaises(RuntimeError, cmake.argparse, [], { "TEST" : "xxx"})
 
