@@ -1,3 +1,9 @@
+Version 1.3.11
+
+  * Fix wrong column count (exposed by indentation check)
+  * Fix indentation check
+  * Add XML schema to XML output
+
 Version 1.3.10
 
   * Improve handling of message_runtime in package format 2
