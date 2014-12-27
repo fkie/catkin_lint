@@ -153,7 +153,7 @@ def depends(linter):
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_known_pkg(pkg):
-                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+                if info.env.has_rosdep(): info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
             elif not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         for pkg in args[1:]:
@@ -210,7 +210,7 @@ def exports(linter):
         opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
         for pkg in opts["CATKIN_DEPENDS"]:
             if not info.env.is_known_pkg(pkg):
-                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+                if info.env.has_rosdep(): info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
             elif not info.env.is_catkin_pkg(pkg):
                 info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
         for pkg in opts["DEPENDS"]:

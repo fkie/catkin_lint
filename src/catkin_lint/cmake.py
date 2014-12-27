@@ -74,11 +74,12 @@ def _lexer(s):
         if typ == 'NL':
             line += 1
             col = 1
-        elif typ != 'SKIP':
-            val = mo.group(typ)
-            if val.upper() in keywords: typ = val.upper()
-            yield ( typ, val, line, col )
-        col += mo.end() - mo.start()
+        else:
+            if typ != 'SKIP':
+                val = mo.group(typ)
+                if val.upper() in keywords: typ = val.upper()
+                yield ( typ, val, line, col )
+            col += mo.end() - mo.start()
         pos = mo.end()
         mo = _next_token(s, pos)
     if pos != len(s):

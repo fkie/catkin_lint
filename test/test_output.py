@@ -55,7 +55,7 @@ class OutputTest(unittest.TestCase):
     def test_xml(self):
         result = self._do_output(o.XmlOutput(), self._demo_msgs)
         self.assertEqual(result,
-          '<catkin_lint version="%(version)s">'
+          '<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">'
           '<error>'
           '<location><package>mock</package><file>mock.cmake</file><line>1</line></location>'
           '<id>MOCK_MSG</id><text>short text</text>'

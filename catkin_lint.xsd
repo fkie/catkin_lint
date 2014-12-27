@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:group name="file_location">
+        <xs:sequence>
+            <xs:element name="file" type="xs:string"/>
+            <xs:element name="line" type="xs:positiveInteger" minOccurs="0"/>
+        </xs:sequence>
+    </xs:group>
+    <xs:complexType name="message_type">
+        <xs:sequence>
+            <xs:element name="location">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="package" type="xs:string"/>
+                        <xs:group ref="file_location" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:element name="id" type="xs:string"/>
+            <xs:element name="text" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:group name="any_message">
+        <xs:choice>
+            <xs:element name="error" type="message_type"/>
+            <xs:element name="warning" type="message_type"/>
+            <xs:element name="notice" type="message_type"/>
+        </xs:choice>
+    </xs:group>
+    <xs:element name="catkin_lint">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:group ref="any_message" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="version" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+
