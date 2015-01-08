@@ -337,7 +337,7 @@ class CMakeLinter(object):
                     if column != cur_col[-1][-1]:
                         info.report(NOTICE, "INDENTATION")
                 else:
-                    if cur_col[-1][-1] is None: 
+                    if cur_col[-1][-1] is None:
                         cur_col[-1][-1] = column
                         if len(cur_col[-1]) >= 2 and cur_col[-1][-2] >= cur_col[-1][-1]:
                             info.report(NOTICE, "INDENTATION")
