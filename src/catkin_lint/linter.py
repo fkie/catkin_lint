@@ -488,3 +488,7 @@ class CatkinEnvironment(object):
 
     def has_rosdep(self):
         return len(self.rosdep_view.keys()) > 0
+
+    def disable_rosdep(self):
+        self.rosdep_view = {}
+

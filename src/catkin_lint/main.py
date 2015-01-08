@@ -99,7 +99,7 @@ def run_linter(args):
             continue
         pkgs_to_check += env.add_path(path)
     for name in args.pkg:
-        if not name in env.known_catkin_pkgs:
+        if not env.is_catkin_pkg(name):
             sys.stderr.write("catkin_lint: no such package: %s\n" % name)
             nothing_to_do = 1
             continue
@@ -108,6 +108,10 @@ def run_linter(args):
     if not pkgs_to_check:
         sys.stderr.write ("catkin_lint: no packages to check\n")
         return nothing_to_do
+    if not env.is_known_pkg("catkin"):
+        sys.stderr.write("catkin_lint: ROS environment is broken\n")
+        sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
+        env.disable_rosdep()
     if args.xml:
         output = XmlOutput()
     elif args.explain:
