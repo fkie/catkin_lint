@@ -55,6 +55,7 @@ def prepare_arguments(parser):
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
+    parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
@@ -79,6 +80,7 @@ def run_linter(args):
         return 0
     nothing_to_do = 0
     pkgs_to_check = []
+    if args.rosdistro: os.environ["ROS_DISTRO"] = args.rosdistro
     env = CatkinEnvironment()
     if not args.path and not args.pkg:
         if os.path.isfile("package.xml"):
@@ -108,8 +110,8 @@ def run_linter(args):
     if not pkgs_to_check:
         sys.stderr.write ("catkin_lint: no packages to check\n")
         return nothing_to_do
-    if not env.is_known_pkg("catkin"):
-        sys.stderr.write("catkin_lint: ROS environment is broken\n")
+    if not "ROS_DISTRO" in os.environ:
+        sys.stderr.write("catkin_lint: neither ROS_DISTRO environment variable nor --rosdistro option set\n")
         sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
         env.disable_rosdep()
     if args.xml:
