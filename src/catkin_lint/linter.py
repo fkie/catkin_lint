@@ -478,13 +478,27 @@ class CatkinEnvironment(object):
         return found
 
     def is_catkin_pkg(self, name):
-        return name in self.known_catkin_pkgs
+        if name in self.known_catkin_pkgs: return True
+        if name in self.known_other_pkgs: return False
+        try:
+            # FIXME _is_ros is also true for build_type != catkin
+            return self.rosdep_view.lookup(name).data["_is_ros"]
+        except (KeyError, AttributeError):
+            return False
 
     def is_system_pkg(self, name):
-        return name in self.rosdep_view.keys() or name in self.known_other_pkgs
+        if name in self.known_other_pkgs: return True
+        if name in self.known_catkin_pkgs: return False
+        if name in self.ros_dep_view.keys():
+            try:
+                # FIXME _is_ros is also true for build_type != catkin
+                return not self.rosdep_view.lookup(name).data["_is_ros"]
+            except (KeyError, AttributeError):
+                return True
+        return False
 
     def is_known_pkg(self, name):
-        return self.is_catkin_pkg(name) or self.is_system_pkg(name)
+        return name in self.rosdep_view.keys() or name in self.known_catkin_pkgs or name in self.known_other_pkgs
 
     def has_rosdep(self):
         return len(self.rosdep_view.keys()) > 0
