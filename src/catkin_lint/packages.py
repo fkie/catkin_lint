@@ -92,7 +92,6 @@ def _load_manifest_cache():
         with open(os.path.join(_manifest_cache_dir, "packages.pickle"), "rb") as f:
             _manifest_cache = pickle.loads(f.read())
             if _manifest_cache[".VERSION."] < 1: raise RuntimeError()
-            f.close()
     except:
         _manifest_cache = { ".VERSION.": 1 }
 

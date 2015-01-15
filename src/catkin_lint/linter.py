@@ -170,9 +170,8 @@ class CMakeLinter(object):
         self._final_hooks.append(cb)
 
     def _read_file(self, filename):
-        f = open(filename, "r")
-        content = f.read()
-        f.close()
+        with open(filename, "r") as f:
+            content = f.read()
         return content
 
     def _include_file(self, info, args):
