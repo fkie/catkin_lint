@@ -30,29 +30,27 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 from .packages import find_packages
+from .rosdep import Rosdep, get_rosdep
 from .util import iteritems
 
 
 class CatkinEnvironment(object):
     def __init__(self, use_rosdep=True):
         self.manifests = {}
+        self.cache = {}
         self.known_catkin_pkgs = set([])
         self.known_other_pkgs = set([])
-        self.rosdep_ok = True
-        self.rosdep_view = None
+        self.ok = True
         if use_rosdep:
             try:
-                from rosdep2.lookup import RosdepLookup
-                from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
-                from rosdep2.sources_list import SourcesListLoader
-                sources_loader = SourcesListLoader.create_default()
-                lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
-                self.rosdep_view = lookup.get_rosdep_view(DEFAULT_VIEW_KEY)
+                self.rosdep = get_rosdep()
             except Exception as err:
                 sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
                 sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
-                self.rosdep_ok = False
-        self.cache = {}
+                self.ok = False
+                self.rosdep = Rosdep()
+        else:
+            self.rosdep = Rosdep()
 
     def add_path(self, path):
         if not os.path.isdir(path):
@@ -81,27 +79,13 @@ class CatkinEnvironment(object):
     def is_catkin_pkg(self, name):
         if name in self.known_catkin_pkgs: return True
         if name in self.known_other_pkgs: return False
-        if self.rosdep_view is None: return False
-        try:
-            # FIXME _is_ros is also true for build_type != catkin
-            return self.rosdep_view.lookup(name).data["_is_ros"]
-        except KeyError:
-            return False
+        return self.rosdep.is_ros(name)
 
     def is_system_pkg(self, name):
         if name in self.known_other_pkgs: return True
         if name in self.known_catkin_pkgs: return False
-        if self.rosdep_view is None: return False
-        if name in self.ros_dep_view.keys():
-            try:
-                # FIXME _is_ros is also true for build_type != catkin
-                return not self.rosdep_view.lookup(name).data["_is_ros"]
-            except KeyError:
-                return True
-        return False
+        return self.rosdep.is_pkg(name) and not self.rosdep.is_ros(name)
 
     def is_known_pkg(self, name):
         if name in self.known_catkin_pkgs or name in self.known_other_pkgs: return True
-        if self.rosdep_view is None: return False
-        return name in self.rosdep_view.keys()
-
+        return self.rosdep.is_pkg(name)

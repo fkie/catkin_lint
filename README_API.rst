@@ -207,12 +207,12 @@ is_known_pkg()
 
 Alias for ``is_catkin_pkg(name) or is_system_pkg(name)``.
 
-rosdep_ok
+ok
 ---------------
 
 ::
 
-    env.rosdep_ok
+    env.ok
 
 Is ``True`` if the list of ROS dependencies was properly
 initialized. If it is ``False``, the function ``is_system_pkg()``
