@@ -207,15 +207,15 @@ is_known_pkg()
 
 Alias for ``is_catkin_pkg(name) or is_system_pkg(name)``.
 
-has_rosdep()
+rosdep_ok
 ---------------
 
 ::
 
-    env.has_rosdep()
+    env.rosdep_ok
 
-Returns ``True`` if list of ROS dependencies was properly
-initialized. If it returns ``False``, the function ``is_system_pkg()``
-will never return ``True``. In this case, checks for invalid dependencies 
-should be skipped to prevent false positives.
+Is ``True`` if the list of ROS dependencies was properly
+initialized. If it is ``False``, the function ``is_system_pkg()``
+and ``is_catkin_pkg()`` may return wrong results, so checks for
+invalid dependencies should be skipped to prevent false positives.
 

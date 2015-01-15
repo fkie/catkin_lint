@@ -117,7 +117,7 @@ def run_linter(args):
     if not "ROS_DISTRO" in os.environ:
         sys.stderr.write("catkin_lint: neither ROS_DISTRO environment variable nor --rosdistro option set\n")
         sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
-        env.disable_rosdep()
+        env.rosdep_ok = False
     if args.xml:
         output = XmlOutput()
     elif args.explain:

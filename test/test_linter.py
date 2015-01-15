@@ -117,7 +117,7 @@ class LinterTest(unittest.TestCase):
     @patch("os.path.isdir", lambda x: x == "/" or x == "\\")
     @patch("os.path.realpath", lambda x: x)
     def do_environment(self):
-        env = catkin_lint.environment.CatkinEnvironment(rosdep_view={})
+        env = catkin_lint.environment.CatkinEnvironment(use_rosdep=False)
         mock_packages = {}
         mock_packages[os.path.normpath("/mock_catkin")] = create_manifest("mock_catkin")
         mock_packages[os.path.normpath("/mock_other")] = create_manifest("mock_other")
