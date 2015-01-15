@@ -1,4 +1,5 @@
-from catkin_lint.linter import CatkinEnvironment, CMakeLinter
+from catkin_lint.linter import CMakeLinter
+from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
 from catkin_lint.checks import all
 from catkin_lint.util import iteritems

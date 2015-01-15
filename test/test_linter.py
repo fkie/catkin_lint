@@ -6,7 +6,7 @@ sys.stderr = sys.stdout
 from catkin_lint.linter import CMakeLinter, LintInfo
 from .helper import create_env, create_manifest, mock_lint
 import catkin_lint.checks.build as cc
-import catkin_lint.linter
+import catkin_lint.environment
 from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
 from catkin_pkg.package import Export
 
@@ -117,13 +117,13 @@ class LinterTest(unittest.TestCase):
     @patch("os.path.isdir", lambda x: x == "/" or x == "\\")
     @patch("os.path.realpath", lambda x: x)
     def do_environment(self):
-        env = catkin_lint.linter.CatkinEnvironment(rosdep_view={})
+        env = catkin_lint.environment.CatkinEnvironment(rosdep_view={})
         mock_packages = {}
         mock_packages[os.path.normpath("/mock_catkin")] = create_manifest("mock_catkin")
         mock_packages[os.path.normpath("/mock_other")] = create_manifest("mock_other")
         mock_packages[os.path.normpath("/mock_other")].exports += [ Export("random_tag"), Export("build_type", "cmake") ]
-        old_find = catkin_lint.linter.find_packages
-        catkin_lint.linter.find_packages = lambda x: mock_packages
+        old_find = catkin_lint.environment.find_packages
+        catkin_lint.environment.find_packages = lambda x: mock_packages
         result = env.add_path(os.path.normpath("/"))
         self.assertEqual(1, len(result))
         self.assertTrue(env.is_catkin_pkg("mock_catkin"))
@@ -138,7 +138,7 @@ class LinterTest(unittest.TestCase):
         self.assertTrue(env.is_system_pkg("mock_other"))
         result = env.add_path(os.path.normpath("/missing"))
         self.assertEqual([], result)
-        catkin_lint.linter.find_packages = old_find
+        catkin_lint.environment.find_packages = old_find
 
 
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])

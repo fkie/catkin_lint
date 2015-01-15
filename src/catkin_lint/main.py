@@ -32,7 +32,8 @@ import sys
 import argparse
 import importlib
 from . import __version__ as catkin_lint_version
-from .linter import CatkinEnvironment, CMakeLinter, ERROR, WARNING, NOTICE
+from .linter import CMakeLinter, ERROR, WARNING, NOTICE
+from .environment import CatkinEnvironment
 from .output import TextOutput, ExplainedTextOutput, XmlOutput
 
 import catkin_lint.checks
