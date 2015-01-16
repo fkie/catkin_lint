@@ -123,7 +123,7 @@ class LinterTest(unittest.TestCase):
         mock_packages[os.path.normpath("/mock_other")] = create_manifest("mock_other")
         mock_packages[os.path.normpath("/mock_other")].exports += [ Export("random_tag"), Export("build_type", "cmake") ]
         old_find = catkin_lint.environment.find_packages
-        catkin_lint.environment.find_packages = lambda x: mock_packages
+        catkin_lint.environment.find_packages = lambda x, use_cache: mock_packages
         result = env.add_path(os.path.normpath("/"))
         self.assertEqual(1, len(result))
         self.assertTrue(env.is_catkin_pkg("mock_catkin"))

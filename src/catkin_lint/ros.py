@@ -27,11 +27,15 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+import os
+import sys
+from catkin_pkg.package import parse_package_string
 
 class Rosdep(object):
 
-    def __init__(self, view=None):
+    def __init__(self, view=None, quiet=False):
         self.view = view
+        self.quiet = quiet
 
     def is_ros(self, name):
         if self.view is None: return False
@@ -40,7 +44,7 @@ class Rosdep(object):
         except KeyError:
             return False
 
-    def is_pkg(self, name):
+    def has_key(self, name):
         if self.view is None: return False
         return name in self.view.keys()
 
@@ -48,10 +52,43 @@ class Rosdep(object):
         return self.view is not None
 
 
-def get_rosdep():
+def get_rosdep(quiet):
     from rosdep2.lookup import RosdepLookup
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
     from rosdep2.sources_list import SourcesListLoader
     sources_loader = SourcesListLoader.create_default()
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
-    return Rosdep(view=lookup.get_rosdep_view(DEFAULT_VIEW_KEY))
+    return Rosdep(view=lookup.get_rosdep_view(DEFAULT_VIEW_KEY), quiet=quiet)
+
+class Rosdistro(object):
+    def __init__(self, dist=None, quiet=False):
+        self.dist = dist
+        self.quiet = quiet
+
+    def ok(self):
+        return self.dist is not None
+
+    def download_manifest(self, name):
+        if self.dist is None: raise KeyError()
+        if not self.quiet:
+            sys.stderr.write("catkin_lint: downloading package manifest for '%s'\n" % name)
+        package_xml = self.dist.get_release_package_xml(name)
+        if package_xml is None: return None
+        return parse_package_string(package_xml)
+
+
+def get_rosdistro(quiet):
+    dist = None
+    if "ROS_DISTRO" in os.environ:
+        distro_id = os.environ["ROS_DISTRO"]
+        try:
+            from rosdistro import get_index, get_index_url, get_distribution
+            url = get_index_url()
+            if not quiet:
+                sys.stderr.write("catkin_lint: downloading %s package index from %s\n" % (distro_id, url))
+            index = get_index(url)
+            dist = get_distribution(index, distro_id)
+        except Exception as err:
+            if not quiet:
+                sys.stderr.write("catkin_lint: cannot initialize rosdistro: %s\n" % str(err))
+    return Rosdistro(dist=dist, quiet=quiet)

@@ -60,6 +60,7 @@ def prepare_arguments(parser):
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
     parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
+    parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
@@ -79,13 +80,13 @@ def run_linter(args):
         sys.stdout.write("\n")
         return 0
     if args.dump_cache:
-        from .packages import _dump_manifest_cache
-        _dump_manifest_cache()
+        from .environment import _dump_cache
+        _dump_cache()
         return 0
     nothing_to_do = 0
     pkgs_to_check = []
     if args.rosdistro: os.environ["ROS_DISTRO"] = args.rosdistro
-    env = CatkinEnvironment()
+    env = CatkinEnvironment(use_rosdistro=not args.offline)
     if not args.path and not args.pkg:
         if os.path.isfile("package.xml"):
             pkgs_to_check += env.add_path(os.getcwd())

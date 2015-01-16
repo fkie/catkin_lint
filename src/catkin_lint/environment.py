@@ -29,63 +29,216 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
 import sys
-from .packages import find_packages
-from .rosdep import Rosdep, get_rosdep
-from .util import iteritems
+from time import time
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
+from catkin_pkg.package import parse_package, PACKAGE_MANIFEST_FILENAME
+from .ros import get_rosdep, get_rosdistro
+from .util import iteritems, write_atomic
+
+DOWNLOAD_CACHE_EXPIRY = 2592000  # 30 days
+CACHE_VERSION = 1
+
+class Cache(object):
+    def __init__(self):
+        self.version = CACHE_VERSION
+        self.local_paths = {}
+        self.packages = {}
+
+class CacheItem(object):
+    def __init__(self, data, timestamp):
+        self.data = data
+        self.timestamp = timestamp
+
+class PackageCacheData(object):
+    def __init__(self, path, manifest):
+        self.path = path # if path is None, we know the package but it is not installed
+        self.manifest = manifest
+
+def find_packages(basepath, use_cache=True):
+    global _cache
+    if use_cache:
+        if _cache is None: _load_cache()
+        distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
+    packages = {}
+    package_paths = []
+    for dirpath, dirnames, filenames in os.walk(basepath, followlinks=True):
+        if "CATKIN_IGNORE" in filenames:
+            del dirnames[:]
+            continue
+        elif PACKAGE_MANIFEST_FILENAME in filenames:
+            package_paths.append(os.path.relpath(dirpath, basepath))
+            del dirnames[:]
+            continue
+        for dirname in dirnames:
+            if dirname.startswith('.'):
+                dirnames.remove(dirname)
+    cache_updated = False
+    for path in package_paths:
+        pkg_dir = os.path.realpath(os.path.join(basepath, path))
+        if use_cache:
+            last_modified = os.path.getmtime(os.path.join(pkg_dir, PACKAGE_MANIFEST_FILENAME))
+            path_ts = _cache.local_paths[pkg_dir].timestamp if pkg_dir in _cache.local_paths else 0
+            if last_modified > path_ts:
+                manifest = parse_package(pkg_dir)
+                _cache.local_paths[pkg_dir] = CacheItem(manifest, last_modified)
+                cache_updated = True
+            else:
+                manifest = _cache.local_paths[pkg_dir].data
+            if not distro_id in _cache.packages: _cache.packages[distro_id] = {}
+            manifest_ts = _cache.packages[distro_id][manifest.name].timestamp if manifest.name in _cache.packages[distro_id] else 0
+            if last_modified > manifest_ts:
+                _cache.packages[distro_id][manifest.name] = CacheItem(PackageCacheData(path=pkg_dir, manifest=manifest), last_modified)
+                cache_updated = True
+        else:
+            manifest = parse_package(pkg_dir)
+        packages[path] = manifest
+    if cache_updated:
+        _store_cache()
+    return packages
+
+def is_catkin_package(manifest):
+    if manifest is None: return False
+    for e in manifest.exports:
+        if e.tagname == "build_type" and e.content != "catkin":
+            return False
+    return True
 
 
 class CatkinEnvironment(object):
-    def __init__(self, use_rosdep=True):
-        self.manifests = {}
-        self.cache = {}
+    def __init__(self, use_rosdep=True, use_rosdistro=True, use_cache=True, quiet=False):
+        self.searched_paths = {}
         self.known_catkin_pkgs = set([])
         self.known_other_pkgs = set([])
         self.ok = True
+        self.use_cache = use_cache
+        self.use_rosdistro = use_rosdistro
+        self.rosdistro = None
+        self.rosdep = None
+        self.quiet = quiet
         if use_rosdep:
             try:
-                self.rosdep = get_rosdep()
+                self.rosdep = get_rosdep(quiet=self.quiet)
             except Exception as err:
-                sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
-                sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
+                if not self.quiet:
+                    sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
+                    sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
                 self.ok = False
-                self.rosdep = Rosdep()
-        else:
-            self.rosdep = Rosdep()
 
     def add_path(self, path):
         if not os.path.isdir(path):
             return []
         realpath = os.path.realpath(path)
-        if realpath in self.cache:
-            return self.cache[realpath]
-        pkgs = find_packages(path)
+        if realpath in self.searched_paths:
+            return self.searched_paths[realpath]
+        pkgs = find_packages(path, use_cache=self.use_cache)
         found = []
         for p, m in iteritems(pkgs):
-            is_catkin = True
-            for e in m.exports:
-                if e.tagname == "build_type" and e.content != "catkin":
-                    is_catkin = False
-                    break
-            if is_catkin:
+            if is_catkin_package(m):
                 self.known_catkin_pkgs.add(m.name)
                 pm = ( os.path.join(path, p), m )
-                self.manifests[m.name] = pm
                 found.append(pm)
             else:
                 self.known_other_pkgs.add(m.name)
-        self.cache[realpath] = found
+        self.searched_paths[realpath] = found
         return found
 
     def is_catkin_pkg(self, name):
+        global _cache
         if name in self.known_catkin_pkgs: return True
         if name in self.known_other_pkgs: return False
-        return self.rosdep.is_ros(name)
+        if self.rosdep is None: return False
+        if not self.rosdep.is_ros(name): return False
+        try:
+            return is_catkin_package(self.get_manifest(name))
+        except (IOError, KeyError):
+            return True
 
     def is_system_pkg(self, name):
+        global _cache
         if name in self.known_other_pkgs: return True
         if name in self.known_catkin_pkgs: return False
-        return self.rosdep.is_pkg(name) and not self.rosdep.is_ros(name)
+        if self.rosdep is None: return False
+        if not self.rosdep.has_key(name): return False
+        if not self.rosdep.is_ros(name): return True
+        try:
+            return not is_catkin_package(self.get_manifest(name))
+        except (IOError, KeyError):
+            return False
+
+    def get_manifest(self, name):
+        if self.use_cache:
+            distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
+            if _cache is None: _load_cache()
+            if not distro_id in _cache.packages: _cache.packages[distro_id] = {}
+            if name in _cache.packages[distro_id]:
+                data = _cache.packages[distro_id][name].data
+                ts = _cache.packages[distro_id][name].timestamp
+                if self.use_rosdistro and data.path is None and ts + DOWNLOAD_CACHE_EXPIRY < time():
+                    del _cache.packages[distro_id][name]
+                else:
+                    return data.manifest
+        if self.use_rosdistro:
+            if self.rosdistro is None: 
+                self.rosdistro = get_rosdistro(quiet=self.quiet)
+            if not self.rosdistro.ok():
+                if not self.quiet and env.ok:
+                    sys.stderr.write("catkin_lint: expect spurious dependency errors\n")
+                    env.ok = False
+                raise KeyError()
+            manifest = self.rosdistro.download_manifest(name)
+            if self.use_cache:
+                _cache.packages[distro_id][name] = CacheItem(PackageCacheData(path=None, manifest=manifest), time())
+                _store_cache()
+            return manifest
+        raise KeyError()
 
     def is_known_pkg(self, name):
         if name in self.known_catkin_pkgs or name in self.known_other_pkgs: return True
-        return self.rosdep.is_pkg(name)
+        if self.rosdep is None: return False
+        return self.rosdep.has_key(name)
+
+
+
+_cache = None
+try:
+    from rospkg import get_ros_home
+    _cache_dir = os.path.join(get_ros_home(), "catkin_lint")
+except ImportError:
+    _cache_dir = os.path.join(os.path.expanduser("~"), ".ros", "catkin_lint")
+
+
+def _load_cache():
+    global _cache
+    global _cache_dir
+    try:
+        with open(os.path.join(_cache_dir, "packages.pickle"), "rb") as f:
+            _cache = pickle.loads(f.read())
+            if not isinstance(_cache, Cache) or _cache.version != 1:
+                raise RuntimeError()
+    except:
+        _cache = Cache()
+
+def _store_cache():
+    global _cache
+    global _cache_dir
+    try:
+        os.makedirs(_cache_dir)
+    except:
+        pass
+    write_atomic(os.path.join(_cache_dir, "packages.pickle"), pickle.dumps(_cache, -1))
+
+def _dump_cache():
+    global _cache
+    if _cache is None: _load_cache()
+    sys.stdout.write ("Cache version is %d\n" % _cache.version)
+    sys.stdout.write ("Cached local paths: %d\n" % len(_cache.local_paths))
+    t0 = time()
+    for p,c in iteritems(_cache.local_paths):
+        sys.stdout.write ("  * %s\n    => %s (%ds)\n" % (p, c.data.name, t0 - c.timestamp))
+    for distro_id in _cache.packages:
+        sys.stdout.write("Cached packages for distribution %s: %d\n" % (distro_id if distro_id is not None else "(None)", len(_cache.packages[distro_id])))
+        for p,c in iteritems(_cache.packages[distro_id]):
+            sys.stdout.write("  * %s (%s, %ds)\n" % (p, "available" if c.data.path is not None else "not found", t0 - c.timestamp))
