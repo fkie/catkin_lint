@@ -158,7 +158,7 @@ def depends(linter):
             if not info.env.is_known_pkg(pkg):
                 if info.env.ok: info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
             elif not info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         for pkg in args[1:]:
             if info.env.is_known_pkg(pkg):
                 info.report(ERROR, "MISSING_COMPONENTS", pkg=pkg)
@@ -215,10 +215,10 @@ def exports(linter):
             if not info.env.is_known_pkg(pkg):
                 if info.env.ok: info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
             elif not info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
         for pkg in opts["DEPENDS"]:
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
             elif pkg in info.pkg_modules:
                 info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif not pkg in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
