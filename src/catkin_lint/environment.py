@@ -241,4 +241,4 @@ def _dump_cache():
     for distro_id in _cache.packages:
         sys.stdout.write("Cached packages for distribution %s: %d\n" % (distro_id if distro_id is not None else "(None)", len(_cache.packages[distro_id])))
         for p,c in iteritems(_cache.packages[distro_id]):
-            sys.stdout.write("  * %s (%s, %ds)\n" % (p, "available" if c.data.path is not None else "not found", t0 - c.timestamp))
+            sys.stdout.write("  * %s (%s, %ds)\n" % (p, "available" if c.data.path is not None else "not found" if c.data.manifest is None else "not installed" , t0 - c.timestamp))
