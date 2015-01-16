@@ -170,16 +170,23 @@ class CatkinEnvironment(object):
 
     def get_manifest(self, name):
         if self.use_cache:
+            cache_updated = False
             distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
             if _cache is None: _load_cache()
             if not distro_id in _cache.packages: _cache.packages[distro_id] = {}
             if name in _cache.packages[distro_id]:
                 data = _cache.packages[distro_id][name].data
                 ts = _cache.packages[distro_id][name].timestamp
-                if self.use_rosdistro and data.path is None and ts + DOWNLOAD_CACHE_EXPIRY < time():
+                if data.path is not None and not os.path.isdir(data.path):
+                    if data.path in _cache.local_paths: del _cache.local_paths[data.path]
                     del _cache.packages[distro_id][name]
+                    cache_updated = True
+                elif self.use_rosdistro and data.path is None and ts + DOWNLOAD_CACHE_EXPIRY < time():
+                    del _cache.packages[distro_id][name]
+                    cache_updated = True
                 else:
                     return data.manifest
+            if cache_updated: _store_cache()
         if self.use_rosdistro:
             if self.rosdistro is None:
                 self.rosdistro = get_rosdistro(quiet=self.quiet)
