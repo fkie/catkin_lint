@@ -237,6 +237,11 @@ def _store_cache():
         pass
     write_atomic(os.path.join(_cache_dir, "packages.pickle"), pickle.dumps(_cache, -1))
 
+def _clear_cache():
+    global _cache
+    _cache = Cache()
+    _store_cache()
+
 def _dump_cache():
     global _cache
     if _cache is None: _load_cache()

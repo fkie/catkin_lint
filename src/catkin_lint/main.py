@@ -61,18 +61,22 @@ def prepare_arguments(parser):
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
     parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
     parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
-    parser.add_argument("--disable-cache", action="store_true", help="do not cache package manifests")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
     group.add_argument("--xml", action="store_true", help="output result as XML")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--disable-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--dump-cache", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--clear-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
     return parser
 
 
 def run_linter(args):
+    if args.clear_cache:
+        from .environment import _clear_cache
+        _clear_cache()
     if args.list_check_ids:
         from .diagnostics import message_list
         ids = [ k.lower() for k in message_list.keys() ]
