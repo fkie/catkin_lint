@@ -17,7 +17,7 @@ _catkin_lint_complete()
 		return 0
 	fi
 	compopt -o filenames 2>/dev/null
-	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --offline --pkg --skip-pkg --ignore --package-path" -- "$arg" ) )
+	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --offline --pkg --skip-pkg --ignore --package-path --disable-cache" -- "$arg" ) )
 	COMPREPLY+=( $( compgen -d -- "$arg" ) )
 	return 0
 }
