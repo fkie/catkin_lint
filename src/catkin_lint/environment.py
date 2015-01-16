@@ -181,12 +181,12 @@ class CatkinEnvironment(object):
                 else:
                     return data.manifest
         if self.use_rosdistro:
-            if self.rosdistro is None: 
+            if self.rosdistro is None:
                 self.rosdistro = get_rosdistro(quiet=self.quiet)
             if not self.rosdistro.ok():
-                if not self.quiet and env.ok:
-                    sys.stderr.write("catkin_lint: expect spurious dependency errors\n")
-                    env.ok = False
+                if not self.quiet and self.ok:
+                    sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
+                self.ok = False
                 raise KeyError()
             manifest = self.rosdistro.download_manifest(name)
             if self.use_cache:
