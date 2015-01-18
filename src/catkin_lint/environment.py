@@ -146,7 +146,6 @@ class CatkinEnvironment(object):
         return found
 
     def is_catkin_pkg(self, name):
-        global _cache
         if name in self.known_catkin_pkgs: return True
         if name in self.known_other_pkgs: return False
         if self.rosdep is None: return False
@@ -157,7 +156,6 @@ class CatkinEnvironment(object):
             return True
 
     def is_system_pkg(self, name):
-        global _cache
         if name in self.known_other_pkgs: return True
         if name in self.known_catkin_pkgs: return False
         if self.rosdep is None: return False
@@ -169,6 +167,7 @@ class CatkinEnvironment(object):
             return False
 
     def get_manifest(self, name):
+        global _cache
         if self.use_cache:
             cache_updated = False
             distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
