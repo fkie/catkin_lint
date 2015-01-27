@@ -82,12 +82,12 @@ def get_rosdistro(quiet):
     if "ROS_DISTRO" in os.environ:
         distro_id = os.environ["ROS_DISTRO"]
         try:
-            from rosdistro import get_index, get_index_url, get_distribution
+            from rosdistro import get_index, get_index_url, get_cached_distribution
             url = get_index_url()
             if not quiet:
                 sys.stderr.write("catkin_lint: downloading %s package index from %s\n" % (distro_id, url))
             index = get_index(url)
-            dist = get_distribution(index, distro_id)
+            dist = get_cached_distribution(index, distro_id, allow_lazy_load=True)
         except Exception as err:
             if not quiet:
                 sys.stderr.write("catkin_lint: cannot initialize rosdistro: %s\n" % str(err))
