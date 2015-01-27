@@ -60,15 +60,15 @@ def prepare_arguments(parser):
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
     parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
-    parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
     group.add_argument("--xml", action="store_true", help="output result as XML")
+    parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
+    parser.add_argument("--clear-cache", action="store_true", help="clear internal cache and invalidate all downloaded manifests")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--disable-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--dump-cache", action="store_true", help=argparse.SUPPRESS)
-    parser.add_argument("--clear-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
     return parser
 
