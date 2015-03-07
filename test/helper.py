@@ -1,4 +1,5 @@
-from catkin_lint.linter import CatkinEnvironment, CMakeLinter
+from catkin_lint.linter import CMakeLinter
+from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
 from catkin_lint.checks import all
 from catkin_lint.util import iteritems
@@ -6,7 +7,7 @@ from catkin_lint.util import iteritems
 import os
 
 def create_env(catkin_pkgs=[ "catkin", "message_generation", "message_runtime", "other_catkin", "other_msgs" ], system_pkgs=[ "other_system" ]):
-    env = CatkinEnvironment(rosdep_view={ "#" : "#" })
+    env = CatkinEnvironment(use_rosdep=False, use_cache=False)
     env.known_catkin_pkgs = set(catkin_pkgs)
     env.known_other_pkgs = set(system_pkgs)
     return env

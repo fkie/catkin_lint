@@ -5,5 +5,5 @@
 /dist
 /MANIFEST
 *.pyc
-__pycache__
-*_old.py
+__pycache__/
+*.egg-info/

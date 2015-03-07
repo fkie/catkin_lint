@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright (c) 2013,2014 Fraunhofer FKIE
+Copyright (c) 2013-2015 Fraunhofer FKIE
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -11,6 +11,9 @@ are met:
  * Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
+ * Neither the name of the Fraunhofer organization nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
@@ -153,9 +156,9 @@ def depends(linter):
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_known_pkg(pkg):
-                if info.env.has_rosdep(): info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
             elif not info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         for pkg in args[1:]:
             if info.env.is_known_pkg(pkg):
                 info.report(ERROR, "MISSING_COMPONENTS", pkg=pkg)
@@ -210,12 +213,12 @@ def exports(linter):
         opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
         for pkg in opts["CATKIN_DEPENDS"]:
             if not info.env.is_known_pkg(pkg):
-                if info.env.has_rosdep(): info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
             elif not info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
         for pkg in opts["DEPENDS"]:
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
+                if info.env.ok: info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
             elif pkg in info.pkg_modules:
                 info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif not pkg in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):

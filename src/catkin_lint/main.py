@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Copyright (c) 2013,2014 Fraunhofer FKIE
+Copyright (c) 2013-2015 Fraunhofer FKIE
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
@@ -11,6 +11,9 @@ are met:
  * Redistributions in binary form must reproduce the above copyright
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
+ * Neither the name of the Fraunhofer organization nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
 IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
@@ -29,7 +32,8 @@ import sys
 import argparse
 import importlib
 from . import __version__ as catkin_lint_version
-from .linter import CatkinEnvironment, CMakeLinter, ERROR, WARNING, NOTICE
+from .linter import CMakeLinter, ERROR, WARNING, NOTICE
+from .environment import CatkinEnvironment
 from .output import TextOutput, ExplainedTextOutput, XmlOutput
 
 import catkin_lint.checks
@@ -55,17 +59,24 @@ def prepare_arguments(parser):
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
+    parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
     group.add_argument("--xml", action="store_true", help="output result as XML")
+    parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
+    parser.add_argument("--clear-cache", action="store_true", help="clear internal cache and invalidate all downloaded manifests")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--disable-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--dump-cache", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--list-check-ids", action="store_true", help=argparse.SUPPRESS)
     return parser
 
 
 def run_linter(args):
+    if args.clear_cache:
+        from .environment import _clear_cache
+        _clear_cache()
     if args.list_check_ids:
         from .diagnostics import message_list
         ids = [ k.lower() for k in message_list.keys() ]
@@ -74,12 +85,13 @@ def run_linter(args):
         sys.stdout.write("\n")
         return 0
     if args.dump_cache:
-        from .packages import _dump_manifest_cache
-        _dump_manifest_cache()
+        from .environment import _dump_cache
+        _dump_cache()
         return 0
     nothing_to_do = 0
     pkgs_to_check = []
-    env = CatkinEnvironment()
+    if args.rosdistro: os.environ["ROS_DISTRO"] = args.rosdistro
+    env = CatkinEnvironment(use_rosdistro=not args.offline, use_cache=not args.disable_cache)
     if not args.path and not args.pkg:
         if os.path.isfile("package.xml"):
             pkgs_to_check += env.add_path(os.getcwd())
@@ -99,7 +111,7 @@ def run_linter(args):
             continue
         pkgs_to_check += env.add_path(path)
     for name in args.pkg:
-        if not name in env.known_catkin_pkgs:
+        if not env.is_catkin_pkg(name):
             sys.stderr.write("catkin_lint: no such package: %s\n" % name)
             nothing_to_do = 1
             continue
@@ -108,6 +120,11 @@ def run_linter(args):
     if not pkgs_to_check:
         sys.stderr.write ("catkin_lint: no packages to check\n")
         return nothing_to_do
+    if not "ROS_DISTRO" in os.environ:
+        if env.ok and not args.quiet:
+            sys.stderr.write("catkin_lint: neither ROS_DISTRO environment variable nor --rosdistro option set\n")
+            sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
+        env.ok = False
     if args.xml:
         output = XmlOutput()
     elif args.explain:

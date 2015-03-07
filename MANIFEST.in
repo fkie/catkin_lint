@@ -1,2 +1,2 @@
-include *.rst changelog.txt run.py run_coverage.sh bash/catkin_lint
+include *.rst changelog.txt catkin_lint.xsd run.py run_travis.py bash/catkin_lint
 recursive-include test *.py

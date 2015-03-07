@@ -1,3 +1,9 @@
+Version 1.4.0
+
+  * Add rosdistro support and refactor rosdep integration
+  * Improved cache
+  * Bugfixes and code cleanup
+
 Version 1.3.11
 
   * Fix wrong column count (exposed by indentation check)
