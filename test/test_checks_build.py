@@ -245,6 +245,18 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
+            include_directories(${catkin_INCLUDE_DIRS} ${other_catkin_INCLUDE_DIRS})
+            add_executable(mock_prog src/mock.cpp)
+            target_link_libraries(mock_prog ${catkin_LIBRARIES})
+            """,
+        checks=cc.targets)
+        self.assertEqual([ "DUPLICATE_BUILD_INCLUDE" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            catkin_package()
             include_directories(${catkin_INCLUDE_DIRS})
             add_executable(mock_prog src/mock.cpp)
             target_link_libraries(mock_prog ${catkin_LIBRARIES})

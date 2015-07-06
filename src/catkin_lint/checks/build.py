@@ -82,6 +82,10 @@ def targets(linter):
     def on_final(info):
         if (info.executables or info.libraries) and info.catkin_components and not os.path.normpath("/catkin-includes") in info.build_includes:
             info.report(ERROR, "MISSING_CATKIN_INCLUDE")
+        if os.path.normpath("/catkin-includes") in info.build_includes:
+            for pkg in info.catkin_components:
+                if os.path.normpath("/%s-includes" % pkg) in info.build_includes:
+                    info.report(ERROR, "DUPLICATE_BUILD_INCLUDE", pkg=pkg)
 
     linter.require(includes)
     linter.require(depends)
@@ -153,6 +157,8 @@ def depends(linter):
             info.report(WARNING, "MISSING_REQUIRED", pkg="catkin")
             info.required_packages.add("catkin")
         for pkg in opts["COMPONENTS"]:
+            info.var["%s_INCLUDE_DIRS" % pkg] = "/%s-includes" % pkg
+            info.var["%s_LIBRARIES" % pkg] = "/%s-libs/library.so" % pkg
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_known_pkg(pkg):
