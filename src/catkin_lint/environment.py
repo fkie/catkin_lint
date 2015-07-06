@@ -145,6 +145,13 @@ class CatkinEnvironment(object):
         self.searched_paths[realpath] = found
         return found
 
+    def find_local_pkg(self, name):
+        for path, packages in iteritems(self.searched_paths):
+            for p,m in packages:
+                if m.name == name:
+                    return p,m
+        raise KeyError()
+
     def is_catkin_pkg(self, name):
         if name in self.known_catkin_pkgs: return True
         if name in self.known_other_pkgs: return False

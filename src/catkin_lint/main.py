@@ -111,11 +111,12 @@ def run_linter(args):
             continue
         pkgs_to_check += env.add_path(path)
     for name in args.pkg:
-        if not env.is_catkin_pkg(name):
+        try:
+            path, manifest = env.find_local_pkg(name)
+            pkgs_to_check.append((path, manifest))
+        except KeyError:
             sys.stderr.write("catkin_lint: no such package: %s\n" % name)
             nothing_to_do = 1
-            continue
-        pkgs_to_check.append(env.manifests[name])
     pkgs_to_check = [ (p,m) for p,m in pkgs_to_check if not m.name in args.skip_pkg ]
     if not pkgs_to_check:
         sys.stderr.write ("catkin_lint: no packages to check\n")
