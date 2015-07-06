@@ -85,7 +85,7 @@ def targets(linter):
         if os.path.normpath("/catkin-includes") in info.build_includes:
             for pkg in info.catkin_components:
                 if os.path.normpath("/%s-includes" % pkg) in info.build_includes:
-                    info.report(ERROR, "DUPLICATE_BUILD_INCLUDE", pkg=pkg)
+                    info.report(WARNING, "DUPLICATE_BUILD_INCLUDE", pkg=pkg)
 
     linter.require(includes)
     linter.require(depends)
