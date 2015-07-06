@@ -258,6 +258,12 @@ catkin_package() command, but that path is not mentioned in any
 include_directories() call.
 """
 ),
+"DUPLICATE_BUILD_INCLUDE" : ("duplicate include path ${%(pkg)s_INCLUDE_DIRS}",
+"""\
+Include paths of packages listed in the find_package(catkin) command are added implicitly
+by the ${catkin_INCLUDE_DIRS} variable. There is no need to add it a second time.
+"""
+),
 "AMBIGUOUS_BUILD_INCLUDE" : ("include paths '%(path)s' and '%(parent_path)s' are ambiguous",
 """\
 You have used two include paths where one is a parent of
@@ -559,6 +565,11 @@ if(CATKIN_ENABLE_TESTING) block.
 """\
 For better readability, each command should be placed on its own line.
 if() and foreach() bodies should be indented by one or more extra spaces.
+"""
+),
+"UNSORTED_LIST": ("list %(name)s should be sorted",
+"""\
+The catkin manual recommends that list element be kept in order.
 """
 ),
 }
