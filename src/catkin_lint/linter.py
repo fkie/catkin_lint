@@ -325,7 +325,7 @@ class CMakeLinter(object):
                     cur_col += [[None]] * (depth-cur_depth)
                     cur_depth = depth
                 if depth < cur_depth:
-                    del cur_col[depth-cur_depth:]
+                    del cur_col[depth+1:]
                     cur_depth = depth
                 if cmd == "else":
                     if len(cur_col[-1]) < 2: raise CMakeSyntaxError("%s(%d): else() without if()" % (info.file, info.line))
