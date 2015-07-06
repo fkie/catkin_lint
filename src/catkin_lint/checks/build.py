@@ -31,7 +31,7 @@ import os
 import re
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
-from ..util import word_split, iteritems
+from ..util import word_split, iteritems, is_sorted
 from .manifest import depends as manifest_depends
 from functools import partial
 
@@ -101,6 +101,8 @@ def source_files(linter):
     def on_add_executable(info, cmd, args):
         if "IMPORTED" in args: return
         opts, args = cmake_argparse(args, { "WIN32": "-", "MACOSX_BUNDLE": "-", "EXCLUDE_FROM_ALL": "-"})
+        if not is_sorted(args[1:]):
+            info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
             if not source_file: continue
             source_file = info.package_path(source_file)
@@ -110,6 +112,8 @@ def source_files(linter):
     def on_add_library(info, cmd, args):
         if "IMPORTED" in args: return
         opts, args = cmake_argparse(args, { "STATIC": "-", "SHARED": "-", "MODULE": "-", "EXCLUDE_FROM_ALL": "-"})
+        if not is_sorted(args[1:]):
+            info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
             if not source_file: continue
             source_file = info.package_path(source_file)
@@ -156,6 +160,8 @@ def depends(linter):
         if not opts["REQUIRED"]:
             info.report(WARNING, "MISSING_REQUIRED", pkg="catkin")
             info.required_packages.add("catkin")
+        if not is_sorted(opts["COMPONENTS"]):
+            info.report(NOTICE, "UNSORTED_LIST", name="COMPONENTS")
         for pkg in opts["COMPONENTS"]:
             info.var["%s_INCLUDE_DIRS" % pkg] = "/%s-includes" % pkg
             info.var["%s_LIBRARIES" % pkg] = "/%s-libs/library.so" % pkg
@@ -217,6 +223,9 @@ def exports(linter):
         info.export_targets = set([])
     def on_catkin_package(info, cmd, args):
         opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
+        for list_name in ["CATKIN_DEPENDS","DEPENDS","CFG_EXTRAS","EXPORTED_TARGETS"]:
+            if not is_sorted(opts[list_name]):
+                info.report(NOTICE, "UNSORTED_LIST", name=list_name)
         for pkg in opts["CATKIN_DEPENDS"]:
             if not info.env.is_known_pkg(pkg):
                 if info.env.ok: info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
@@ -317,7 +326,7 @@ def installs(linter):
         info.install_includes = False
         info.install_files = set([])
     def on_install(info, cmd, args):
-        install_type = ""
+        install_type = None
         opts, args =  cmake_argparse(args, { "PROGRAMS" : "*", "FILES": "*", "TARGETS": "*", "DIRECTORY" : "?", "DESTINATION" : "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?" })
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
@@ -329,6 +338,10 @@ def installs(linter):
         if opts["TARGETS"]:
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
+        if install_type is None:
+            return
+        if install_type != "DIRECTORY" and not is_sorted(opts[install_type]):
+            info.report(NOTICE, "UNSORTED_LIST", name=install_type)
         for dest in [ "DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION" ]:
             if opts[dest] is None: continue
             if not info.is_catkin_target(opts[dest]):
@@ -396,6 +409,9 @@ def message_generation(linter):
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
+        opts, args = cmake_argparse(args, { "DIRECTORY": "?", "FILES": "*" })
+        if not is_sorted(opts["FILES"]):
+            info.report(NOTICE, "UNSORTED_LIST", name="FILES")
     def on_generate_msg(info, cmd, args):
         info.uses_catkin = True
         if info.manifest.is_metapackage():
@@ -405,6 +421,8 @@ def message_generation(linter):
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
         opts, args = cmake_argparse(args, { "DEPENDENCIES": "*" })
+        if not is_sorted(opts["DEPENDENCIES"]):
+            info.report(NOTICE, "UNSORTED_LIST", name="DEPENDENCIES")
         info.msg_dep |= set(opts["DEPENDENCIES"])
     def on_final(info):
         if info.manifest.is_metapackage(): return

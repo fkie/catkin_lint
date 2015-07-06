@@ -67,6 +67,12 @@ def write_atomic(filepath, data):
             os.unlink(filepath_tmp)
 
 
+def is_sorted(lst, key=lambda x, y: x < y):
+    for i, el in enumerate(lst[1:]):
+        if key(el, lst[i-1]):
+            return False
+    return True
+
 # Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
 try:
     iteritems = dict.iteritems

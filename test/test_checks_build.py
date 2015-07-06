@@ -472,7 +472,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_library(Stuff_LIBRARIES stuff)
             catkin_package(
             CATKIN_DEPENDS other_catkin
-            DEPENDS other_system Stuff
+            DEPENDS Stuff other_system
             )
             """,
         checks=cc.exports)

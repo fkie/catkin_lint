@@ -567,6 +567,11 @@ For better readability, each command should be placed on its own line.
 if() and foreach() bodies should be indented by one or more extra spaces.
 """
 ),
+"UNSORTED_LIST": ("list %(name)s should be sorted",
+"""\
+The catkin manual recommends that list element be kept in order.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):
