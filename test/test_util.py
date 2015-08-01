@@ -25,3 +25,9 @@ class UtilTest(unittest.TestCase):
         self.assertEqual([ "c", "3", "po" ], result)
         result = util.word_split("c-3po")
         self.assertEqual([ "c", "3po" ], result)
+    def test_is_sorted(self):
+        self.assertTrue(util.is_sorted(["a","b","c","d"]))
+        self.assertFalse(util.is_sorted(["b","a","c","d"]))
+        self.assertFalse(util.is_sorted(["a","c","b","d"]))
+        self.assertFalse(util.is_sorted(["a","b","d","c"]))
+

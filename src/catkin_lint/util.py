@@ -69,7 +69,7 @@ def write_atomic(filepath, data):
 
 def is_sorted(lst, key=lambda x, y: x < y):
     for i, el in enumerate(lst[1:]):
-        if key(el, lst[i-1]):
+        if key(el, lst[i]):
             return False
     return True
 
