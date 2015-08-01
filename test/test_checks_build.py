@@ -697,7 +697,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([], result)
@@ -710,7 +710,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(other_catkin REQUIRED)
             generate_messages(DEPENDENCIES other_catkin)
             add_message_files(FILES mock.msg)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([ "ORDER_VIOLATION" ], result)
@@ -721,7 +721,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             """,
@@ -736,7 +736,7 @@ class ChecksBuildTest(unittest.TestCase):
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
             find_package(catkin REQUIRED)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([ "CATKIN_ORDER_VIOLATION", "CATKIN_ORDER_VIOLATION" ], result)
@@ -761,7 +761,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([ "MISSING_GENERATE_MSG" ], result)
@@ -773,7 +773,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
             generate_messages(DEPENDENCIES other_catkin)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([ "UNUSED_GENERATE_MSG" ], result)
@@ -812,7 +812,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(other_catkin REQUIRED)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([ "UNCONFIGURED_BUILD_DEPEND" ], result)
@@ -824,7 +824,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED COMPONENTS message_generation)
             add_message_files(FILES mock.msg)
             generate_messages(DEPENDENCIES other_catkin)
-            catkin_package(CATKIN_DEPENDS other_catkin message_runtime)
+            catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
         self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
