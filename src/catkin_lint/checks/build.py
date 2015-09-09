@@ -204,7 +204,7 @@ def tests(linter):
         if not info.condition_is_true("CATKIN_ENABLE_TESTING"):
             info.report(ERROR, "UNGUARDED_TEST_CMD", cmd=cmd)
         if dep is None: return
-        if not dep in info.test_dep | info.build_dep:
+        if not dep in info.test_dep | info.build_dep | info.exec_dep:
             info.report(ERROR, "MISSING_DEPEND", type="test", pkg=dep)
 
     linter.require(manifest_depends)
