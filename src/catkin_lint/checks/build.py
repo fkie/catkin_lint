@@ -352,12 +352,12 @@ def installs(linter):
         for lib in info.export_libs:
             if not lib in info.targets: continue
             if not lib in info.install_targets:
-                info.report(ERROR if "install" in info.commands else NOTICE, "UNINSTALLED_EXPORT_LIB", target=lib)
+                info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_EXPORT_LIB", target=lib)
         for tgt in info.executables - info.install_targets:
             if "test" in tgt.lower() or "example" in tgt.lower(): continue
-            info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
+            info.report(WARNING, "MISSING_INSTALL_TARGET", target=tgt)
         if info.export_includes and not info.install_includes:
-            info.report (ERROR if "install" in info.commands else NOTICE, "MISSING_INSTALL_INCLUDE")
+            info.report (ERROR if "install" in info.commands else WARNING, "MISSING_INSTALL_INCLUDE")
         for target, depends in iteritems(info.target_links):
             if not target in info.install_targets: continue
             for lib in depends:
