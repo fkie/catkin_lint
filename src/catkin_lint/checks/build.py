@@ -190,7 +190,7 @@ def depends(linter):
                 info.report(ERROR, "MISSING_REQUIRED", pkg=pkg)
         for pkg in info.build_dep - (info.find_packages - info.test_packages):
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
+                info.report(ERROR if info.executables or info.libraries else WARNING, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
 
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
