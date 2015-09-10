@@ -7,12 +7,8 @@ then
 	debian/rules make-orig-tar
 fi
 export BUILD_ARCH=amd64
+export BUILD_DISTROS="precise trusty"
 export DPKG_BUILDPACKAGE_OPTS="-i\\..*"
-for distro in precise trusty
-do
-	sed -i -e '1s/\(~[a-z]\+\)\?) [a-z]\+;/~'$distro') '$distro';/' debian/changelog
-	../builddeb.sh "$sa"
-	sa="-sd"
-done
+../builddeb_distro.sh -sa
 git checkout -- debian/changelog
 
