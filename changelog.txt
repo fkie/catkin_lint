@@ -1,3 +1,9 @@
+Version 1.4.3
+
+  * Promote uninstalled target notices to warning
+  * Demote unconfigured build errors to warnings if there are no build targets
+  * Fix diagnostic about test dependenceis which are also run dependencies
+
 Version 1.4.2
 
   * Fix off-by-one error in check for sorted lists

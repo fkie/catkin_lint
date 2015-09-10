@@ -190,7 +190,7 @@ def depends(linter):
                 info.report(ERROR, "MISSING_REQUIRED", pkg=pkg)
         for pkg in info.build_dep - (info.find_packages - info.test_packages):
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
+                info.report(ERROR if info.executables or info.libraries else WARNING, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
 
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
@@ -204,7 +204,7 @@ def tests(linter):
         if not info.condition_is_true("CATKIN_ENABLE_TESTING"):
             info.report(ERROR, "UNGUARDED_TEST_CMD", cmd=cmd)
         if dep is None: return
-        if not dep in info.test_dep | info.build_dep:
+        if not dep in info.test_dep | info.build_dep | info.exec_dep:
             info.report(ERROR, "MISSING_DEPEND", type="test", pkg=dep)
 
     linter.require(manifest_depends)
@@ -352,12 +352,12 @@ def installs(linter):
         for lib in info.export_libs:
             if not lib in info.targets: continue
             if not lib in info.install_targets:
-                info.report(ERROR if "install" in info.commands else NOTICE, "UNINSTALLED_EXPORT_LIB", target=lib)
+                info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_EXPORT_LIB", target=lib)
         for tgt in info.executables - info.install_targets:
             if "test" in tgt.lower() or "example" in tgt.lower(): continue
-            info.report(WARNING if "install" in info.commands else NOTICE, "MISSING_INSTALL_TARGET", target=tgt)
+            info.report(WARNING, "MISSING_INSTALL_TARGET", target=tgt)
         if info.export_includes and not info.install_includes:
-            info.report (ERROR if "install" in info.commands else NOTICE, "MISSING_INSTALL_INCLUDE")
+            info.report (ERROR if "install" in info.commands else WARNING, "MISSING_INSTALL_INCLUDE")
         for target, depends in iteritems(info.target_links):
             if not target in info.install_targets: continue
             for lib in depends:
