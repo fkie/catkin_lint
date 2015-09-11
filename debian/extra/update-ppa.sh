@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-declare -A ubuntu=( [precise]=12.02 [trusty]=14.04 [utopic]=14.10 [vivid]=15.04 [wily]=15.10 )
+declare -A ubuntu=( [precise]=12.04 [trusty]=14.04 [utopic]=14.10 [vivid]=15.04 [wily]=15.10 )
 sa="-sa"
 ./debian/rules make-orig-tar
 for distro in precise trusty utopic vivid
