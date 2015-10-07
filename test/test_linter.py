@@ -11,6 +11,7 @@ from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
 from catkin_pkg.package import Export
 
 import os.path
+import os # for os.environ
 import posixpath
 import ntpath
 
@@ -100,6 +101,18 @@ class LinterTest(unittest.TestCase):
             set(bla $ENV{PATH})
             """, checks=cc.all)
         self.assertEqual([ "ENV_VAR"], result)
+
+    def test_env_var_resolution(self):
+        info = LintInfo(create_env())
+        info.path = '/tmp/somewhere'
+        os.environ['CATKIN_LINT_REL_TESTVAR'] = 'wheee'
+        cmake_rel_env = '$ENV{CATKIN_LINT_REL_TESTVAR}'
+        self.assertEqual('wheee', info.resolve_env_vars(cmake_rel_env))
+        self.assertEqual('/tmp/somewhere/wheee', info.real_path(cmake_rel_env))
+        os.environ['CATKIN_LINT_ABS_TESTVAR'] = '/wheee'
+        cmake_abs_env = '$ENV{CATKIN_LINT_ABS_TESTVAR}'
+        self.assertEqual('/wheee', info.resolve_env_vars(cmake_abs_env))
+        self.assertEqual('/wheee', info.real_path(cmake_abs_env))
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
     def do_blacklist(self):
