@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
 import sys
+import re
 from functools import total_ordering
 from fnmatch import fnmatch
 from copy import copy
@@ -81,6 +82,7 @@ class LintInfo(object):
         self.messages = []
         self._pkg_source = os.path.normpath("/pkg-source")
         self._pkg_build = os.path.normpath("/pkg-build")
+        self._find_env = re.compile(r'(?<!\\)\$ENV\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
     def report(self, level, msg_id, **kwargs):
         if msg_id in self.ignore_messages:
@@ -105,7 +107,14 @@ class LintInfo(object):
         return new_path
 
     def real_path(self, path):
-        return os.path.normpath(os.path.join(self.path, path))
+        return os.path.normpath(os.path.join(self.path, self.resolve_env_vars(path)))
+
+    def resolve_env_vars(self, path):
+        mo = self._find_env(path)
+        while mo is not None:
+            path = path[:mo.start(0)] + '${' + mo.group(1) + '}' + path[mo.end(0):]
+            mo = self._find_env(path)
+        return os.path.expandvars(path)
 
     def is_internal_path(self, path):
         tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
