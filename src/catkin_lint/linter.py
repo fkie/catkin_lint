@@ -111,10 +111,15 @@ class LintInfo(object):
 
     def resolve_env_vars(self, path):
         mo = self._find_env(path)
-        while mo is not None:
-            path = path[:mo.start(0)] + '${' + mo.group(1) + '}' + path[mo.end(0):]
-            mo = self._find_env(path)
-        return os.path.expandvars(path)
+        prev_path = ''
+        # repeat until path is stable to properly resolve nested
+        # $ENV{} statements
+        while prev_path != path:
+            prev_path = path
+            while mo is not None:
+                path = path[:mo.start(0)] + os.path.expandvars('${' + mo.group(1) + '}') + path[mo.end(0):]
+                mo = self._find_env(path)
+        return path
 
     def is_internal_path(self, path):
         tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
