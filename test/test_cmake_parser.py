@@ -7,10 +7,10 @@ import catkin_lint.cmake as cmake
 
 class CMakeParserTest(unittest.TestCase):
 
-    def parse_all(self, s, var=None, location=None):
+    def parse_all(self, s, var=None, env_var=None, location=None):
         result = []
         ctxt = cmake.ParserContext()
-        for cmd, args, (fname, line, column) in ctxt.parse(s, var=var):
+        for cmd, args, (fname, line, column) in ctxt.parse(s, var=var, env_var=env_var):
             if location is None:
                 result.append( ( cmd, args) )
             elif location == 1:
@@ -232,7 +232,7 @@ class CMakeParserTest(unittest.TestCase):
 
     def test_substitution(self):
         self.assertEqual(
-            self.parse_all("cmd(${args})", { "args" : "one;two;three"}),
+            self.parse_all("cmd(${args})", var={ "args" : "one;two;three"}),
             [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
@@ -244,44 +244,56 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd", [ "" ]) ]
         )
         self.assertEqual(
-            self.parse_all("${fun}()", { "fun" : "cmd"}),
+            self.parse_all("${fun}()", var={ "fun" : "cmd"}),
             [ ("cmd", []) ]
         )
         self.assertEqual(
-            self.parse_all("cmd(${args})", { "args" : "one two three"}),
+            self.parse_all("cmd(${args})", var={ "args" : "one two three"}),
             [ ("cmd", [ "one", "two", "three" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd("${args}")', { "args" : "one;two;three"}),
+            self.parse_all('cmd("${args}")', var={ "args" : "one;two;three"}),
             [ ("cmd", [ "one;two;three" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd("\\${args}")', { "args" : "fail"}),
+            self.parse_all('cmd("\\${args}")', var={ "args" : "fail"}),
             [ ("cmd", [ "${args}" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd(\\${args})', { "args" : "fail"}),
+            self.parse_all('cmd(\\${args})', var={ "args" : "fail"}),
             [ ("cmd", [ "${args}" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd(${args})', { "args" : "\\\\"}),
+            self.parse_all('cmd(${args})', var={ "args" : "\\\\"}),
             [ ("cmd", [ "\\\\" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd(${args})', { "args" : "${looks_like_a_variable}"}),
+            self.parse_all('cmd(${args})', var={ "args" : "${looks_like_a_variable}"}),
             [ ("cmd", [ "${looks_like_a_variable}" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd(${args})', { "args" : ")"}),
+            self.parse_all('cmd(${args})', var={ "args" : ")"}),
             [ ("cmd", [ ")" ]) ]
         )
         self.assertEqual(
-            self.parse_all('cmd(fun ${args})', { "args" : "stuff"}),
+            self.parse_all('cmd(fun ${args})', var={ "args" : "stuff"}),
             [ ("cmd", [ "fun", "stuff" ]) ]
         )
         self.assertEqual(
             self.parse_all("cmd($ENV{PATH})"),
             [ ("cmd", [ "$ENV{PATH}" ]) ]
+        )
+        self.assertEqual(
+            self.parse_all("cmd($env{test})", env_var={"test": "foo"}),
+            [ ("cmd", [ "$env{test}" ]) ]
+        )
+        self.assertEqual(
+            self.parse_all("cmd($ENV{test})", env_var={"test": "foo"}),
+            [ ("cmd", [ "foo" ]) ]
+        )
+        self.assertEqual(
+            self.parse_all("cmd($ENV{Test})", env_var={"test": "foo"}),
+            [ ("cmd", [ "$ENV{Test}" ]) ]
         )
 
     def test_pragma(self):

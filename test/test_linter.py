@@ -11,6 +11,7 @@ from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
 from catkin_pkg.package import Export
 
 import os.path
+import os # for os.environ
 import posixpath
 import ntpath
 

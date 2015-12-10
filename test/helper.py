@@ -6,7 +6,7 @@ from catkin_lint.util import iteritems
 
 import os
 
-def create_env(catkin_pkgs=[ "catkin", "message_generation", "message_runtime", "other_catkin", "other_msgs" ], system_pkgs=[ "other_system" ]):
+def create_env(catkin_pkgs=[ "catkin", "message_generation", "message_runtime", "other_catkin", "other_msgs", "first_pkg", "second_pkg" ], system_pkgs=[ "other_system" ]):
     env = CatkinEnvironment(use_rosdep=False, use_cache=False)
     env.known_catkin_pkgs = set(catkin_pkgs)
     env.known_other_pkgs = set(system_pkgs)

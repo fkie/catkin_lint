@@ -28,13 +28,12 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
-import sys
+import re
 from functools import total_ordering
 from fnmatch import fnmatch
 from copy import copy
 from .cmake import ParserContext, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
-from .environment import CatkinEnvironment
 
 ERROR = 0
 WARNING = 1
@@ -52,11 +51,9 @@ class Message(object):
         self.text = text
         self.description = description
 
-    def __eq__(self, other):
-        return (self.package, self.level, self.file, self.line, self.id) == (other.package, other.level, other.file, other.line, other.id)
+    __eq__ = lambda self, other: (self.package, self.level, self.file, self.line, self.id) == (other.package, other.level, other.file, other.line, other.id)
 
-    def __lt__(self, other):
-        return (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
+    __lt__ = lambda self, other: (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
 
 class LintInfo(object):
 
@@ -309,7 +306,7 @@ class CMakeLinter(object):
             # i.e. each function/macro invocation has its own indentation list
             cur_col = [[None]]
             cur_depth = 0
-            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, filename=cur_file):
+            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, env_var=self.env.os_env, filename=cur_file):
                 info.file = fname
                 info.line = line
                 if cmd == "#catkin_lint":

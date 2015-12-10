@@ -28,18 +28,22 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/existing.cpp"))
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath("/mock-path/src/a.cpp"), os.path.normpath("/mock-path/src/b.cpp")])
     def do_source_files(self):
         env = create_env()
         pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, "add_executable(mock src/existing.cpp) add_library(mock_lib src/existing.cpp)", checks=cc.source_files)
+        result = mock_lint(env, pkg, "add_executable(mock src/a.cpp src/b.cpp) add_library(mock_lib src/a.cpp src/b.cpp)", checks=cc.source_files)
         self.assertEqual([], result)
-        result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/existing.cpp) add_library(mock_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/existing.cpp)", checks=cc.source_files)
+        result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp) add_library(mock_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp)", checks=cc.source_files)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "add_executable(mock src/missing.cpp)", checks=cc.source_files)
         self.assertEqual([ "MISSING_FILE" ], result)
         result = mock_lint(env, pkg, "add_library(mock src/missing.cpp)", checks=cc.source_files)
         self.assertEqual([ "MISSING_FILE" ], result)
+        result = mock_lint(env, pkg, "add_executable(mock src/b.cpp src/a.cpp)", checks=cc.source_files)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
+        result = mock_lint(env, pkg, "add_library(mock src/b.cpp src/a.cpp)", checks=cc.source_files)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/in_package"))
@@ -210,6 +214,21 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.depends)
         self.assertEqual([], result)
+        pkg = create_manifest("mock", build_depends=[ "first_pkg", "second_pkg" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS first_pkg second_pkg)
+            """,
+        checks=cc.depends)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS second_pkg first_pkg)
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
@@ -645,6 +664,23 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual([ "MISSING_BUILD_INCLUDE", "AMBIGUOUS_BUILD_INCLUDE" ], result)
+        pkg = create_manifest("mock", build_depends=[ "first_pkg", "second_pkg" ], run_depends=[ "first_pkg", "second_pkg" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS first_pkg second_pkg)
+            catkin_package(CATKIN_DEPENDS first_pkg second_pkg)
+            """,
+        checks=cc.exports)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS first_pkg second_pkg)
+            catkin_package(CATKIN_DEPENDS second_pkg first_pkg)
+            """,
+        checks=cc.exports)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/config.xml"))

@@ -44,13 +44,22 @@ def _unescape(s):
 
 
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
-def _resolve_vars(s, var):
-    mo = _find_var(s)
-    while mo is not None:
-        key = _unescape(mo.group(1))
-        value = _escape(var[key]) if key in var else ""
-        s = s[:mo.start(0)] + value + s[mo.end(0):]
+_find_env_var = re.compile(r'(?<!\\)\$ENV\{([A-Za-z_0-9]+)\}').search
+def _resolve_vars(s, var, env_var):
+    if var is not None:
         mo = _find_var(s)
+        while mo is not None:
+            key = _unescape(mo.group(1))
+            value = _escape(var[key]) if key in var else ""
+            s = s[:mo.start(0)] + value + s[mo.end(0):]
+            mo = _find_var(s)
+    if env_var is not None:
+        mo = _find_env_var(s)
+        while mo is not None:
+            key = _unescape(mo.group(1))
+            value = _escape(env_var[key]) if key in env_var else "\\$ENV{%s}" % mo.group(1)
+            s = s[:mo.start(0)] + value + s[mo.end(0):]
+            mo = _find_env_var(s)
     return s
 
 
@@ -89,15 +98,15 @@ def _lexer(s):
         raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
 
 
-def _resolve_args(arg_tokens, var):
+def _resolve_args(arg_tokens, var, env_var):
     args = []
     for typ, val in arg_tokens:
         if typ == "STRING":
             val = val[1:-1]
-            val = _resolve_vars(val, var)
+            val = _resolve_vars(val, var, env_var)
             args.append(_unescape(val))
         elif typ == "WORD":
-            val = _resolve_vars(val, var)
+            val = _resolve_vars(val, var, env_var)
             if val:
                 args += re.split(r";|[ \t]+", _unescape(val))
         elif typ != "SEMICOLON":
@@ -189,7 +198,7 @@ class ParserContext(object):
     def call_depth(self):
         return len(self._call_stack)
 
-    def call(self, name, args, var=None, skip_callable=False):
+    def call(self, name, args, var=None, env_var=None, skip_callable=False):
         lname = name.lower()
         if lname in self._call_stack: return
         if var is None: var = {}
@@ -206,7 +215,7 @@ class ParserContext(object):
             var["ARGN"] = ';'.join(argn)
             cmds = copy(f.commands)
             self._call_stack.add(lname)
-            for cmd, args, loc in self._yield(cmds, var, skip_callable):
+            for cmd, args, loc in self._yield(cmds, var, env_var, skip_callable):
                 yield (cmd, args, loc)
         finally:
             self._call_stack.remove(lname)
@@ -217,15 +226,15 @@ class ParserContext(object):
                     del var[key]
             if "ARGN" in var: del var["ARGN"]
 
-    def _yield(self, cmds, var, skip_callable):
+    def _yield(self, cmds, var, env_var, skip_callable):
         if var is None: var = {}
         while cmds:
             cmd = cmds.pop(0)
-            cmdname = _resolve_vars(cmd.name, var)
+            cmdname = _resolve_vars(cmd.name, var, env_var)
             cmdname_lower = cmdname.lower()
             if not re.match(r'^#?[a-z_][a-z_0-9]*$', cmdname_lower):
                 raise SyntaxError("%s(%d): invalid command identifier '%s'" % (cmd.filename, cmd.line, cmdname))
-            args = _resolve_args(cmd.args, var)
+            args = _resolve_args(cmd.args, var, env_var)
             if cmd.name.lower() == "macro":
                 if not args:
                     raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
@@ -269,22 +278,22 @@ class ParserContext(object):
                 for loop_value in loop_args:
                     var[loop_var] = str(loop_value)
                     loop_cmds = copy(f.commands)
-                    for cmd, args, loc in self._yield(loop_cmds, var, skip_callable):
+                    for cmd, args, loc in self._yield(loop_cmds, var, env_var, skip_callable):
                         yield (cmd, args, loc)
             elif cmdname_lower in self.callable:
                 f = self.callable[cmdname_lower]
                 if skip_callable or f.new_context:
                     yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
                 else:
-                    for cmd, args, loc in self.call(cmdname, args, var, skip_callable):
+                    for cmd, args, loc in self.call(cmdname, args, var, env_var, skip_callable):
                         yield (cmd, args, loc)
             else:
                 yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
 
-    def parse(self, s, var=None, filename=None, skip_callable=False):
+    def parse(self, s, var=None, env_var=None, filename=None, skip_callable=False):
         if filename is None: filename = "<inline>"
         cmds = _parse_commands(s, filename)
-        for cmd, args, loc in self._yield(cmds, var, skip_callable):
+        for cmd, args, loc in self._yield(cmds, var, env_var, skip_callable):
             yield (cmd, args, loc)
 
 
