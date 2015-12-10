@@ -51,11 +51,9 @@ class Message(object):
         self.text = text
         self.description = description
 
-    def __eq__(self, other):
-        return (self.package, self.level, self.file, self.line, self.id) == (other.package, other.level, other.file, other.line, other.id)
+    __eq__ = lambda self, other: (self.package, self.level, self.file, self.line, self.id) == (other.package, other.level, other.file, other.line, other.id)
 
-    def __lt__(self, other):
-        return (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
+    __lt__ = lambda self, other: (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
 
 class LintInfo(object):
 

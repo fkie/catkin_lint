@@ -338,8 +338,7 @@ def installs(linter):
         if opts["TARGETS"]:
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
-        if install_type is None:
-            return
+        if install_type is None: return
         if install_type != "DIRECTORY" and not is_sorted(opts[install_type]):
             info.report(NOTICE, "UNSORTED_LIST", name=install_type)
         for dest in [ "DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION" ]:
