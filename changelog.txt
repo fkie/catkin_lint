@@ -1,3 +1,8 @@
+Version 1.4.4
+
+  * New option --resolve-env to resolve $ENV{} references from OS environment
+  * Add missing unit tests for sorted lists
+
 Version 1.4.3
 
   * Promote uninstalled target notices to warning
