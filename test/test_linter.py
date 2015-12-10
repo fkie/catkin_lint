@@ -102,22 +102,6 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all)
         self.assertEqual([ "ENV_VAR"], result)
 
-    def test_env_var_resolution(self):
-        info = LintInfo(create_env())
-        info.path = '/tmp/somewhere'
-        os.environ['CATKIN_LINT_REL_TESTVAR'] = 'wheee'
-        cmake_rel_env = '$ENV{CATKIN_LINT_REL_TESTVAR}'
-        self.assertEqual('wheee', info.resolve_env_vars(cmake_rel_env))
-        self.assertEqual('/tmp/somewhere/wheee', info.real_path(cmake_rel_env))
-        os.environ['CATKIN_LINT_ABS_TESTVAR'] = '/wheee'
-        cmake_abs_env = '$ENV{CATKIN_LINT_ABS_TESTVAR}'
-        self.assertEqual('/wheee', info.resolve_env_vars(cmake_abs_env))
-        self.assertEqual('/wheee', info.real_path(cmake_abs_env))
-        os.environ['CATKIN_LINT_PARTIAL_TESTVAR'] = 'CATKIN_LINT_'
-        os.environ['CATKIN_LINT_SUFFIX'] = 'REL_TESTVAR'
-        cmake_nested_env = '$ENV{$ENV{CATKIN_LINT_PARTIAL_TESTVAR}$ENV{CATKIN_LINT_SUFFIX}}'
-        self.assertEqual('wheee', info.resolve_env_vars(cmake_nested_env))
-
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
     def do_blacklist(self):
         env = create_env()

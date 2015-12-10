@@ -108,11 +108,12 @@ def is_catkin_package(manifest):
 
 
 class CatkinEnvironment(object):
-    def __init__(self, use_rosdep=True, use_rosdistro=True, use_cache=True, quiet=False):
+    def __init__(self, os_env=None, use_rosdep=True, use_rosdistro=True, use_cache=True, quiet=False):
         self.searched_paths = {}
         self.known_catkin_pkgs = set([])
         self.known_other_pkgs = set([])
         self.ok = True
+        self.os_env = os_env
         self.use_cache = use_cache
         self.use_rosdistro = use_rosdistro
         self.rosdistro = None

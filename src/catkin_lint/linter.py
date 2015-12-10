@@ -28,14 +28,12 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
-import sys
 import re
 from functools import total_ordering
 from fnmatch import fnmatch
 from copy import copy
 from .cmake import ParserContext, argparse as cmake_argparse, SyntaxError as CMakeSyntaxError
 from .diagnostics import msg
-from .environment import CatkinEnvironment
 
 ERROR = 0
 WARNING = 1
@@ -82,7 +80,6 @@ class LintInfo(object):
         self.messages = []
         self._pkg_source = os.path.normpath("/pkg-source")
         self._pkg_build = os.path.normpath("/pkg-build")
-        self._find_env = re.compile(r'(?<!\\)\$ENV\{([a-z_0-9]+)\}', re.IGNORECASE).search
 
     def report(self, level, msg_id, **kwargs):
         if msg_id in self.ignore_messages:
@@ -107,19 +104,7 @@ class LintInfo(object):
         return new_path
 
     def real_path(self, path):
-        return os.path.normpath(os.path.join(self.path, self.resolve_env_vars(path)))
-
-    def resolve_env_vars(self, path):
-        mo = self._find_env(path)
-        prev_path = ''
-        # repeat until path is stable to properly resolve nested
-        # $ENV{} statements
-        while prev_path != path:
-            prev_path = path
-            while mo is not None:
-                path = path[:mo.start(0)] + os.path.expandvars('${' + mo.group(1) + '}') + path[mo.end(0):]
-                mo = self._find_env(path)
-        return path
+        return os.path.normpath(os.path.join(self.path, path))
 
     def is_internal_path(self, path):
         tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
@@ -323,7 +308,7 @@ class CMakeLinter(object):
             # i.e. each function/macro invocation has its own indentation list
             cur_col = [[None]]
             cur_depth = 0
-            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, filename=cur_file):
+            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, env_var=self.env.os_env, filename=cur_file):
                 info.file = fname
                 info.line = line
                 if cmd == "#catkin_lint":
