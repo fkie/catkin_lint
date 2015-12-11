@@ -1,9 +1,17 @@
 language: c
+sudo: false
 compiler:
   - gcc
-install:
-  - sudo apt-get update || true
-  - sudo apt-get install -y dpkg-dev debhelper python-all python3-all fakeroot python-setuptools python3-setuptools
+addons:
+  apt:
+    packages:
+      - dpkg-dev
+      - debhelper
+      - python-all
+      - python3-all
+      - fakeroot
+      - python-setuptools
+      - python3-setuptools
 before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar
