@@ -1,9 +1,10 @@
 language: python
+sudo: false
 python:
   - "2.7"
   - "3.3"
 install:
-  - pip install -M coverage catkin_pkg
+  - pip install coverage catkin_pkg
 script:
   - nosetests --with-coverage --cover-package=catkin_lint test
 
