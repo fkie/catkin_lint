@@ -13,6 +13,7 @@ Package: python-catkin-lint
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}, python-catkin-pkg, cmake (>= 2.8.3)
 Recommends: python-catkin-tools
+Conflicts: python3-catkin-lint
 Description: Check catkin packages for common errors
  Lints the package.xml and CMakeLists.txt files of catkin packages
  and gives useful diagnostics for common mistakes.
@@ -21,6 +22,7 @@ Package: python3-catkin-lint
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends}, python3-catkin-pkg, cmake (>= 2.8.3)
 Recommends: python3-catkin-tools
+Conflicts: python-catkin-lint
 Description: Check catkin packages for common errors
  Lints the package.xml and CMakeLists.txt files of catkin packages
  and gives useful diagnostics for common mistakes.

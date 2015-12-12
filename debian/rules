@@ -10,15 +10,14 @@
 #export DH_VERBOSE=1
 
 DEB_VERSION:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 | cut -d"-" -f1 | cut -d"+" -f1 )
-PY_VERSION:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__" )
+CUR_VERSION:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__" )
 
-ifneq ($(DEB_VERSION),$(PY_VERSION))
-$(error Debian version $(DEB_VERSION) does not match package version $(PY_VERSION))
+ifneq ($(DEB_VERSION),$(CUR_VERSION))
+$(error Debian version $(DEB_VERSION) does not match package version $(CUR_VERSION))
 endif
 
-PY3REQUESTED := $(shell py3versions -r)
-PY3DEFAULT := $(shell py3versions -d)
-PYTHON3 := $(filter-out $(PY3DEFAULT),$(PY3REQUESTED)) python3
+PYTHON2:=$(shell pyversions -d)
+PYTHON3:=$(shell py3versions -d)
 
 %:
 	dh $@ --with python2,python3 --buildsystem=python_distutils
@@ -28,29 +27,27 @@ override_dh_auto_clean:
 	rm -rf build
 
 override_dh_auto_build:
-	set -e; for python in $(PYTHON3); do \
-		$$python setup.py build; \
-	done
-	dh_auto_build
+	true
 
 override_dh_auto_install:
-	mkdir -p debian/tmp/etc/bash_completion.d
-	set -e; for python in $(PYTHON3); do \
-		$$python setup.py install --install-layout=deb --root=debian/tmp; \
-		v=$${python#python}; \
-		mv debian/tmp/usr/bin/catkin_lint debian/tmp/usr/bin/catkin_lint$$v; \
-		sed -e 's/catkin_lint/catkin_lint'$$v'/g' bash/catkin_lint > debian/tmp/etc/bash_completion.d/catkin_lint$$v; \
+	set -e; for python in $(PYTHON2); do \
+		$$python setup.py install --install-layout=deb --root=debian/python-catkin-lint; \
 	done
-	dh_auto_install
-	cp bash/catkin_lint debian/tmp/etc/bash_completion.d
+	set -e; for python in $(PYTHON3); do \
+		$$python setup.py install --install-layout=deb --root=debian/python3-catkin-lint; \
+	done
+	set -e; for python in python python3; do \
+		mkdir -p debian/$$python-catkin-lint/etc/bash_completion.d; \
+		cp bash/catkin_lint debian/$$python-catkin-lint/etc/bash_completion.d; \
+	done
 
 make-orig-tar:
-	git archive --prefix=catkin-lint-$(PY_VERSION)/ -o ../catkin-lint_$(PY_VERSION).orig.tar.gz $(shell git merge-base debian $(PY_VERSION) )
+	git archive --prefix=catkin-lint-$(CUR_VERSION)/ -o ../catkin-lint_$(CUR_VERSION).orig.tar.gz $(shell git merge-base debian $(CUR_VERSION) )
 
 make-patches:
 	rm -rf debian/patches
 	mkdir debian/patches
-	git format-patch -o debian/patches $(shell git merge-base debian $(PY_VERSION) )..master
+	git format-patch -o debian/patches $(shell git merge-base debian $(CUR_VERSION) )..master
 	ls debian/patches/[0-9]* | sed -e 's/^debian\/patches\///' > debian/patches/series
 
 clean-patches:
