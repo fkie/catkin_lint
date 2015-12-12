@@ -60,7 +60,7 @@ def prepare_arguments(parser):
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
     parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
-    parser.add_argument("--resolve-env", action="store_true", help="resolve $ENV{] references from environment variables")
+    parser.add_argument("--resolve-env", action="store_true", help="resolve $ENV{} references from environment variables")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
