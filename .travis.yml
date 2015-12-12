@@ -17,4 +17,6 @@ before_script:
   - debian/rules make-orig-tar
 script:
   - dpkg-buildpackage -tc -uc -us -i\\..*
+after_success:
+  - for d in ../*.deb; do dpkg-deb -I $d; dpkg-deb -c $d; done
 
