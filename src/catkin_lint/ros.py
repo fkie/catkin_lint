@@ -31,7 +31,7 @@ import os
 import sys
 from catkin_pkg.package import parse_package_string
 
-class Rosdep(object):
+class Rosdep(object): # pragma: no cover
 
     def __init__(self, view=None, quiet=False):
         self.view = view
@@ -52,7 +52,7 @@ class Rosdep(object):
         return self.view is not None
 
 
-def get_rosdep(quiet):
+def get_rosdep(quiet): # pragma: no cover
     from rosdep2.lookup import RosdepLookup
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
     from rosdep2.sources_list import SourcesListLoader
@@ -60,7 +60,7 @@ def get_rosdep(quiet):
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
     return Rosdep(view=lookup.get_rosdep_view(DEFAULT_VIEW_KEY), quiet=quiet)
 
-class Rosdistro(object):
+class Rosdistro(object): # pragma: no cover
     def __init__(self, dist=None, quiet=False):
         self.dist = dist
         self.quiet = quiet
@@ -77,7 +77,7 @@ class Rosdistro(object):
         return parse_package_string(package_xml)
 
 
-def get_rosdistro(quiet):
+def get_rosdistro(quiet): # pragma: no cover
     dist = None
     if "ROS_DISTRO" in os.environ:
         distro_id = os.environ["ROS_DISTRO"]

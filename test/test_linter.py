@@ -139,6 +139,8 @@ class LinterTest(unittest.TestCase):
         self.assertTrue(env.is_system_pkg("mock_other"))
         result = env.add_path(os.path.normpath("/missing"))
         self.assertEqual([], result)
+        self.assertFalse(env.is_catkin_pkg("invalid"))
+        self.assertFalse(env.is_system_pkg("invalid"))
         catkin_lint.environment.find_packages = old_find
 
 
@@ -209,6 +211,35 @@ class LinterTest(unittest.TestCase):
             }, checks=cc.all
         )
         self.assertEqual([ "SUBPROJECT" ], result)
+
+        var = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : """
+              project(mock)
+              set(foo "toplevel")
+              add_subdirectory(src)
+              """,
+              "/mock-path/src/CMakeLists.txt" : """
+              set(foo "subdir")
+              find_file(bar bar.txt)
+              """
+            }, checks=None, return_var=True
+        )
+        self.assertEqual("toplevel", var["foo"])
+        self.assertFalse("bar" in var)
+        var = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : """
+              project(mock)
+              set(foo "toplevel")
+              add_subdirectory(src)
+              """,
+              "/mock-path/src/CMakeLists.txt" : """
+              set(foo "subdir" PARENT_SCOPE)
+              """
+            }, checks=None, return_var=True
+        )
+        self.assertEqual("subdir", var["foo"])
 
 
     @patch("os.path", posixpath)

@@ -41,23 +41,23 @@ from .util import iteritems, write_atomic
 DOWNLOAD_CACHE_EXPIRY = 2592000  # 30 days
 CACHE_VERSION = 1
 
-class Cache(object):
+class Cache(object): # pragma: no cover
     def __init__(self):
         self.version = CACHE_VERSION
         self.local_paths = {}
         self.packages = {}
 
-class CacheItem(object):
+class CacheItem(object): # pragma: no cover
     def __init__(self, data, timestamp):
         self.data = data
         self.timestamp = timestamp
 
-class PackageCacheData(object):
+class PackageCacheData(object): # pragma: no cover
     def __init__(self, path, manifest):
         self.path = path # if path is None, we know the package but it is not installed
         self.manifest = manifest
 
-def find_packages(basepath, use_cache=True):
+def find_packages(basepath, use_cache=True): # pragma: no cover
     global _cache
     if use_cache:
         if _cache is None: _load_cache()
@@ -119,7 +119,7 @@ class CatkinEnvironment(object):
         self.rosdistro = None
         self.rosdep = None
         self.quiet = quiet
-        if use_rosdep:
+        if use_rosdep: # pragma: no cover
             try:
                 self.rosdep = get_rosdep(quiet=self.quiet)
             except Exception as err:
@@ -146,7 +146,7 @@ class CatkinEnvironment(object):
         self.searched_paths[realpath] = found
         return found
 
-    def find_local_pkg(self, name):
+    def find_local_pkg(self, name): # pragma: no cover
         for path, packages in iteritems(self.searched_paths):
             for p,m in packages:
                 if m.name == name:
@@ -156,25 +156,27 @@ class CatkinEnvironment(object):
     def is_catkin_pkg(self, name):
         if name in self.known_catkin_pkgs: return True
         if name in self.known_other_pkgs: return False
-        if self.rosdep is None: return False
-        if not self.rosdep.is_ros(name): return False
-        try:
-            return is_catkin_package(self.get_manifest(name))
-        except (IOError, KeyError):
-            return True
+        if self.rosdep is not None: # pragma: no cover
+            if not self.rosdep.is_ros(name): return False
+            try:
+                return is_catkin_package(self.get_manifest(name))
+            except (IOError, KeyError):
+                return True
+        return False
 
     def is_system_pkg(self, name):
         if name in self.known_other_pkgs: return True
         if name in self.known_catkin_pkgs: return False
-        if self.rosdep is None: return False
-        if not self.rosdep.has_key(name): return False
-        if not self.rosdep.is_ros(name): return True
-        try:
-            return not is_catkin_package(self.get_manifest(name))
-        except (IOError, KeyError):
-            return False
+        if self.rosdep is not None: # pragma: no cover
+            if not self.rosdep.has_key(name): return False
+            if not self.rosdep.is_ros(name): return True
+            try:
+                return not is_catkin_package(self.get_manifest(name))
+            except (IOError, KeyError):
+                return False
+        return False
 
-    def get_manifest(self, name):
+    def get_manifest(self, name): # pragma: no cover
         global _cache
         if self.use_cache:
             cache_updated = False
@@ -211,20 +213,21 @@ class CatkinEnvironment(object):
 
     def is_known_pkg(self, name):
         if name in self.known_catkin_pkgs or name in self.known_other_pkgs: return True
-        if self.rosdep is None: return False
-        return self.rosdep.has_key(name)
+        if self.rosdep is not None: # pragma: no cover
+            return self.rosdep.has_key(name)
+        return False
 
 
 
 _cache = None
-try:
+try: # pragma: no cover
     from rospkg import get_ros_home
     _cache_dir = os.path.join(get_ros_home(), "catkin_lint")
 except ImportError:
     _cache_dir = os.path.join(os.path.expanduser("~"), ".ros", "catkin_lint")
 
 
-def _load_cache():
+def _load_cache(): # pragma: no cover
     global _cache
     global _cache_dir
     try:
@@ -235,7 +238,7 @@ def _load_cache():
     except:
         _cache = Cache()
 
-def _store_cache():
+def _store_cache(): # pragma: no cover
     global _cache
     global _cache_dir
     try:
@@ -244,12 +247,12 @@ def _store_cache():
         pass
     write_atomic(os.path.join(_cache_dir, "packages.pickle"), pickle.dumps(_cache, -1))
 
-def _clear_cache():
+def _clear_cache(): # pragma: no cover
     global _cache
     _cache = Cache()
     _store_cache()
 
-def _dump_cache():
+def _dump_cache(): # pragma: no cover
     global _cache
     if _cache is None: _load_cache()
     sys.stdout.write ("Cache version is %d\n" % _cache.version)

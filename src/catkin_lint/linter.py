@@ -120,9 +120,6 @@ class LintInfo(object):
             if c.expr == expr and c.value == True: ret = True
         return ret
 
-    def condition_is_false(self, expr):
-        return not self.condition_is_true(expr)
-
 
 class IfCondition(object):
     def __init__(self, expr, value):
@@ -165,7 +162,7 @@ class CMakeLinter(object):
     def add_final_hook(self, cb):
         self._final_hooks.append(cb)
 
-    def _read_file(self, filename):
+    def _read_file(self, filename): # pragma: no cover
         with open(filename, "r") as f:
             content = f.read()
         return content
@@ -395,8 +392,8 @@ class CMakeLinter(object):
             info.file = save_file
             info.line = save_line
 
-    def lint(self, path, manifest):
-        info = LintInfo(self.env)
+    def lint(self, path, manifest, info=None):
+        if info is None: info = LintInfo(self.env)
         info.ignore_messages = self.ignore_messages
         info.path = path
         info.manifest = manifest
@@ -425,7 +422,7 @@ class CMakeLinter(object):
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
             for cb in self._final_hooks:
                 cb(info)
-        except IOError as err:
+        except IOError as err: # pragma: no cover
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
         self.ignored_messages += info.ignored_messages

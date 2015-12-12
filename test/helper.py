@@ -1,4 +1,4 @@
-from catkin_lint.linter import CMakeLinter
+from catkin_lint.linter import CMakeLinter, LintInfo
 from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
 from catkin_lint.checks import all
@@ -46,7 +46,7 @@ def create_manifest2(name, description="", buildtool_depends=[ "catkin" ], build
     )
 
 
-def mock_lint(env, manifest, cmakelist, checks=all, full_result=False, indentation=False):
+def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_var=False):
     linter = CMakeLinter(env)
     if type(cmakelist) is dict:
         tmp = {}
@@ -64,10 +64,11 @@ def mock_lint(env, manifest, cmakelist, checks=all, full_result=False, indentati
             return ""
     linter._read_file = get_cmakelist
     if checks is not None: linter.require(checks)
-    linter.lint (os.path.normpath("/mock-path"), manifest)
+    info = LintInfo(env)
+    linter.lint (os.path.normpath("/mock-path"), manifest, info)
     if not indentation:
         linter.messages = [ m for m in linter.messages if m.id != "INDENTATION" ]
-    if full_result:
-        return linter.messages
+    if return_var:
+        return info.var
     else:
         return [ m.id for m in linter.messages ]

@@ -419,6 +419,17 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.installs)
         self.assertEqual([ "UNINSTALLED_DEPEND" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(mock1 src/mock.cpp)
+            add_executable(mock2 src/mock.cpp)
+            install(TARGETS mock2 mock1 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
     def test_tests(self):
@@ -864,6 +875,37 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.message_generation)
         self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
+        pkg = create_manifest("mock", build_depends=[ "message_generation", "first_pkg", "second_pkg" ], run_depends=[ "message_runtime", "first_pkg", "second_pkg" ])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS first_pkg message_generation second_pkg)
+            add_message_files(FILES mock1.msg mock2.msg)
+            generate_messages(DEPENDENCIES first_pkg second_pkg)
+            catkin_package(CATKIN_DEPENDS first_pkg message_runtime second_pkg)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS first_pkg message_generation second_pkg)
+            add_message_files(FILES mock1.msg mock2.msg)
+            generate_messages(DEPENDENCIES second_pkg first_pkg)
+            catkin_package(CATKIN_DEPENDS first_pkg message_runtime second_pkg)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS first_pkg message_generation second_pkg)
+            add_message_files(FILES mock2.msg mock1.msg)
+            generate_messages(DEPENDENCIES first_pkg second_pkg)
+            catkin_package(CATKIN_DEPENDS first_pkg message_runtime second_pkg)
+            """,
+        checks=cc.message_generation)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
 
     def test_format2_message_exports(self):
         env = create_env()

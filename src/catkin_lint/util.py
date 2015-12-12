@@ -49,7 +49,7 @@ except ImportError:
         return map(None, *args)
 
 
-def write_atomic(filepath, data):
+def write_atomic(filepath, data): # pragma: no cover
     fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + ".tmp.", dir=os.path.dirname(filepath))
     with os.fdopen(fd, "wb") as f:
         f.write(data)
