@@ -45,6 +45,8 @@ Build status of latest version:
 
 .. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=master
    :target: https://travis-ci.org/fkie/catkin_lint
+.. image:: https://codecov.io/github/fkie/catkin_lint/coverage.svg?branch=master
+    :target: https://codecov.io/github/fkie/catkin_lint?branch=master
 
 Build your own Debian packages
 ------------------------------
