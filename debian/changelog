@@ -1,3 +1,9 @@
+catkin-lint (1.4.4-2~precise) precise; urgency=medium
+
+  * Revise package layout
+
+ -- Timo Röhling <timo.roehling@gmx.de>  Sat, 12 Dec 2015 23:58:01 +0100
+
 catkin-lint (1.4.4-1~precise) precise; urgency=medium
 
   * New release
