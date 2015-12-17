@@ -424,6 +424,15 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "UNDEFINED_INSTALL_TARGET" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             add_library(mock1 src/mock.cpp)
             add_executable(mock2 src/mock.cpp)
             install(TARGETS mock2 mock1 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

@@ -363,6 +363,9 @@ def installs(linter):
                 if not lib in info.libraries: continue
                 if not lib in info.install_targets:
                     info.report (ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib)
+        for target in info.install_targets:
+            if not target in info.libraries and not target in info.executables:
+                info.report(ERROR, "UNDEFINED_INSTALL_TARGET", target=target)
 
     linter.require(targets)
     linter.require(exports)
@@ -384,7 +387,7 @@ def plugins(linter):
                     if not os.path.isfile(info.real_path(plugin[10:])):
                         info.report (ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
                     if not os.path.normpath("/catkin-target/share/%s/%s" % (info.manifest.name, plugin[10:])) in info.install_files:
-                        info.report (ERROR if "install" in info.commands else NOTICE, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
+                        info.report (ERROR if "install" in info.commands else WARNING, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
         for dep in plugin_dep - info.exec_dep:
             info.report (WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)
 

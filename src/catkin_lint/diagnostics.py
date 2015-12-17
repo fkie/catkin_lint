@@ -375,6 +375,12 @@ Your package provides a CMake target to other packages, but the listed
 target is not defined at all.
 """
 ),
+"UNDEFINED_INSTALL_TARGET" : ("installed target '%(target)s' is not defined",
+"""\
+Your package installs a CMake target which is neither a library nor an
+executable.
+"""
+),
 "INVALID_TARGET_OUTPUT" : ("target '%(target)s' has invalid characters in its output file name",
 """\
 The output file that your target is supposed to generate contains invalid
