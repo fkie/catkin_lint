@@ -6,6 +6,7 @@ python:
 install:
   - pip install codecov coverage catkin_pkg
 script:
+  - rm -f .coverage
   - nosetests --with-coverage --cover-package=catkin_lint test
 after_success:
   - codecov
