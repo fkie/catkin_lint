@@ -393,10 +393,10 @@ class CMakeLinter(object):
                     cur_col[-1].append(None)
                 if cmd in ["if", "else", "endif"]:
                     self._handle_if(info, cmd, args)
-                self.execute_hook(info, cmd, args)
                 if cmd == "project" and info.subdir:
                     info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
                     return
+                self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
         finally:
             info.file = save_file
