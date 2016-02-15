@@ -215,8 +215,8 @@ class ParserContext(object):
             var["ARGN"] = ';'.join(argn)
             cmds = copy(f.commands)
             self._call_stack.add(lname)
-            for cmd, args, loc in self._yield(cmds, var, env_var, skip_callable):
-                yield (cmd, args, loc)
+            for cmd, args, arg_tokens, loc in self._yield(cmds, var, env_var, skip_callable):
+                yield (cmd, args, arg_tokens, loc)
         finally:
             self._call_stack.remove(lname)
             for key, value in iteritems(save_vars):
@@ -240,18 +240,18 @@ class ParserContext(object):
                     raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, False)
                 self.callable[f.name.lower()] = f
-                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
+                yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
             elif cmd.name.lower() == "function":
                 if not args:
                     raise SyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
                 self.callable[f.name.lower()] = f
-                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
+                yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
             elif cmd.name.lower() == "foreach":
                 if not args:
                     raise SyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
-                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
+                yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
                 loop_var = args[0]
                 if len(args) == 1: continue
                 if args[1] == "RANGE":
@@ -278,23 +278,23 @@ class ParserContext(object):
                 for loop_value in loop_args:
                     var[loop_var] = str(loop_value)
                     loop_cmds = copy(f.commands)
-                    for cmd, args, loc in self._yield(loop_cmds, var, env_var, skip_callable):
-                        yield (cmd, args, loc)
+                    for cmd, args, arg_tokens, loc in self._yield(loop_cmds, var, env_var, skip_callable):
+                        yield (cmd, args, arg_tokens, loc)
             elif cmdname_lower in self.callable:
                 f = self.callable[cmdname_lower]
                 if skip_callable or f.new_context:
-                    yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
+                    yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
                 else:
-                    for cmd, args, loc in self.call(cmdname, args, var, env_var, skip_callable):
-                        yield (cmd, args, loc)
+                    for cmd, args, arg_tokens, loc in self.call(cmdname, args, var, env_var, skip_callable):
+                        yield (cmd, args, arg_tokens, loc)
             else:
-                yield (cmdname, args, (cmd.filename, cmd.line, cmd.column))
+                yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
 
     def parse(self, s, var=None, env_var=None, filename=None, skip_callable=False):
         if filename is None: filename = "<inline>"
         cmds = _parse_commands(s, filename)
-        for cmd, args, loc in self._yield(cmds, var, env_var, skip_callable):
-            yield (cmd, args, loc)
+        for cmd, args, arg_tokens, loc in self._yield(cmds, var, env_var, skip_callable):
+            yield (cmd, args, arg_tokens, loc)
 
 
 def argparse(args, opts):

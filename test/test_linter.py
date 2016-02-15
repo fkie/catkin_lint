@@ -51,6 +51,43 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all)
         self.assertEqual([], result)
 
+    def test_if(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if ("${PROJECT_NAME}" STREQUAL "mock")
+            endif()
+            if (EXISTS "filename")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (${PROJECT_NAME} STREQUAL "mock")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (EXISTS filename)
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL) endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(A STREQUAL) endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL A) endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(EXISTS) endif()")
+
     def test_list(self):
         env = create_env()
         linter = CMakeLinter(env)

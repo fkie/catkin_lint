@@ -281,9 +281,21 @@ class CMakeLinter(object):
         if pragma == "ignore":
             info.ignore_messages |= set([ a.upper() for a in args ])
 
-    def _handle_if(self, info, cmd, args):
+    def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
+            for i, tok in enumerate(arg_tokens):
+                if tok[0] != "WORD": continue
+                if tok[1][:3] == "STR" or tok[1][:8] == "VERSION_" or tok[1] in ["MATCHES", "IS_NEWER_THAN"]:
+                    if i == 0 or i == len(arg_tokens) - 1:
+                        raise CMakeSyntaxError("%s(%d): missing argument for binary operator %s" % (info.file, info.line, tok))
+                    if arg_tokens[i-1][0] != "STRING" or arg_tokens[i+1][0] != "STRING":
+                        info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
+                if tok[1] in ["EXISTS", "IS_DIRECTORY", "IS_SYMLINK", "IS_ABSOLUTE"]:
+                    if i == len(arg_tokens) - 1:
+                        raise CMakeSyntaxError("%s(%d): missing argument for unary operator %s" % (info.file, info.line, tok))
+                    if arg_tokens[i+1][0] != "STRING":
+                        info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
         if cmd == "else":
             if len(info.conditionals) > 0:
                 info.conditionals[-1].value = False
@@ -354,7 +366,7 @@ class CMakeLinter(object):
             # i.e. each function/macro invocation has its own indentation list
             cur_col = [[None]]
             cur_depth = 0
-            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, env_var=self.env.os_env, filename=cur_file):
+            for cmd, args, arg_tokens, (fname, line, column) in self._ctx.parse(content, var=info.var, env_var=self.env.os_env, filename=cur_file):
                 info.file = fname
                 info.line = line
                 if cmd == "#catkin_lint":
@@ -392,7 +404,7 @@ class CMakeLinter(object):
                 if cmd in ["if", "foreach"]:
                     cur_col[-1].append(None)
                 if cmd in ["if", "else", "endif"]:
-                    self._handle_if(info, cmd, args)
+                    self._handle_if(info, cmd, args, arg_tokens)
                 if cmd == "project" and info.subdir:
                     info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
                     return

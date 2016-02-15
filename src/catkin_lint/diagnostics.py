@@ -578,6 +578,12 @@ if() and foreach() bodies should be indented by one or more extra spaces.
 The catkin manual recommends that list element be kept in order.
 """
 ),
+"UNQUOTED_STRING_OP": ("operands for operator %(op)s should be quoted strings",
+"""\
+The catkin manual recommends that if() conditions with string operators should
+have the operands enclosed in double quotes.
+"""
+)
 }
 
 def msg(msg_id, **kwargs):
