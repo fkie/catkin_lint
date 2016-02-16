@@ -90,6 +90,8 @@ def _lexer(s):
             if typ != 'SKIP':
                 val = mo.group(typ)
                 if val.upper() in keywords: typ = val.upper()
+                if typ == "STRING":
+                    val = val[1:-1]
                 yield ( typ, val, line, col )
             col += mo.end() - mo.start()
         pos = mo.end()
@@ -102,7 +104,6 @@ def _resolve_args(arg_tokens, var, env_var):
     args = []
     for typ, val in arg_tokens:
         if typ == "STRING":
-            val = val[1:-1]
             val = _resolve_vars(val, var, env_var)
             args.append(_unescape(val))
         elif typ == "WORD":

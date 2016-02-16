@@ -87,6 +87,42 @@ class LinterTest(unittest.TestCase):
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(A STREQUAL) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL A) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(EXISTS) endif()")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (varname)
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (${varname})
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([ "AMBIGUOUS_CONDITION" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if ("${varname}")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([ "AMBIGUOUS_CONDITION" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if ("${varname}${othervarname}")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([], result)
 
     def test_list(self):
         env = create_env()

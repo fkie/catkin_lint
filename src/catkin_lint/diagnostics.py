@@ -589,7 +589,15 @@ The catkin manual recommends that list element be kept in order.
 The catkin manual recommends that if() conditions with string operators should
 have the operands enclosed in double quotes.
 """
-)
+),
+"AMBIGUOUS_CONDITION": ("condition '%(cond)s' is ambiguous",
+"""\
+Historically, the if() command will interpret a single token as a variable
+name and transparently resolve it if possible. Explicit variable references
+like if(${var}) can lead to incorrect results if ${var} resolves to a different
+variable name. Use if(var) instead.
+"""
+),
 }
 
 def msg(msg_id, **kwargs):

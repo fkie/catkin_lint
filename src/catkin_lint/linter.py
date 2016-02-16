@@ -284,6 +284,8 @@ class CMakeLinter(object):
     def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
+            if len(arg_tokens) == 1 and re.match("\${[a-z_0-9]+}$", arg_tokens[0][1]):
+                info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD": continue
                 if tok[1][:3] == "STR" or tok[1][:8] == "VERSION_" or tok[1] in ["MATCHES", "IS_NEWER_THAN"]:
