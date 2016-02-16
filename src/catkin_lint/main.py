@@ -52,7 +52,7 @@ def prepare_arguments(parser):
     parser.add_argument("--version", action="version", version=catkin_lint_version)
     parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
     parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
-    parser.add_argument("-W", metavar="LEVEL", type=int, default=0, help="set warning level (0-2)")
+    parser.add_argument("-W", metavar="LEVEL", type=int, default=1, help="set warning level (0-2)")
     parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[ "all" ], help=argparse.SUPPRESS)
     parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
     parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
