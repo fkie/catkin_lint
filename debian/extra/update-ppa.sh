@@ -3,7 +3,7 @@ set -e
 declare -A ubuntu=( [precise]=12.04 [trusty]=14.04 [utopic]=14.10 [vivid]=15.04 [wily]=15.10 [xenial]=16.04 )
 sa="-sa"
 ./debian/rules make-orig-tar
-for distro in precise trusty vivid wily
+for distro in precise trusty wily xenial
 do
     sed -i -e '1s/\(~.\+\)\?) [a-z]\+;/~'${ubuntu[$distro]}') '$distro';/' debian/changelog
     dpkg-buildpackage -S $sa -i\\..*
