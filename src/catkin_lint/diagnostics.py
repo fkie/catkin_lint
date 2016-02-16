@@ -63,6 +63,12 @@ backwards compatibility reasons, the both names should also be identical
 to the name of the source folder that contains the package.
 """
 ),
+"LITERAL_PROJECT_NAME" : ("use ${PROJECT_NAME} instead of '%(name)s'",
+"""\
+The catkin manual recommends that you use the ${PROJECT_NAME} variable instead
+of the literal project name.
+"""
+),
 "ORDER_VIOLATION" : ( "%(first_cmd)s() is called before %(second_cmd)s()",
 """\
 Certain configuration macros must be called in a specific order as
@@ -375,6 +381,12 @@ Your package provides a CMake target to other packages, but the listed
 target is not defined at all.
 """
 ),
+"UNDEFINED_INSTALL_TARGET" : ("installed target '%(target)s' is not defined",
+"""\
+Your package installs a CMake target which is neither a library nor an
+executable.
+"""
+),
 "INVALID_TARGET_OUTPUT" : ("target '%(target)s' has invalid characters in its output file name",
 """\
 The output file that your target is supposed to generate contains invalid
@@ -570,6 +582,20 @@ if() and foreach() bodies should be indented by one or more extra spaces.
 "UNSORTED_LIST": ("list %(name)s should be sorted",
 """\
 The catkin manual recommends that list element be kept in order.
+"""
+),
+"UNQUOTED_STRING_OP": ("operands for operator %(op)s should be quoted strings",
+"""\
+The catkin manual recommends that if() conditions with string operators should
+have the operands enclosed in double quotes.
+"""
+),
+"AMBIGUOUS_CONDITION": ("condition '%(cond)s' is ambiguous",
+"""\
+Historically, the if() command will interpret a single token as a variable
+name and transparently resolve it if possible. Explicit variable references
+like if(${var}) can lead to incorrect results if ${var} resolves to a different
+variable name. Use if(var) instead.
 """
 ),
 }

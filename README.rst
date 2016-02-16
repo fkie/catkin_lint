@@ -45,6 +45,8 @@ Build status of latest version:
 
 .. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=master
    :target: https://travis-ci.org/fkie/catkin_lint
+.. image:: https://codecov.io/github/fkie/catkin_lint/coverage.svg?branch=master
+    :target: https://codecov.io/github/fkie/catkin_lint?branch=master
 
 Build your own Debian packages
 ------------------------------
@@ -113,8 +115,8 @@ Diagnostic Levels
 errors, warnings, and notices. The ``-W`` option controls which problems
 are reported to the user:
 
-- ``-W0``: only errors are reported (this is the default)
-- ``-W1``: errors and warnings are reported
+- ``-W0``: only errors are reported
+- ``-W1``: errors and warnings are reported (this is the default)
 - ``-W2``: errors, warnings, and notices are reported
 
 Normally, **catkin_lint** returns a non-zero exit code if and only

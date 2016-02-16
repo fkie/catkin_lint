@@ -120,9 +120,6 @@ class LintInfo(object):
             if c.expr == expr and c.value == True: ret = True
         return ret
 
-    def condition_is_false(self, expr):
-        return not self.condition_is_true(expr)
-
 
 class IfCondition(object):
     def __init__(self, expr, value):
@@ -137,6 +134,7 @@ class CMakeLinter(object):
         self.ignore_messages = set([])
         self.ignored_messages = 0
         self._cmd_hooks = {}
+        self._running_hooks = set([])
         self._init_hooks = []
         self._final_hooks = []
         self._added_checks = set([])
@@ -165,7 +163,7 @@ class CMakeLinter(object):
     def add_final_hook(self, cb):
         self._final_hooks.append(cb)
 
-    def _read_file(self, filename):
+    def _read_file(self, filename): # pragma: no cover
         with open(filename, "r") as f:
             content = f.read()
         return content
@@ -283,15 +281,79 @@ class CMakeLinter(object):
         if pragma == "ignore":
             info.ignore_messages |= set([ a.upper() for a in args ])
 
-    def _handle_if(self, info, cmd, args):
+    def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
+            if len(arg_tokens) == 1 and re.match("\${[a-z_0-9]+}$", arg_tokens[0][1]):
+                info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
+            for i, tok in enumerate(arg_tokens):
+                if tok[0] != "WORD": continue
+                if tok[1][:3] == "STR" or tok[1][:8] == "VERSION_" or tok[1] in ["MATCHES", "IS_NEWER_THAN"]:
+                    if i == 0 or i == len(arg_tokens) - 1:
+                        raise CMakeSyntaxError("%s(%d): missing argument for binary operator %s" % (info.file, info.line, tok))
+                    if arg_tokens[i-1][0] != "STRING" or arg_tokens[i+1][0] != "STRING":
+                        info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
+                if tok[1] in ["EXISTS", "IS_DIRECTORY", "IS_SYMLINK", "IS_ABSOLUTE"]:
+                    if i == len(arg_tokens) - 1:
+                        raise CMakeSyntaxError("%s(%d): missing argument for unary operator %s" % (info.file, info.line, tok))
+                    if arg_tokens[i+1][0] != "STRING":
+                        info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
         if cmd == "else":
             if len(info.conditionals) > 0:
                 info.conditionals[-1].value = False
         if cmd == "endif":
             if len(info.conditionals) > 0:
                 info.conditionals.pop()
+
+    def execute_hook(self, info, cmd, args):
+        if cmd in self._running_hooks: return
+        if cmd == "project":
+            info.var["PROJECT_NAME"] = args[0]
+            info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
+            info.var["PROJECT_BINARY_DIR"] = info.var["CMAKE_CURRENT_BINARY_DIR"]
+        self._running_hooks.add(cmd)
+        if cmd in self._cmd_hooks:
+            for cb in self._cmd_hooks[cmd]:
+                cb(info, cmd, args)
+        if cmd == "set":
+            opts, args = cmake_argparse(args, { "PARENT_SCOPE" : "-", "FORCE": "-", "CACHE": "*"})
+            if opts["PARENT_SCOPE"]:
+                info.parent_var[args[0]] = ';'.join(args[1:])
+            else:
+                info.var[args[0]] = ';'.join(args[1:])
+        if cmd == "unset":
+            opts, args = cmake_argparse(args, { "CACHE": "-"})
+            info.var[args[0]] = ""
+        if cmd == "list":
+            self._handle_list(info, args)
+        if cmd == "include":
+            self._include_file(info, args)
+        if cmd == "add_subdirectory":
+            saved_hooks = self._running_hooks
+            self._running_hooks = set()
+            self._subdirectory(info, args)
+            self._running_hooks = saved_hooks
+        if cmd == "find_package":
+            info.var["%s_INCLUDE_DIRS" % args[0]] = "/%s-includes" % args[0]
+            info.var["%s_INCLUDE_DIRS" % args[0].upper()] = "/%s-includes" % args[0]
+            info.var["%s_LIBRARIES" % args[0]] = "/%s-libs/library.so" % args[0]
+            info.var["%s_LIBRARIES" % args[0].upper()] = "/%s-libs/library.so" % args[0]
+            info.find_packages.add(args[0])
+        if cmd == "add_executable":
+            info.targets.add(args[0])
+            if not "IMPORTED" in args: info.executables.add(args[0])
+        if cmd == "add_library":
+            info.targets.add(args[0])
+            if not "IMPORTED" in args: info.libraries.add(args[0])
+        if cmd == "add_custom_target":
+            info.targets.add(args[0])
+        if cmd == "find_path":
+            info.var[args[0]] = "/find-path"
+        if cmd == "find_library":
+            info.var[args[0]] = "/find-libs/library.so"
+        if cmd == "find_file":
+            info.var[args[0]] = "/find-file/filename.ext"
+        self._running_hooks.discard(cmd)
 
     def _parse_file(self, info, filename):
         save_file = info.file
@@ -306,7 +368,7 @@ class CMakeLinter(object):
             # i.e. each function/macro invocation has its own indentation list
             cur_col = [[None]]
             cur_depth = 0
-            for cmd, args, (fname, line, column) in self._ctx.parse(content, var=info.var, env_var=self.env.os_env, filename=cur_file):
+            for cmd, args, arg_tokens, (fname, line, column) in self._ctx.parse(content, var=info.var, env_var=self.env.os_env, filename=cur_file):
                 info.file = fname
                 info.line = line
                 if cmd == "#catkin_lint":
@@ -317,6 +379,11 @@ class CMakeLinter(object):
                 if cmd != cmd.lower():
                     info.report(NOTICE, "CMD_CASE", cmd=cmd)
                     cmd = cmd.lower()
+                if cmd != "project" and "PROJECT_NAME" in info.var:
+                    for _, val in arg_tokens:
+                        if info.var["PROJECT_NAME"] in val:
+                            info.report(NOTICE, "LITERAL_PROJECT_NAME", name=info.var["PROJECT_NAME"])
+                            break
                 depth = self._ctx.call_depth()
                 if depth > cur_depth:
                     cur_col += [[None]] * (depth-cur_depth)
@@ -344,59 +411,18 @@ class CMakeLinter(object):
                 if cmd in ["if", "foreach"]:
                     cur_col[-1].append(None)
                 if cmd in ["if", "else", "endif"]:
-                    self._handle_if(info, cmd, args)
-                if cmd == "project":
-                    info.var["PROJECT_NAME"] = args[0]
-                    info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
-                    info.var["PROJECT_BINARY_DIR"] = info.var["CMAKE_CURRENT_BINARY_DIR"]
-                    if info.subdir:
-                        info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
-                        return
-                if cmd in self._cmd_hooks:
-                    for cb in self._cmd_hooks[cmd]:
-                        cb(info, cmd, args)
+                    self._handle_if(info, cmd, args, arg_tokens)
+                if cmd == "project" and info.subdir:
+                    info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
+                    return
+                self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
-                if cmd == "set":
-                    opts, args = cmake_argparse(args, { "PARENT_SCOPE" : "-", "FORCE": "-", "CACHE": "*"})
-                    if opts["PARENT_SCOPE"]:
-                        info.parent_var[args[0]] = ';'.join(args[1:])
-                    else:
-                        info.var[args[0]] = ';'.join(args[1:])
-                if cmd == "unset":
-                    opts, args = cmake_argparse(args, { "CACHE": "-"})
-                    info.var[args[0]] = ""
-                if cmd == "list":
-                    self._handle_list(info, args)
-                if cmd == "include":
-                    self._include_file(info, args)
-                if cmd == "add_subdirectory":
-                    self._subdirectory(info, args)
-                if cmd == "find_package":
-                    info.var["%s_INCLUDE_DIRS" % args[0]] = "/%s-includes" % args[0]
-                    info.var["%s_INCLUDE_DIRS" % args[0].upper()] = "/%s-includes" % args[0]
-                    info.var["%s_LIBRARIES" % args[0]] = "/%s-libs/library.so" % args[0]
-                    info.var["%s_LIBRARIES" % args[0].upper()] = "/%s-libs/library.so" % args[0]
-                    info.find_packages.add(args[0])
-                if cmd == "add_executable":
-                    info.targets.add(args[0])
-                    if not "IMPORTED" in args: info.executables.add(args[0])
-                if cmd == "add_library":
-                    info.targets.add(args[0])
-                    if not "IMPORTED" in args: info.libraries.add(args[0])
-                if cmd == "add_custom_target":
-                    info.targets.add(args[0])
-                if cmd == "find_path":
-                    info.var[args[0]] = "/find-path"
-                if cmd == "find_library":
-                    info.var[args[0]] = "/find-libs/library.so"
-                if cmd == "find_file":
-                    info.var[args[0]] = "/find-file/filename.ext"
         finally:
             info.file = save_file
             info.line = save_line
 
-    def lint(self, path, manifest):
-        info = LintInfo(self.env)
+    def lint(self, path, manifest, info=None):
+        if info is None: info = LintInfo(self.env)
         info.ignore_messages = self.ignore_messages
         info.path = path
         info.manifest = manifest
@@ -425,7 +451,7 @@ class CMakeLinter(object):
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
             for cb in self._final_hooks:
                 cb(info)
-        except IOError as err:
+        except IOError as err: # pragma: no cover
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
         self.ignored_messages += info.ignored_messages

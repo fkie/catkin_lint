@@ -11,7 +11,6 @@ from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
 from catkin_pkg.package import Export
 
 import os.path
-import os # for os.environ
 import posixpath
 import ntpath
 
@@ -49,6 +48,79 @@ class LinterTest(unittest.TestCase):
             PROJECT(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+
+    def test_if(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if ("${var}" STREQUAL "foo")
+            endif()
+            if (EXISTS "filename")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (${var} STREQUAL "foo")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (EXISTS filename)
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL) endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(A STREQUAL) endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL A) endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(EXISTS) endif()")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (varname)
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (${varname})
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([ "AMBIGUOUS_CONDITION" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if ("${varname}")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([ "AMBIGUOUS_CONDITION" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if ("${varname}${othervarname}")
+            endif()
             """, checks=cc.all)
         self.assertEqual([], result)
 
@@ -139,22 +211,24 @@ class LinterTest(unittest.TestCase):
         self.assertTrue(env.is_system_pkg("mock_other"))
         result = env.add_path(os.path.normpath("/missing"))
         self.assertEqual([], result)
+        self.assertFalse(env.is_catkin_pkg("invalid"))
+        self.assertFalse(env.is_system_pkg("invalid"))
         catkin_lint.environment.find_packages = old_find
 
 
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])
-    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/mock.cpp") ])
+    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/source.cpp") ])
     def do_subdir(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(mock_test2 src/mock.cpp)",
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(${PROJECT_NAME}_test2 src/source.cpp)",
               "/mock-path/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
-              add_executable(mock_test mock.cpp)
+              add_executable(${PROJECT_NAME}_test source.cpp)
               """
             }, checks=cc.all
         )
@@ -167,7 +241,7 @@ class LinterTest(unittest.TestCase):
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
-              add_executable(mock_test mock.cpp)
+              add_executable(${PROJECT_NAME}_test source.cpp)
               add_subdirectory(../src)
               """
             }, checks=cc.all
@@ -209,6 +283,35 @@ class LinterTest(unittest.TestCase):
             }, checks=cc.all
         )
         self.assertEqual([ "SUBPROJECT" ], result)
+
+        var = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : """
+              project(mock)
+              set(foo "toplevel")
+              add_subdirectory(src)
+              """,
+              "/mock-path/src/CMakeLists.txt" : """
+              set(foo "subdir")
+              find_file(bar bar.txt)
+              """
+            }, checks=None, return_var=True
+        )
+        self.assertEqual("toplevel", var["foo"])
+        self.assertFalse("bar" in var)
+        var = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : """
+              project(mock)
+              set(foo "toplevel")
+              add_subdirectory(src)
+              """,
+              "/mock-path/src/CMakeLists.txt" : """
+              set(foo "subdir" PARENT_SCOPE)
+              """
+            }, checks=None, return_var=True
+        )
+        self.assertEqual("subdir", var["foo"])
 
 
     @patch("os.path", posixpath)

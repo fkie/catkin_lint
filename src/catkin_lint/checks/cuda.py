@@ -27,54 +27,18 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-import os
-import re
-import tempfile
+from .build import source_files
 
-def word_split(s):
-    ws = re.compile(r"(\W|_)+|(?<=[^A-Z])(?=[A-Z])|(?<=\w)(?=[A-Z][a-z])")
-    mo = ws.search(s)
-    result = []
-    while mo:
-        result.append(s[:mo.start()].lower())
-        s = s[mo.end():]
-        mo = ws.search(s)
-    result.append(s.lower())
-    return result
+def targets(linter):
+    def on_cuda_add_executable(info, cmd, args):
+        linter.execute_hook(info, "add_executable", args)
 
-try:
-    from itertools import zip_longest
-except ImportError:
-    def zip_longest(*args):
-        return map(None, *args)
+    def on_cuda_add_library(info, cmd, args):
+        linter.execute_hook(info, "add_library", args)
 
+    linter.require(source_files)
+    linter.add_command_hook("cuda_add_executable", on_cuda_add_executable)
+    linter.add_command_hook("cuda_add_library", on_cuda_add_library)
 
-def write_atomic(filepath, data): # pragma: no cover
-    fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + ".tmp.", dir=os.path.dirname(filepath))
-    with os.fdopen(fd, "wb") as f:
-        f.write(data)
-        f.close()
-    try:
-        os.rename (filepath_tmp, filepath)
-    except OSError:
-        try:
-            os.unlink(filepath)
-        except OSError:
-            pass
-        try:
-            os.rename(filepath_tmp, filepath)
-        except OSError:
-            os.unlink(filepath_tmp)
-
-
-def is_sorted(lst, key=lambda x, y: x < y):
-    for i, el in enumerate(lst[1:]):
-        if key(el, lst[i]):
-            return False
-    return True
-
-# Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
-try:
-    iteritems = dict.iteritems
-except AttributeError:
-    iteritems = dict.items
+def all(linter):
+    linter.require(targets)

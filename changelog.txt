@@ -1,3 +1,9 @@
+Version 1.4.5
+  * Make -W1 the new default diagnostic level
+  * Implement policy checks on variables and conditions
+  * Full coverage for unit tests
+  * Bugfixes
+
 Version 1.4.4
 
   * New option --resolve-env to resolve $ENV{} references from OS environment

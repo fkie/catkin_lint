@@ -10,7 +10,7 @@ class CMakeParserTest(unittest.TestCase):
     def parse_all(self, s, var=None, env_var=None, location=None):
         result = []
         ctxt = cmake.ParserContext()
-        for cmd, args, (fname, line, column) in ctxt.parse(s, var=var, env_var=env_var):
+        for cmd, args, arg_tokens, (fname, line, column) in ctxt.parse(s, var=var, env_var=env_var):
             if location is None:
                 result.append( ( cmd, args) )
             elif location == 1:
