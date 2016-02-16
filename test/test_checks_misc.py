@@ -54,7 +54,7 @@ class ChecksMiscTest(unittest.TestCase):
     def test_global_vars(self):
         env = create_env()
         pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, "project(mock) option(mock_option test OFF) set(mock_global CACHE STRING)", checks=cc.global_vars)
+        result = mock_lint(env, pkg, "project(mock) option(${PROJECT_NAME}_option test OFF) set(${PROJECT_NAME}_global CACHE STRING)", checks=cc.global_vars)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) set(global CACHE STRING)", checks=cc.global_vars)
         self.assertEqual([ "GLOBAL_VAR_COLLISION" ], result)

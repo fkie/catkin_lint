@@ -59,7 +59,7 @@ class LinterTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            if ("${PROJECT_NAME}" STREQUAL "mock")
+            if ("${var}" STREQUAL "foo")
             endif()
             if (EXISTS "filename")
             endif()
@@ -70,7 +70,7 @@ class LinterTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            if (${PROJECT_NAME} STREQUAL "mock")
+            if (${var} STREQUAL "foo")
             endif()
             """, checks=cc.all)
         self.assertEqual(["UNQUOTED_STRING_OP"], result)
@@ -181,18 +181,18 @@ class LinterTest(unittest.TestCase):
 
 
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])
-    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/mock.cpp") ])
+    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/source.cpp") ])
     def do_subdir(self):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(mock_test2 src/mock.cpp)",
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(${PROJECT_NAME}_test2 src/source.cpp)",
               "/mock-path/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
-              add_executable(mock_test mock.cpp)
+              add_executable(${PROJECT_NAME}_test source.cpp)
               """
             }, checks=cc.all
         )
@@ -205,7 +205,7 @@ class LinterTest(unittest.TestCase):
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
-              add_executable(mock_test mock.cpp)
+              add_executable(${PROJECT_NAME}_test source.cpp)
               add_subdirectory(../src)
               """
             }, checks=cc.all

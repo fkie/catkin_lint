@@ -63,6 +63,12 @@ backwards compatibility reasons, the both names should also be identical
 to the name of the source folder that contains the package.
 """
 ),
+"LITERAL_PROJECT_NAME" : ("use ${PROJECT_NAME} instead of '%(name)s'",
+"""\
+The catkin manual recommends that you use the ${PROJECT_NAME} variable instead
+of the literal project name.
+"""
+),
 "ORDER_VIOLATION" : ( "%(first_cmd)s() is called before %(second_cmd)s()",
 """\
 Certain configuration macros must be called in a specific order as

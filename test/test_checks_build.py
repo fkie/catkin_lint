@@ -231,7 +231,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     def do_targets(self):
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ], run_depends=[ "other_catkin" ])
@@ -241,9 +241,9 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
             include_directories(${catkin_INCLUDE_DIRS})
-            add_executable(mock/prog src/mock.cpp)
-            set_target_properties(mock/prog PROPERTIES OUTPUT_NAME "prog")
-            target_link_libraries(mock/prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}/prog src/source.cpp)
+            set_target_properties(${PROJECT_NAME}/prog PROPERTIES OUTPUT_NAME "prog")
+            target_link_libraries(${PROJECT_NAME}/prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
         self.assertEqual([], result)
@@ -253,8 +253,8 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
-            add_executable(mock_prog src/mock.cpp)
-            target_link_libraries(mock_prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}_prog src/source.cpp)
+            target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
         self.assertEqual([ "MISSING_CATKIN_INCLUDE" ], result)
@@ -265,8 +265,8 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
             include_directories(${catkin_INCLUDE_DIRS} ${other_catkin_INCLUDE_DIRS})
-            add_executable(mock_prog src/mock.cpp)
-            target_link_libraries(mock_prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}_prog src/source.cpp)
+            target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
         self.assertEqual([ "DUPLICATE_BUILD_INCLUDE" ], result)
@@ -277,8 +277,8 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
             include_directories(${catkin_INCLUDE_DIRS})
-            add_executable(mock_prog src/mock.cpp)
-            target_link_libraries(mock_prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}_prog src/source.cpp)
+            target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
         self.assertEqual([], result)
@@ -286,11 +286,11 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg,
             """
             project(mock)
-            add_executable(mock_prog src/mock.cpp)
+            add_executable(${PROJECT_NAME}_prog src/source.cpp)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
             include_directories(${catkin_INCLUDE_DIRS})
-            target_link_libraries(mock_prog ${catkin_LIBRARIES})
+            target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
         self.assertEqual([ "CATKIN_ORDER_VIOLATION", "ORDER_VIOLATION" ], result)
@@ -301,13 +301,13 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_metapackage()
-            add_executable(mock_prog src/mock.cpp)
+            add_executable(${PROJECT_NAME}_prog src/source.cpp)
             """,
         checks=cc.targets)
         self.assertEqual([ "INVALID_META_COMMAND" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     def do_name_check(self):
         env = create_env()
         pkg = create_manifest("mock")
@@ -316,8 +316,8 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_executable(mock/prog src/mock.cpp)
-            target_link_libraries(mock/prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}/prog src/source.cpp)
+            target_link_libraries(${PROJECT_NAME}/prog ${catkin_LIBRARIES})
             """,
         checks=cc.name_check)
         self.assertEqual([ "INVALID_TARGET_OUTPUT" ], result)
@@ -327,7 +327,7 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_executable(prog src/mock.cpp)
+            add_executable(prog src/source.cpp)
             target_link_libraries(prog ${catkin_LIBRARIES})
             """,
         checks=cc.name_check)
@@ -338,13 +338,13 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_library(libmock src/mock.cpp)
+            add_library(lib${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.name_check)
         self.assertEqual([ "REDUNDANT_LIB_PREFIX" ], result)
 
 
-    @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/mock.cpp") ])
+    @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/source.cpp") ])
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
     def do_installs(self):
         env = create_env()
@@ -355,12 +355,12 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             include_directories(include)
             catkin_package(INCLUDE_DIRS include)
-            add_executable(mock src/mock.cpp)
-            add_executable(test_mock src/mock.cpp)
-            add_executable(mock_example src/mock.cpp)
+            add_executable(${PROJECT_NAME} src/source.cpp)
+            add_executable(test_${PROJECT_NAME} src/source.cpp)
+            add_executable(${PROJECT_NAME}_example src/source.cpp)
             install(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             install(FILES share/file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
-            install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             install(DIRECTORY include/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
             """,
         checks=cc.installs)
@@ -390,9 +390,9 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            catkin_package(LIBRARIES mock)
-            add_library(mock src/mock.cpp)
-            add_executable(mock_prog src/mock.cpp)
+            catkin_package(LIBRARIES ${PROJECT_NAME})
+            add_library(${PROJECT_NAME} src/source.cpp)
+            add_executable(${PROJECT_NAME}_prog src/source.cpp)
             """,
         checks=cc.installs)
         self.assertEqual([ "UNINSTALLED_EXPORT_LIB", "MISSING_INSTALL_TARGET" ], result)
@@ -402,7 +402,7 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package(INCLUDE_DIRS include)
-            add_executable(test_mock src/mock.cpp)
+            add_executable(test_${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.installs)
         self.assertEqual([ "MISSING_BUILD_INCLUDE", "MISSING_INSTALL_INCLUDE" ], result)
@@ -412,10 +412,10 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_library(mock_lib src/mock.cpp)
-            add_executable(mock src/mock.cpp)
-            target_link_libraries(mock mock_lib)
-            install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            add_library(${PROJECT_NAME}_lib src/source.cpp)
+            add_executable(${PROJECT_NAME} src/source.cpp)
+            target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             """,
         checks=cc.installs)
         self.assertEqual([ "UNINSTALLED_DEPEND" ], result)
@@ -424,7 +424,7 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            install(TARGETS mock RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             """,
         checks=cc.installs)
         self.assertEqual([ "UNDEFINED_INSTALL_TARGET" ], result)
@@ -433,9 +433,9 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_library(mock1 src/mock.cpp)
-            add_executable(mock2 src/mock.cpp)
-            install(TARGETS mock2 mock1 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            add_library(${PROJECT_NAME}_target1 src/source.cpp)
+            add_executable(${PROJECT_NAME}_target2 src/source.cpp)
+            install(TARGETS ${PROJECT_NAME}_target2 ${PROJECT_NAME}_target1 RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             """,
         checks=cc.installs)
         self.assertEqual([ "UNSORTED_LIST" ], result)
@@ -464,7 +464,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["MISSING_DEPEND"], result)
 
 
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/mock.cpp"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/include"), os.path.normpath("/mock-path/include/mock") ])
     def do_exports(self):
         env = create_env()
@@ -479,10 +479,10 @@ class ChecksBuildTest(unittest.TestCase):
             INCLUDE_DIRS include
             CATKIN_DEPENDS other_catkin
             DEPENDS other_system
-            LIBRARIES mock
+            LIBRARIES ${PROJECT_NAME}
             )
             include_directories(include)
-            add_library(mock src/mock.cpp)
+            add_library(${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
         self.assertEqual([], result)
@@ -634,7 +634,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             catkin_package(INCLUDE_DIRS include)
             include_directories(include)
-            add_library(mock src/mock.cpp)
+            add_library(${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
         self.assertEqual([ "MISSING_EXPORT_LIB" ], result)
@@ -644,10 +644,10 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            catkin_package(INCLUDE_DIRS include LIBRARIES mock)
+            catkin_package(INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME})
             include_directories(include)
-            add_library(mock src/mock.cpp)
-            set_target_properties(mock PROPERTIES OUTPUT_NAME "renamed")
+            add_library(${PROJECT_NAME} src/source.cpp)
+            set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "renamed")
             """,
         checks=cc.exports)
         self.assertEqual([ "EXPORT_LIB_RENAMED" ], result)
@@ -657,9 +657,9 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            catkin_package(INCLUDE_DIRS include LIBRARIES mock)
+            catkin_package(INCLUDE_DIRS include LIBRARIES ${PROJECT_NAME})
             include_directories(include)
-            add_executable(mock src/mock.cpp)
+            add_executable(${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
         self.assertEqual([ "EXPORT_LIB_NOT_LIB" ], result)
@@ -669,7 +669,7 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package(INCLUDE_DIRS include)
-            add_executable(test_mock src/mock.cpp)
+            add_executable(test_${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
         self.assertEqual([ "MISSING_BUILD_INCLUDE" ], result)
@@ -680,7 +680,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             catkin_package(INCLUDE_DIRS include)
             include_directories(include/${PROJECT_NAME})
-            add_executable(test_mock src/mock.cpp)
+            add_executable(test_${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
         self.assertEqual([ "MISSING_BUILD_INCLUDE", "AMBIGUOUS_BUILD_INCLUDE" ], result)
@@ -751,7 +751,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
@@ -765,7 +765,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
             generate_messages(DEPENDENCIES other_catkin)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
@@ -778,7 +778,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             """,
         checks=cc.message_generation)
@@ -789,7 +789,7 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             find_package(catkin REQUIRED)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
@@ -803,7 +803,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS message_runtime)
             """,
@@ -816,7 +816,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
@@ -840,7 +840,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS other_catkin)
             """,
@@ -853,7 +853,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages()
             catkin_metapackage()
             """,
@@ -866,7 +866,7 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
@@ -878,7 +878,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS message_generation)
-            add_message_files(FILES mock.msg)
+            add_message_files(FILES message.msg)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
@@ -889,7 +889,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS first_pkg message_generation second_pkg)
-            add_message_files(FILES mock1.msg mock2.msg)
+            add_message_files(FILES message1.msg message2.msg)
             generate_messages(DEPENDENCIES first_pkg second_pkg)
             catkin_package(CATKIN_DEPENDS first_pkg message_runtime second_pkg)
             """,
@@ -899,7 +899,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS first_pkg message_generation second_pkg)
-            add_message_files(FILES mock1.msg mock2.msg)
+            add_message_files(FILES message1.msg message2.msg)
             generate_messages(DEPENDENCIES second_pkg first_pkg)
             catkin_package(CATKIN_DEPENDS first_pkg message_runtime second_pkg)
             """,
@@ -909,7 +909,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED COMPONENTS first_pkg message_generation second_pkg)
-            add_message_files(FILES mock2.msg mock1.msg)
+            add_message_files(FILES message2.msg message1.msg)
             generate_messages(DEPENDENCIES first_pkg second_pkg)
             catkin_package(CATKIN_DEPENDS first_pkg message_runtime second_pkg)
             """,
