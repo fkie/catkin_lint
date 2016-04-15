@@ -99,7 +99,7 @@ def _lexer(s):
         pos = mo.end()
         mo = _next_token(s, pos)
     if pos != len(s):
-        raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
+        raise SyntaxError("Unexpected character %r on line %d [%s]" % (s[pos], line, s.split('\n')[line-1]))
 
 
 def _resolve_args(arg_tokens, var, env_var):
