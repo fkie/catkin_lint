@@ -54,6 +54,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('cmd("string that spans\nmultiple lines")'),
             [ ("cmd", [ 'string that spans\nmultiple lines' ]) ]
         )
+        self.assertEqual(
+            self.parse_all('cmd("\\\\"\\")'),
+            [ ("cmd", [ '\\', '"' ]) ]
+        )
 
     def test_macro(self):
         self.assertEqual(
@@ -225,6 +229,14 @@ class CMakeParserTest(unittest.TestCase):
             [ ("cmd", [ '"' ]) ]
         )
         self.assertEqual(
+            self.parse_all('cmd(\\")'),
+            [ ("cmd", [ '"' ]) ]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(a\\ b)'),
+            [ ("cmd", [ 'a b' ]) ]
+        )
+        self.assertEqual(
             self.parse_all("cmd(ENV{PATH})"),
             [ ("cmd", [ "ENV{PATH}" ]) ]
         )
@@ -249,7 +261,7 @@ class CMakeParserTest(unittest.TestCase):
         )
         self.assertEqual(
             self.parse_all("cmd(${args})", var={ "args" : "one two three"}),
-            [ ("cmd", [ "one", "two", "three" ]) ]
+            [ ("cmd", [ "one two three" ]) ]
         )
         self.assertEqual(
             self.parse_all('cmd("${args}")', var={ "args" : "one;two;three"}),
