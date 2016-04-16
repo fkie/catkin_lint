@@ -68,9 +68,9 @@ _token_spec = [
     ( 'SKIP', r'[ \t]+' ),
     ( 'LPAREN', r'\(' ),
     ( 'RPAREN', r'\)' ),
-    ( 'STRING', r'"[^\\"]*(?:\\.[^\\"]*)*"' ),
+    ( 'STRING', r'"(?:\\.|[^\\"])*"' ),
     ( 'SEMICOLON', r';'),
-    ( 'WORD', r'[^\(\)"# \t\r\n;]+' ),
+    ( 'WORD', r'(?:\\.|[^\\\(\)"# \t\r\n;])+' ),
     ( 'PRAGMA', r'#catkin_lint:.*?$' ),
     ( 'COMMENT', r'#.*?$' ),
 ]
@@ -99,17 +99,30 @@ def _lexer(s):
     if pos != len(s):
         raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
 
+_arg_spec = [
+    ( 'SKIP', r';' ),
+    ( 'ARG', r'(?:\\.|[^;])+' ),
+]
+_next_arg = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _arg_spec)).match
 
 def _resolve_args(arg_tokens, var, env_var):
     args = []
     for typ, val in arg_tokens:
         if typ == "STRING":
             val = _resolve_vars(val, var, env_var)
+            # Treat quoted strings as a single word
             args.append(_unescape(val))
         elif typ == "WORD":
             val = _resolve_vars(val, var, env_var)
-            if val:
-                args += re.split(r";|[ \t]+", _unescape(val))
+            # Split unquoted text into list items
+            mo = _next_arg(val)
+            while mo is not None:
+                typ = mo.lastgroup
+                if typ != "SKIP":
+                    arg = mo.group(typ)
+                    args.append(_unescape(arg))
+                pos = mo.end()
+                mo = _next_arg(val, pos)
         elif typ != "SEMICOLON":
             args.append(val)
     return args
