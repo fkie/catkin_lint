@@ -72,6 +72,8 @@ _token_spec = [
     ( 'SEMICOLON', r';'),
     ( 'WORD', r'(?:\\.|[^\\\(\)"# \t\r\n;])+' ),
     ( 'PRAGMA', r'#catkin_lint:.*?$' ),
+    ( 'BACKSLASH', r"\\"),
+    ( 'DOUBLE_QUOTATION', r'\"'),
     ( 'COMMENT', r'#.*?$' ),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
@@ -97,7 +99,7 @@ def _lexer(s):
         pos = mo.end()
         mo = _next_token(s, pos)
     if pos != len(s):
-        raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
+        raise SyntaxError("Unexpected character %r on line %d [%s]" % (s[pos], line, s.split('\n')[line-1]))
 
 _arg_spec = [
     ( 'SKIP', r';' ),
