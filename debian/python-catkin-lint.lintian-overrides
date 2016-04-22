@@ -1,1 +1,0 @@
-python-catkin-lint: binary-without-manpage usr/bin/catkin_lint
