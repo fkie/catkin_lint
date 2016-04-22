@@ -176,16 +176,21 @@ def deprecated(linter):
 
 def cmake_modules(linter):
     modules = set([
-        "Eigen",
+        "GSL",
         "NUMPY",
+        "Poco",
         "TBB",
         "TinyXML",
+        "UUID",
         "Xenomai",
     ])
+    upgrades = {"Eigen": "Eigen3"}
     def on_find_package(info, cmd, args):
         if args[0] in modules:
             if not "cmake_modules" in info.find_packages:
                 info.report(WARNING, "MISSING_CMAKE_MODULES", pkg=args[0])
+        if args[0] in upgrades:
+            info.report(WARNING, "DEPRECATED_CMAKE_MODULE", old_module=args[0], new_module=upgrades[args[0]])
 
     linter.add_command_hook("find_package", on_find_package)
 

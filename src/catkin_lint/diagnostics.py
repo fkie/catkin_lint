@@ -95,6 +95,14 @@ Please upgrade your CMakeLists.txt to ensure compatibility with
 future caktin versions.
 """
 ),
+"DEPRECATED_CMAKE_MODULE" : ("CMake module '%(old_module)s' is deprecated, use '%(new_module)s' instead",
+"""\
+Some CMake modules have been provided by cmake_modules in the past, but
+are now provided by the system package or CMake itself.
+Please upgrade your CMakeLists.txt to ensure compatibility with future
+catkin versions.
+"""
+),
 "MISSING_CMAKE_MODULES" : ( "find_package(%(pkg)s) before find_package(cmake_modules)",
 """\
 You need to find_package() cmake_modules before you can use

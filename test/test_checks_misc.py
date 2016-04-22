@@ -86,8 +86,10 @@ class ChecksMiscTest(unittest.TestCase):
     def test_cmake_modules(self):
         env = create_env()
         pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, "project(mock) find_package(Eigen)", checks=cc.cmake_modules)
+        result = mock_lint(env, pkg, "project(mock) find_package(NUMPY)", checks=cc.cmake_modules)
         self.assertEqual([ "MISSING_CMAKE_MODULES" ], result)
+        result = mock_lint(env, pkg, "project(mock) find_package(Eigen)", checks=cc.cmake_modules)
+        self.assertEqual([ "DEPRECATED_CMAKE_MODULE" ], result)
 
     def test_endblock(self):
         env = create_env()
