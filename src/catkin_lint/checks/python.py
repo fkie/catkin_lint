@@ -34,14 +34,15 @@ from .misc import project
 
 def setup(linter):
     def on_catkin_python_setup(info, cmd, args):
-        if not "catkin" in info.find_packages and not info.is_catkin:
+        if "catkin" not in info.find_packages and not info.is_catkin:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "generate_messages" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="generate_messages", second_cmd=cmd)
         if not os.path.isfile(info.real_path("setup.py")):
             info.report(ERROR, "MISSING_FILE", cmd=cmd, file="setup.py")
+
     def on_final(info):
-        if not "catkin_python_setup" in info.commands and os.path.isfile(info.real_path("setup.py")):
+        if "catkin_python_setup" not in info.commands and os.path.isfile(info.real_path("setup.py")):
             info.report(ERROR, "MISSING_PYTHON_SETUP")
 
     linter.require(project)

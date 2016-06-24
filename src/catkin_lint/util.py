@@ -31,6 +31,7 @@ import os
 import re
 import tempfile
 
+
 def word_split(s):
     ws = re.compile(r"(\W|_)+|(?<=[^A-Z])(?=[A-Z])|(?<=\w)(?=[A-Z][a-z])")
     mo = ws.search(s)
@@ -49,13 +50,13 @@ except ImportError:
         return map(None, *args)
 
 
-def write_atomic(filepath, data): # pragma: no cover
+def write_atomic(filepath, data):  # pragma: no cover
     fd, filepath_tmp = tempfile.mkstemp(prefix=os.path.basename(filepath) + ".tmp.", dir=os.path.dirname(filepath))
     with os.fdopen(fd, "wb") as f:
         f.write(data)
         f.close()
     try:
-        os.rename (filepath_tmp, filepath)
+        os.rename(filepath_tmp, filepath)
     except OSError:
         try:
             os.unlink(filepath)

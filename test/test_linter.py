@@ -7,7 +7,7 @@ from catkin_lint.linter import CMakeLinter, LintInfo
 from .helper import create_env, create_manifest, mock_lint
 import catkin_lint.checks.build as cc
 import catkin_lint.environment
-from catkin_lint.cmake import SyntaxError as CMakeSyntaxError
+from catkin_lint.cmake import CMakeSyntaxError
 from catkin_pkg.package import Export
 
 import os.path

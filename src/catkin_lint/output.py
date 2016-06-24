@@ -32,9 +32,10 @@ import textwrap
 from .linter import ERROR, WARNING, NOTICE
 from . import __version__
 
+
 class TextOutput(object):
 
-    diagnostic_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
+    diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
 
     def prolog(self, file=sys.stdout):
         pass
@@ -43,7 +44,7 @@ class TextOutput(object):
         loc = msg.package
         if msg.file:
             if msg.line:
-                fn = "%s(%d)" % ( msg.file, msg.line )
+                fn = "%s(%d)" % (msg.file, msg.line)
             else:
                 fn = msg.file
             loc = "%s: %s" % (msg.package, fn)
@@ -56,11 +57,11 @@ class TextOutput(object):
 class ExplainedTextOutput(TextOutput):
 
     def __init__(self):
-        self.explained = set([])
+        self.explained = set()
 
     def message(self, msg, file=sys.stdout):
         TextOutput.message(self, msg, file)
-        if not msg.id in self.explained:
+        if msg.id not in self.explained:
             self.explained.add(msg.id)
             file.write("%s\n" % textwrap.fill(msg.description, initial_indent="     * ", subsequent_indent="     * "))
             file.write("     * You can ignore this problem with --ignore %s\n" % msg.id.lower())
@@ -68,13 +69,13 @@ class ExplainedTextOutput(TextOutput):
 
 class XmlOutput(object):
 
-    tag_label = { ERROR : "error", WARNING : "warning", NOTICE : "notice" }
+    tag_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
 
     def _quote(self, s):
         return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quote;')
 
     def prolog(self, file=sys.stdout):
-        file.write ('<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">' % {"version": __version__})
+        file.write('<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">' % {"version": __version__})
 
     def message(self, msg, file=sys.stdout):
         file.write('<%s><location><package>%s</package>' % (self.tag_label[msg.level], self._quote(msg.package)))
@@ -86,4 +87,4 @@ class XmlOutput(object):
         file.write('</%s>' % self.tag_label[msg.level])
 
     def epilog(self, file=sys.stdout):
-        file.write ('</catkin_lint>\n')
+        file.write('</catkin_lint>\n')

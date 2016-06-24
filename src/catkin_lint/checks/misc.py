@@ -35,6 +35,7 @@ from ..cmake import argparse as cmake_argparse
 def project(linter):
     def on_init(info):
         info.is_catkin = False
+
     def on_project(info, cmd, args):
         if args[0] != info.manifest.name:
             info.report(ERROR, "PROJECT_NAME", name=args[0])
@@ -76,12 +77,14 @@ def special_vars(linter):
         "CMAKE_INCLUDE_PATH",
         "CMAKE_LIBRARY_PATH",
         "CMAKE_FIND_ROOT_PATH",
-        "CMAKE_MODULE_PATH","CMAKE_PREFIX_PATH"
+        "CMAKE_MODULE_PATH",
+        "CMAKE_PREFIX_PATH"
     ])
 
     def on_init(info):
         for key in critical_vars:
             info.var[key] = "@%s@" % key
+
     def on_set_or_unset(info, cmd, args):
         if args[0] in immutable_vars or args[0].startswith("ENV{"):
             info.report(ERROR, "IMMUTABLE_VAR", var=args[0])
@@ -91,12 +94,14 @@ def special_vars(linter):
                 info.report(ERROR, "CRITICAL_VAR_OVERWRITE", var=args[0])
             else:
                 info.report(WARNING, "CRITICAL_VAR_APPEND", var=args[0])
+
     def on_list(info, cmd, args):
-        if args[0] in ["LENGTH","GET","FIND"]: return
+        if args[0] in ["LENGTH", "GET", "FIND"]:
+            return
         if args[1] in immutable_vars:
             info.report(ERROR, "IMMUTABLE_VAR", var=args[1])
         if args[1] in critical_vars:
-            if args[0] in ["APPEND","INSERT"]:
+            if args[0] in ["APPEND", "INSERT"]:
                 info.report(WARNING, "CRITICAL_VAR_APPEND", var=args[1])
             else:
                 info.report(ERROR, "CRITICAL_VAR_OVERWRITE", var=args[1])
@@ -109,12 +114,13 @@ def special_vars(linter):
 
 def global_vars(linter):
     def on_set(info, cmd, args):
-        if not "CACHE" in args: return
-        if not info.manifest.name in args[0]:
+        if "CACHE" not in args:
+            return
+        if info.manifest.name not in args[0]:
             info.report(NOTICE, "GLOBAL_VAR_COLLISION", var=args[0])
 
     def on_option(info, cmd, args):
-        if not info.manifest.name in args[0]:
+        if info.manifest.name not in args[0]:
             info.report(NOTICE, "GLOBAL_VAR_COLLISION", var=args[0])
 
     linter.add_command_hook("set", on_set)
@@ -130,6 +136,7 @@ def singleton_commands(linter):
         "catkin_metapackage",
         "catkin_python_setup"
     ])
+
     def on_command(info, cmd, args):
         if cmd in info.commands:
             info.report(ERROR, "DUPLICATE_CMD", cmd=cmd)
@@ -140,13 +147,14 @@ def singleton_commands(linter):
 
 def cmake_includes(linter):
     def on_include(info, cmd, args):
-        opts, args = cmake_argparse(args, { "OPTIONAL" : "-", "RESULT_VARIABLE" : "?", "NO_POLICY_SCOPE" : "-"})
+        _, args = cmake_argparse(args, {"OPTIONAL": "-", "RESULT_VARIABLE": "?", "NO_POLICY_SCOPE": "-"})
         if args:
             mo = re.match(r"^Find([A-Za-z0-9_-]+)$", args[0])
             if mo:
                 pkg = mo.group(1)
-                if pkg == "PackageHandleStandardArgs": return
-                info.report (ERROR, "FIND_BY_INCLUDE", pkg=pkg)
+                if pkg == "PackageHandleStandardArgs":
+                    return
+                info.report(ERROR, "FIND_BY_INCLUDE", pkg=pkg)
 
     linter.add_command_hook("include", on_include)
 
@@ -164,15 +172,18 @@ def endblock(linter):
 
 
 def deprecated(linter):
+
     def on_catkin_command(info, cmd, args):
-        info.report(ERROR, "DEPRECATED_CMD", old_cmd=cmd, new_cmd="catkin_%s"%cmd)
+        info.report(ERROR, "DEPRECATED_CMD", old_cmd=cmd, new_cmd="catkin_%s" % cmd)
+
     def on_cmake_command(info, cmd, args):
-        info.report(ERROR, "DEPRECATED_CMD", old_cmd=cmd, new_cmd="cmake_%s"%cmd)
+        info.report(ERROR, "DEPRECATED_CMD", old_cmd=cmd, new_cmd="cmake_%s" % cmd)
 
     linter.add_command_hook("add_gtest", on_catkin_command)
     linter.add_command_hook("add_nosetests", on_catkin_command)
     linter.add_command_hook("download_test_data", on_catkin_command)
     linter.add_command_hook("parse_arguments", on_cmake_command)
+
 
 def cmake_modules(linter):
     modules = set([
@@ -185,9 +196,10 @@ def cmake_modules(linter):
         "Xenomai",
     ])
     upgrades = {"Eigen": "Eigen3"}
+
     def on_find_package(info, cmd, args):
         if args[0] in modules:
-            if not "cmake_modules" in info.find_packages:
+            if "cmake_modules" not in info.find_packages:
                 info.report(WARNING, "MISSING_CMAKE_MODULES", pkg=args[0])
         if args[0] in upgrades:
             info.report(WARNING, "DEPRECATED_CMAKE_MODULE", old_module=args[0], new_module=upgrades[args[0]])
@@ -204,4 +216,3 @@ def all(linter):
     linter.require(endblock)
     linter.require(deprecated)
     linter.require(cmake_modules)
-

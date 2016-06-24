@@ -31,28 +31,31 @@ import os
 import sys
 from catkin_pkg.package import parse_package_string
 
-class Rosdep(object): # pragma: no cover
+
+class Rosdep(object):  # pragma: no cover
 
     def __init__(self, view=None, quiet=False):
         self.view = view
         self.quiet = quiet
 
     def is_ros(self, name):
-        if self.view is None: return False
+        if self.view is None:
+            return False
         try:
             return self.view.lookup(name).data["_is_ros"]
         except KeyError:
             return False
 
     def has_key(self, name):
-        if self.view is None: return False
+        if self.view is None:
+            return False
         return name in self.view.keys()
 
     def ok(self):
         return self.view is not None
 
 
-def get_rosdep(quiet): # pragma: no cover
+def get_rosdep(quiet):  # pragma: no cover
     from rosdep2.lookup import RosdepLookup
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
     from rosdep2.sources_list import SourcesListLoader
@@ -60,7 +63,8 @@ def get_rosdep(quiet): # pragma: no cover
     lookup = RosdepLookup.create_from_rospkg(sources_loader=sources_loader)
     return Rosdep(view=lookup.get_rosdep_view(DEFAULT_VIEW_KEY), quiet=quiet)
 
-class Rosdistro(object): # pragma: no cover
+
+class Rosdistro(object):  # pragma: no cover
     def __init__(self, dist=None, quiet=False):
         self.dist = dist
         self.quiet = quiet
@@ -69,15 +73,17 @@ class Rosdistro(object): # pragma: no cover
         return self.dist is not None
 
     def download_manifest(self, name):
-        if self.dist is None: raise KeyError()
+        if self.dist is None:
+            raise KeyError()
         if not self.quiet:
             sys.stderr.write("catkin_lint: downloading package manifest for '%s'\n" % name)
         package_xml = self.dist.get_release_package_xml(name)
-        if package_xml is None: return None
+        if package_xml is None:
+            return None
         return parse_package_string(package_xml)
 
 
-def get_rosdistro(quiet): # pragma: no cover
+def get_rosdistro(quiet):  # pragma: no cover
     dist = None
     if "ROS_DISTRO" in os.environ:
         distro_id = os.environ["ROS_DISTRO"]

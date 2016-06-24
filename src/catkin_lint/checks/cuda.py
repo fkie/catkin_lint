@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 from .build import source_files
 
+
 def targets(linter):
     def on_cuda_add_executable(info, cmd, args):
         linter.execute_hook(info, "add_executable", args)
@@ -39,6 +40,7 @@ def targets(linter):
     linter.require(source_files)
     linter.add_command_hook("cuda_add_executable", on_cuda_add_executable)
     linter.add_command_hook("cuda_add_library", on_cuda_add_library)
+
 
 def all(linter):
     linter.require(targets)

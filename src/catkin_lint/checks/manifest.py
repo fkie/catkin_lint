@@ -35,45 +35,52 @@ from .misc import project
 
 def depends(linter):
     def on_init(info):
-        info.buildtool_dep = set([ dep.name for dep in info.manifest.buildtool_depends ])
-        info.build_dep = set([ dep.name for dep in info.manifest.build_depends ])
-        info.export_dep = set([])
-        info.exec_dep = set([])
+        info.buildtool_dep = set([dep.name for dep in info.manifest.buildtool_depends])
+        info.build_dep = set([dep.name for dep in info.manifest.build_depends])
+        info.export_dep = set()
+        info.exec_dep = set()
         if info.manifest.package_format > 1 and hasattr(info.manifest, "build_export_depends"):
-            deps = set([ dep.name for dep in info.manifest.build_export_depends ])
+            deps = set([dep.name for dep in info.manifest.build_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
-                    if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
+                    if info.env.ok:
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
             info.export_dep.update(deps)
         if info.manifest.package_format > 1 and hasattr(info.manifest, "buildtool_export_depends"):
-            deps = set([ dep.name for dep in info.manifest.buildtool_export_depends ])
+            deps = set([dep.name for dep in info.manifest.buildtool_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
-                    if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool_export")
+                    if info.env.ok:
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool_export")
             info.export_dep.update(deps)
         if info.manifest.package_format > 1 and hasattr(info.manifest, "exec_depends"):
-            deps = set([ dep.name for dep in info.manifest.exec_depends ])
+            deps = set([dep.name for dep in info.manifest.exec_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
-                    if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="exec")
+                    if info.env.ok:
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="exec")
             info.exec_dep.update(deps)
         if info.manifest.package_format < 2 and hasattr(info.manifest, "run_depends"):
-            deps = set([ dep.name for dep in info.manifest.run_depends ])
+            deps = set([dep.name for dep in info.manifest.run_depends])
             info.export_dep.update(deps)
             info.exec_dep.update(deps)
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
-                    if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
-        info.test_dep = set([ dep.name for dep in info.manifest.test_depends ])
+                    if info.env.ok:
+                        info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
+        info.test_dep = set([dep.name for dep in info.manifest.test_depends])
         for pkg in info.buildtool_dep:
             if not info.env.is_known_pkg(pkg):
-                if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool")
+                if info.env.ok:
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool")
         for pkg in info.build_dep:
             if not info.env.is_known_pkg(pkg):
-                if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build")
+                if info.env.ok:
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build")
         for pkg in info.test_dep:
             if not info.env.is_known_pkg(pkg):
-                if info.env.ok: info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="test")
+                if info.env.ok:
+                    info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="test")
         if info.manifest.is_metapackage() and info.build_dep:
             info.report(ERROR, "INVALID_META_DEPEND", type="build")
         if info.manifest.is_metapackage() and info.test_dep:
@@ -85,35 +92,40 @@ def depends(linter):
 def catkin_build(linter):
     def on_init(info):
         info.uses_catkin = False
+
     def any_catkin_cmd(info, cmd, args):
         info.uses_catkin = True
+
     def on_find_package(info, cmd, args):
         if args[0] == "catkin":
             info.uses_catkin = True
+
     def on_catkin_package(info, cmd, args):
         info.uses_catkin = True
         if info.manifest.is_metapackage():
             info.report(ERROR, "CATKIN_PKG_VS_META")
-        if not "catkin" in info.find_packages and not info.is_catkin:
+        if "catkin" not in info.find_packages and not info.is_catkin:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
+
     def on_catkin_metapackage(info, cmd, args):
         info.uses_catkin = True
         if not info.manifest.is_metapackage():
-            info.report (ERROR, "CATKIN_META_VS_PKG")
-        if not "catkin" in info.find_packages and not info.is_catkin:
+            info.report(ERROR, "CATKIN_META_VS_PKG")
+        if "catkin" not in info.find_packages and not info.is_catkin:
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
+
     def on_final(info):
         if "catkin" in info.build_dep:
             info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="build", right_type="buildtool")
         if not info.uses_catkin:
-            if not "catkin" in info.find_packages and "catkin" in info.buildtool_dep:
+            if "catkin" not in info.find_packages and "catkin" in info.buildtool_dep:
                 info.report(ERROR, "UNUSED_DEPEND", pkg="catkin", type="buildtool")
             return
-        if not "catkin" in info.find_packages and not info.is_catkin:
+        if "catkin" not in info.find_packages and not info.is_catkin:
             info.report(ERROR, "MISSING_FIND", pkg="catkin")
-        if not "catkin" in info.buildtool_dep and not info.is_catkin:
+        if "catkin" not in info.buildtool_dep and not info.is_catkin:
             info.report(ERROR, "MISSING_DEPEND", pkg="catkin", type="buildtool")
-        if not "catkin_package" in info.commands and not "catkin_metapackage" in info.commands:
+        if "catkin_package" not in info.commands and "catkin_metapackage" not in info.commands:
             if info.manifest.is_metapackage():
                 info.report(ERROR, "MISSING_CMD", cmd="catkin_metapackage")
             else:
@@ -135,10 +147,12 @@ def catkin_build(linter):
 
 def export_targets(linter):
     def on_init(info):
-        info.export_targets = set([])
+        info.export_targets = set()
+
     def on_catkin_package(info, cmd, args):
-        opts, args = cmake_argparse(args, { "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*" })
+        opts, args = cmake_argparse(args, {"INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*"})
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
+
     def on_final(info):
         for tgt in info.export_targets - info.targets:
             info.report(ERROR, "UNDEFINED_TARGET", target=tgt)
@@ -224,6 +238,7 @@ def package_description(linter):
         r"with",
         r"work\s+in\s+progress",
     ]
+
     def on_init(info):
         chatter = re.match(r"((\s|[.,!?;()/])*\b(%s|%s)\b)+" % (info.manifest.name, r"|".join(buzzwords)), info.manifest.description, re.IGNORECASE)
         if chatter is not None:
