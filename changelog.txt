@@ -1,3 +1,8 @@
+Version 1.4.7
+  * Fix workspace overlay bug
+  * Reformat source code for better PEP8 compliance
+  * Warn about Eigen module being deprecated in favor of Eigen3
+
 Version 1.4.6
   * Fix parser bug with escaped characters
 
