@@ -31,12 +31,13 @@ import re
 from .util import iteritems, zip_longest
 from copy import copy
 
-class SyntaxError(RuntimeError):
+
+class CMakeSyntaxError(RuntimeError):
     pass
 
 
 def _escape(s):
-    return re.sub(r'([\\$"])',r"\\\1", s)
+    return re.sub(r'([\\$"])', r"\\\1", s)
 
 
 def _unescape(s):
@@ -45,6 +46,8 @@ def _unescape(s):
 
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
 _find_env_var = re.compile(r'(?<!\\)\$ENV\{([A-Za-z_0-9]+)\}').search
+
+
 def _resolve_vars(s, var, env_var):
     if var is not None:
         mo = _find_var(s)
@@ -64,17 +67,19 @@ def _resolve_vars(s, var, env_var):
 
 
 _token_spec = [
-    ( 'NL', r'\r\n|\r|\n' ),
-    ( 'SKIP', r'[ \t]+' ),
-    ( 'LPAREN', r'\(' ),
-    ( 'RPAREN', r'\)' ),
-    ( 'STRING', r'"(?:\\.|[^\\"])*"' ),
-    ( 'SEMICOLON', r';'),
-    ( 'WORD', r'(?:\\.|[^\\\(\)"# \t\r\n;])+' ),
-    ( 'PRAGMA', r'#catkin_lint:.*?$' ),
-    ( 'COMMENT', r'#.*?$' ),
+    ('NL', r'\r\n|\r|\n'),
+    ('SKIP', r'[ \t]+'),
+    ('LPAREN', r'\('),
+    ('RPAREN', r'\)'),
+    ('STRING', r'"(?:\\.|[^\\"])*"'),
+    ('SEMICOLON', r';'),
+    ('WORD', r'(?:\\.|[^\\\(\)"# \t\r\n;])+'),
+    ('PRAGMA', r'#catkin_lint:.*?$'),
+    ('COMMENT', r'#.*?$'),
 ]
 _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
+
+
 def _lexer(s):
     keywords = set([])
     line = 1
@@ -89,21 +94,24 @@ def _lexer(s):
         else:
             if typ != 'SKIP':
                 val = mo.group(typ)
-                if val.upper() in keywords: typ = val.upper()
+                if val.upper() in keywords:
+                    typ = val.upper()
                 if typ == "STRING":
                     val = val[1:-1]
-                yield ( typ, val, line, col )
+                yield (typ, val, line, col)
             col += mo.end() - mo.start()
         pos = mo.end()
         mo = _next_token(s, pos)
     if pos != len(s):
-        raise SyntaxError("Unexpected character %r on line %d" % (s[pos], line))
+        raise CMakeSyntaxError("Unexpected character %r on line %d" % (s[pos], line))
+
 
 _arg_spec = [
-    ( 'SKIP', r';' ),
-    ( 'ARG', r'(?:\\.|[^;])+' ),
+    ('SKIP', r';'),
+    ('ARG', r'(?:\\.|[^;])+'),
 ]
 _next_arg = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _arg_spec)).match
+
 
 def _resolve_args(arg_tokens, var, env_var):
     args = []
@@ -155,14 +163,15 @@ def _parse_commands(s, filename):
     state = 0
     line = 0
     for typ, val, line, col in _lexer(s):
-        if typ == "COMMENT": continue
+        if typ == "COMMENT":
+            continue
         if typ == "PRAGMA":
             args = re.split(r'\s+', val[13:])
-            commands.append(Command("#catkin_lint", [ ( "LITERAL", arg) for arg in args if len(arg)>0 ], filename, line, col))
+            commands.append(Command("#catkin_lint", [("LITERAL", arg) for arg in args if len(arg) > 0], filename, line, col))
             continue
         if state == 0:
             if typ != "WORD":
-                raise SyntaxError("%s(%d): expected command identifier and got '%s'" % (filename, line, val))
+                raise CMakeSyntaxError("%s(%d): expected command identifier and got '%s'" % (filename, line, val))
             cmdname = val
             cmdargs = []
             cmdline = line
@@ -170,7 +179,7 @@ def _parse_commands(s, filename):
             state = 1
         elif state == 1:
             if typ != "LPAREN":
-                raise SyntaxError("%s(%d): expected '(' and got '%s'" % (filename, line, val))
+                raise CMakeSyntaxError("%s(%d): expected '(' and got '%s'" % (filename, line, val))
             paren = 1
             state = 2
         elif state == 2:
@@ -184,9 +193,9 @@ def _parse_commands(s, filename):
                     continue
             cmdargs.append((typ, val))
     if state == 1:
-        raise SyntaxError("%s(%d): expected '(' and got end of file" % (filename, line))
+        raise CMakeSyntaxError("%s(%d): expected '(' and got end of file" % (filename, line))
     if state == 2:
-        raise SyntaxError("%s(%d): expected ')' and got end of file" % (filename, line))
+        raise CMakeSyntaxError("%s(%d): expected ')' and got end of file" % (filename, line))
     return commands
 
 
@@ -194,13 +203,15 @@ def _parse_block(filename, cmds, block_name, result_type, *args):
     result = result_type(*args)
     nesting = 1
     while cmds:
-        if cmds[0].name.lower() == block_name.lower(): nesting += 1
+        if cmds[0].name.lower() == block_name.lower():
+            nesting += 1
         if cmds[0].name.lower() == "end%s" % block_name.lower():
             nesting -= 1
-            if nesting == 0: return result
+            if nesting == 0:
+                return result
         cmd = cmds.pop(0)
         result.commands.append(cmd)
-    raise SyntaxError("%s: expected 'end%s()' and got end of file" % (filename, block_name))
+    raise CMakeSyntaxError("%s: expected 'end%s()' and got end of file" % (filename, block_name))
 
 
 class ParserContext(object):
@@ -214,8 +225,10 @@ class ParserContext(object):
 
     def call(self, name, args, var=None, env_var=None, skip_callable=False):
         lname = name.lower()
-        if lname in self._call_stack: return
-        if var is None: var = {}
+        if lname in self._call_stack:
+            return
+        if var is None:
+            var = {}
         f = self.callable[lname]
         argn = []
         save_vars = {}
@@ -238,54 +251,57 @@ class ParserContext(object):
                     var[key] = value
                 else:
                     del var[key]
-            if "ARGN" in var: del var["ARGN"]
+            if "ARGN" in var:
+                del var["ARGN"]
 
     def _yield(self, cmds, var, env_var, skip_callable):
-        if var is None: var = {}
+        if var is None:
+            var = {}
         while cmds:
             cmd = cmds.pop(0)
             cmdname = _resolve_vars(cmd.name, var, env_var)
             cmdname_lower = cmdname.lower()
             if not re.match(r'^#?[a-z_][a-z_0-9]*$', cmdname_lower):
-                raise SyntaxError("%s(%d): invalid command identifier '%s'" % (cmd.filename, cmd.line, cmdname))
+                raise CMakeSyntaxError("%s(%d): invalid command identifier '%s'" % (cmd.filename, cmd.line, cmdname))
             args = _resolve_args(cmd.args, var, env_var)
             if cmd.name.lower() == "macro":
                 if not args:
-                    raise SyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
+                    raise CMakeSyntaxError("%s(%d): malformed macro() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, False)
                 self.callable[f.name.lower()] = f
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
             elif cmd.name.lower() == "function":
                 if not args:
-                    raise SyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
+                    raise CMakeSyntaxError("%s(%d): malformed function() definition" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
                 self.callable[f.name.lower()] = f
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
             elif cmd.name.lower() == "foreach":
                 if not args:
-                    raise SyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
+                    raise CMakeSyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
                 loop_var = args[0]
-                if len(args) == 1: continue
+                if len(args) == 1:
+                    continue
                 if args[1] == "RANGE":
                     try:
                         if len(args) == 3:
-                            loop_args = range(int(args[2])+1)
+                            loop_args = range(int(args[2]) + 1)
                         elif len(args) == 4:
-                            loop_args = range(int(args[2]), int(args[3])+1)
+                            loop_args = range(int(args[2]), int(args[3]) + 1)
                         elif len(args) == 5:
-                            loop_args = range(int(args[2]), int(args[3])+1, int(args[4]))
+                            loop_args = range(int(args[2]), int(args[3]) + 1, int(args[4]))
                         else:
-                            raise SyntaxError("%s(%d): RANGE expects one, two, or three integers" % (cmd.filename, cmd.line))
+                            raise CMakeSyntaxError("%s(%d): RANGE expects one, two, or three integers" % (cmd.filename, cmd.line))
                     except ValueError:
-                        raise SyntaxError("%s(%d): invalid RANGE parameters" % (cmd.filename, cmd.line))
-                elif args[1:3] == ["IN","LISTS"]:
+                        raise CMakeSyntaxError("%s(%d): invalid RANGE parameters" % (cmd.filename, cmd.line))
+                elif args[1:3] == ["IN", "LISTS"]:
                     loop_args = []
                     for l in args[3:]:
                         if l in var:
                             loop_args += var[l].split(";")
-                elif args[1:3] == ["IN","ITEMS"]:
+                elif args[1:3] == ["IN", "ITEMS"]:
                     loop_args = args[3:]
                 else:
                     loop_args = args[1:]
@@ -305,7 +321,8 @@ class ParserContext(object):
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
 
     def parse(self, s, var=None, env_var=None, filename=None, skip_callable=False):
-        if filename is None: filename = "<inline>"
+        if filename is None:
+            filename = "<inline>"
         cmds = _parse_commands(s, filename)
         for cmd, args, arg_tokens, loc in self._yield(cmds, var, env_var, skip_callable):
             yield (cmd, args, arg_tokens, loc)
@@ -330,7 +347,7 @@ def argparse(args, opts):
     t_args = args[:]
     while t_args:
         l = 0
-        for k,v in iteritems(opts):
+        for k, v in iteritems(opts):
             kl = k.split()
             ll = len(kl)
             if kl == t_args[:ll]:
@@ -352,7 +369,7 @@ def argparse(args, opts):
                 del t_args[0]
             elif curtype == "p":
                 if len(t_args) < 2:
-                    raise SyntaxError("Option '%s' has truncated key-value pair" % curname)
+                    raise CMakeSyntaxError("Option '%s' has truncated key-value pair" % curname)
                 result[curname][t_args[0]] = t_args[1]
                 del t_args[:2]
             else:
@@ -363,8 +380,7 @@ def argparse(args, opts):
             del t_args[0]
     for optname, opttype in iteritems(opts):
         if opttype == "+" and not result[optname]:
-            raise SyntaxError("Option '%s' requires at least one argument" % optname)
+            raise CMakeSyntaxError("Option '%s' requires at least one argument" % optname)
         if opttype == "!" and not result[optname]:
-            raise SyntaxError("Option '%s' requires exactly one argument" % optname)
+            raise CMakeSyntaxError("Option '%s' requires exactly one argument" % optname)
     return result, remaining
-

@@ -34,12 +34,12 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all("MiXeDCaSe()"),
             [ ("MiXeDCaSe", [])]
         )
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "unbalanced(")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "invalid%=characters$()")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "()")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "missing_braces")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "cmd();")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "cmd cmd()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "unbalanced(")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "invalid%=characters$()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "missing_braces")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "cmd();")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "cmd cmd()")
 
     def test_string(self):
         self.assertEqual(
@@ -104,16 +104,16 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all('macro(TEST arg) cmd(${arg}) endmacro() test(value)'),
             [ ("macro", ["TEST", "arg"]), ("endmacro", []), ("cmd", [ "value" ]) ]
         )
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "macro() endmacro()")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "macro(fun)")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "macro() endmacro()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "macro(fun)")
 
     def test_function(self):
         self.assertEqual(
             self.parse_all("function(test) cmd() endfunction() test()"),
             [ ("function", ["test"]), ("endfunction", []), ("test", []) ]
         )
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "function() endfunction()")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "function(fun)")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "function() endfunction()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "function(fun)")
 
     def test_foreach(self):
         self.assertEqual(
@@ -178,10 +178,10 @@ class CMakeParserTest(unittest.TestCase):
               ("ENDFOREACH", []),
               ("ENDFOREACH", []) ]
         )
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg)")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg RANGE bla) endforeach()")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach(arg RANGE 1 5 2 0) endforeach()")
-        self.assertRaises(cmake.SyntaxError, self.parse_all, "foreach() endforeach()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "foreach(arg)")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "foreach(arg RANGE bla) endforeach()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "foreach(arg RANGE 1 5 2 0) endforeach()")
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "foreach() endforeach()")
 
     def test_arguments(self):
         self.assertEqual(
@@ -240,7 +240,7 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all("cmd(ENV{PATH})"),
             [ ("cmd", [ "ENV{PATH}" ]) ]
         )
-        self.assertRaises(cmake.SyntaxError, self.parse_all, 'cmd("unclosed string)')
+        self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
         self.assertEqual(
@@ -373,13 +373,13 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual({ "TEST": None }, opts)
         self.assertEqual([], args)
 
-        self.assertRaises(cmake.SyntaxError, cmake.argparse, [], { "TEST" : "!"})
+        self.assertRaises(cmake.CMakeSyntaxError, cmake.argparse, [], { "TEST" : "!"})
 
         opts, args = cmake.argparse([], { "TEST" : "*"})
         self.assertEqual({ "TEST": [] }, opts)
         self.assertEqual([], args)
 
-        self.assertRaises(cmake.SyntaxError, cmake.argparse, [], { "TEST" : "+"})
+        self.assertRaises(cmake.CMakeSyntaxError, cmake.argparse, [], { "TEST" : "+"})
 
         opts, args = cmake.argparse([], { "TEST" : "p"})
         self.assertEqual({ "TEST": {} }, opts)
@@ -409,7 +409,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual({ "PROPERTIES" : { "key1" : "value1", "key2" : "value2" } }, opts)
         self.assertEqual([ "argument" ], args)
 
-        self.assertRaises(cmake.SyntaxError, cmake.argparse, ["PROPERTIES", "key1", "value1", "key2" ], { "PROPERTIES" : "p"})
+        self.assertRaises(cmake.CMakeSyntaxError, cmake.argparse, ["PROPERTIES", "key1", "value1", "key2" ], { "PROPERTIES" : "p"})
 
         opts, args = cmake.argparse([ "DOUBLE", "DOUBLE", "ARGUMENT", "ARGUMENT" ], {"DOUBLE ARGUMENT" : "?"})
         self.assertEqual({ "DOUBLE ARGUMENT" : "ARGUMENT" }, opts)
