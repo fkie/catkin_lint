@@ -42,7 +42,7 @@ override_dh_auto_install:
 	done
 
 make-orig-tar:
-	git archive --prefix=catkin-lint-$(CUR_VERSION)/ -o ../catkin-lint_$(CUR_VERSION).orig.tar.gz $(shell git merge-base debian $(CUR_VERSION) )
+	git archive --prefix=catkin-lint-$(CUR_VERSION)/ -o ../catkin-lint_$(CUR_VERSION).orig.tar.xz $(shell git merge-base debian $(CUR_VERSION) )
 
 make-patches:
 	rm -rf debian/patches
