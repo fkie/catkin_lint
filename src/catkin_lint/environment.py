@@ -117,6 +117,7 @@ def is_catkin_package(manifest):
 
 class CatkinEnvironment(object):
     def __init__(self, os_env=None, use_rosdep=True, use_rosdistro=True, use_cache=True, quiet=False):
+        self.package_path_order = []
         self.searched_paths = {}
         self.known_catkin_pkgs = set([])
         self.known_other_pkgs = set([])
@@ -142,6 +143,7 @@ class CatkinEnvironment(object):
         realpath = os.path.realpath(path)
         if realpath in self.searched_paths:
             return self.searched_paths[realpath]
+        self.package_path_order.append(realpath)
         pkgs = find_packages(path, use_cache=self.use_cache)
         found = []
         for p, m in iteritems(pkgs):
@@ -155,10 +157,11 @@ class CatkinEnvironment(object):
         return found
 
     def find_local_pkg(self, name):  # pragma: no cover
-        for _, packages in iteritems(self.searched_paths):
-            for p, m in packages:
-                if m.name == name:
-                    return p, m
+        for path in self.package_path_order:
+            for packages in self.searched_paths[path]:
+                for p, m in packages:
+                    if m.name == name:
+                        return p, m
         raise KeyError()
 
     def is_catkin_pkg(self, name):
