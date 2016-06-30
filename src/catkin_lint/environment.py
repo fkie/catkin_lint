@@ -158,10 +158,9 @@ class CatkinEnvironment(object):
 
     def find_local_pkg(self, name):  # pragma: no cover
         for path in self.package_path_order:
-            for packages in self.searched_paths[path]:
-                for p, m in packages:
-                    if m.name == name:
-                        return p, m
+            for p, m in self.searched_paths[path]:
+                if m.name == name:
+                    return p, m
         raise KeyError()
 
     def is_catkin_pkg(self, name):
