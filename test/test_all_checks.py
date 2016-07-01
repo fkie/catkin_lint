@@ -120,10 +120,10 @@ class CatkinInvokationTest(unittest.TestCase):
             self.run_catkin_lint(self.wsdir, "-c", "catkin_lint.checks.all"),
             (0, "catkin_lint: checked 3 packages and found 0 problems\n")
         )
-        self.assertEqual(
-            self.run_catkin_lint(self.wsdir, "-c", "does.not.exist"),
-            (1, "catkin_lint: cannot import 'does.not.exist': No module named does.not\n")
-        )
+        exitcode, stdout = self.run_catkin_lint(self.wsdir, "-c", "does.not.exist")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("cannot import 'does.not.exist'", stdout)
+
         self.assertEqual(
             self.run_catkin_lint("--pkg", "alpha"),
             (1, "catkin_lint: no such package: alpha\ncatkin_lint: no packages to check\n")
