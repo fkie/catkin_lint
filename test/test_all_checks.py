@@ -9,11 +9,13 @@ try:
     from mock import patch
 except ImportError:
     from unittest.mock import patch
-
 from tempfile import mkdtemp
 import shutil
 import argparse
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
 from catkin_lint.main import prepare_arguments, run_linter
 
 class AllChecksTest(unittest.TestCase):
