@@ -172,7 +172,7 @@ class CMakeLinter(object):
     def add_final_hook(self, cb):
         self._final_hooks.append(cb)
 
-    def _read_file(self, filename):  # pragma: no cover
+    def _read_file(self, filename):
         with open(filename, "r") as f:
             content = f.read()
         return content
@@ -471,7 +471,7 @@ class CMakeLinter(object):
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
             for cb in self._final_hooks:
                 cb(info)
-        except IOError as err:  # pragma: no cover
+        except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
         self.ignored_messages += info.ignored_messages
