@@ -177,22 +177,6 @@ class CatkinEnvironment(object):
                 return True
         return False
 
-    def is_system_pkg(self, name):
-        if name in self.known_other_pkgs:
-            return True
-        if name in self.known_catkin_pkgs:
-            return False
-        if self.rosdep is not None:
-            if not self.rosdep.has_key(name):  # noqa
-                return False
-            if not self.rosdep.is_ros(name):
-                return True
-            try:
-                return not is_catkin_package(self.get_manifest(name))
-            except (IOError, KeyError):
-                return False
-        return False
-
     def get_manifest(self, name):
         global _cache
         if self.use_cache:

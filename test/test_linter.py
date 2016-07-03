@@ -201,18 +201,13 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(1, len(result))
         self.assertTrue(env.is_catkin_pkg("mock_catkin"))
         self.assertFalse(env.is_catkin_pkg("mock_other"))
-        self.assertFalse(env.is_system_pkg("mock_catkin"))
-        self.assertTrue(env.is_system_pkg("mock_other"))
         result = env.add_path(os.path.normpath("/"))
         self.assertEqual(1, len(result))
         self.assertTrue(env.is_catkin_pkg("mock_catkin"))
         self.assertFalse(env.is_catkin_pkg("mock_other"))
-        self.assertFalse(env.is_system_pkg("mock_catkin"))
-        self.assertTrue(env.is_system_pkg("mock_other"))
         result = env.add_path(os.path.normpath("/missing"))
         self.assertEqual([], result)
         self.assertFalse(env.is_catkin_pkg("invalid"))
-        self.assertFalse(env.is_system_pkg("invalid"))
         catkin_lint.environment.find_packages = old_find
 
 

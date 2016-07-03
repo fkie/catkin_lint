@@ -69,6 +69,19 @@ Registers a final hook that is called when the CMake parser
 has finished parsing the ``CMakeLists.txt`` file.
 
 
+execute_hook()
+----------------
+
+::
+
+    linter.execute_hook(info, cmd, args)
+
+Executes all registered command hooks for ``cmd``. This is useful
+for CMake wrapper macros, so you don't have to duplicate all checks
+for the wrapped call. For example, the ``cuda_add_executable``
+command hook calls the ``add_executable`` hooks this way.
+
+
 Info Object
 ===========
 
@@ -185,17 +198,7 @@ is_catkin_pkg()
 
     env.is_catkin_pkg(name)
 
-Returns ``True`` if ``name`` is a known catkin package.
-
-
-is_system_pkg()
----------------
-
-::
-
-    env.is_system_pkg(name)
-
-Returns ``True`` if ``name`` is a known system dependency.
+Returns ``True`` if ``name`` is a catkin package.
 
 
 is_known_pkg()
@@ -205,7 +208,8 @@ is_known_pkg()
 
     env.is_known_pkg(name)
 
-Alias for ``is_catkin_pkg(name) or is_system_pkg(name)``.
+Returns ``True`` if ``name`` is a known package.
+
 
 ok
 ---------------
@@ -215,7 +219,7 @@ ok
     env.ok
 
 Is ``True`` if the list of ROS dependencies was properly
-initialized. If it is ``False``, the function ``is_system_pkg()``
-and ``is_catkin_pkg()`` may return wrong results, so checks for
-invalid dependencies should be skipped to prevent false positives.
+initialized. If it is ``False``, the function ``is_catkin_pkg()`` 
+may return wrong results, so checks for invalid dependencies should
+be skipped to prevent false positives.
 

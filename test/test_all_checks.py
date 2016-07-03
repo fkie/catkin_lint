@@ -17,7 +17,7 @@ try:
 except ImportError:
     from io import StringIO
 from catkin_lint.main import prepare_arguments, run_linter
-from subprocess import call
+import catkin_lint.environment
 
 class AllChecksTest(unittest.TestCase):
 
@@ -63,6 +63,7 @@ class CatkinInvokationTest(unittest.TestCase):
             )
 
     def run_catkin_lint(self, *argv):
+        catkin_lint.environment._cache = None  # force cache reloads
         parser = prepare_arguments(argparse.ArgumentParser())
         args = parser.parse_args(argv)
         stdout = StringIO()
@@ -76,19 +77,23 @@ class CatkinInvokationTest(unittest.TestCase):
         self.upstream_ws = mkdtemp()
         self.fake_package("gamma", ["missing"], wsdir=self.upstream_ws)
         self.fake_package("invalid_dep", ["boost"], wsdir=self.upstream_ws)
+        self.fake_package("delta", ["std_msgs"], wsdir=self.upstream_ws)
+        self.fake_package("std_msgs", [], wsdir=self.upstream_ws)
         self.homedir = mkdtemp()
         self.wsdir = mkdtemp()
         os.makedirs(os.path.join(self.wsdir, "src", "no_packages_here"))
         self.fake_package("alpha", ["beta", "rospy"], wsdir=self.wsdir)
         self.fake_package("beta", [], wsdir=self.wsdir)
-        self.fake_package("gamma", [], wsdir=self.wsdir)
+        self.fake_package("gamma", ["delta"], wsdir=self.wsdir)
         self.fake_package("broken", ["missing"], wsdir=self.wsdir)
         with open(os.path.join(self.wsdir, "src", "broken", "CATKIN_IGNORE"), "w"):
             pass
         self.fake_package(".dotdir_with_broken_package", ["missing"], wsdir=self.wsdir)
+        catkin_lint.environment._cache_dir = os.path.join(self.homedir, ".ros", "catkin_lint")
+        os.makedirs(catkin_lint.environment._cache_dir)
         os.environ = {
             "PATH": "/usr/bin:/bin",
-            "ROS_DISTRO": "indigo",
+            "ROS_DISTRO": "kinetic",
             "HOME": self.homedir,
             "ROS_PACKAGE_PATH": self.upstream_ws,
         }
@@ -101,7 +106,6 @@ class CatkinInvokationTest(unittest.TestCase):
         os.environ = self.old_environ
 
     def runTest(self):
-        self.assertTrue(os.path.isfile(os.path.join(self.homedir, ".ros", "rosdep", "sources.cache", "index")))
         pwd = os.getcwd()
         os.chdir(os.path.join(self.wsdir, "src", "beta"))
         exitcode, stdout = self.run_catkin_lint()
@@ -109,21 +113,23 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertIn("checked 1 packages and found 0 problems", stdout)
         os.chdir(pwd)
 
-        exitcode, stdout = self.run_catkin_lint(self.wsdir)
+        exitcode, stdout = self.run_catkin_lint(self.wsdir, "--explain")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
 
-        exitcode, stdout = self.run_catkin_lint(self.wsdir, "--disable-cache")
+        exitcode, stdout = self.run_catkin_lint(self.wsdir, "--disable-cache", "--xml")
         self.assertEqual(exitcode, 0)
+        self.assertIn("</catkin_lint>", stdout)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
 
-        exitcode, stdout = self.run_catkin_lint(self.wsdir, "-c", "catkin_lint.checks.all")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "gamma", "-c", "catkin_lint.checks.misc.project")
         self.assertEqual(exitcode, 0)
-        self.assertIn("checked 3 packages and found 0 problems", stdout)
+        self.assertIn("checked 1 packages and found 0 problems", stdout)
 
         exitcode, stdout = self.run_catkin_lint(self.wsdir, "-c", "does.not.exist")
         self.assertEqual(exitcode, 1)
         self.assertIn("cannot import 'does.not.exist'", stdout)
+        self.assertRaises(ImportError, self.run_catkin_lint, self.wsdir, "-c", "does.not.exist", "--debug")
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "alpha")
         self.assertEqual(exitcode, 1)
@@ -170,16 +176,25 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 1)
         self.assertIn("messages have been ignored", stdout)
 
-        self.assertEqual(
-            self.run_catkin_lint("--clear-cache", "--dump-cache"),
-            (0, "Cache version is 1\nCached local paths: 0\n")
-        )
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("warnings have been ignored", stdout)
 
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
+        self.assertEqual(exitcode, 1)
+
+        exitcode, stdout = self.run_catkin_lint("--clear-cache")
+        self.assertEqual(exitcode, 0)
+        
+        exitcode, stdout = self.run_catkin_lint("--dump-cache")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("Cached local paths: 0\n", stdout)
+        
         del os.environ["ROS_DISTRO"]
         exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
         self.assertEqual(exitcode, 0)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "indigo")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "kinetic")
         self.assertEqual(exitcode, 1)
 
         del os.environ["ROS_DISTRO"]
@@ -187,11 +202,11 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertNotIn("error: unknown package", stdout)
 
-        exitcode, stdout = self.run_catkin_lint(os.path.join(self.wsdir, "src", "alpha"), "--rosdistro", "indigo")
+        exitcode, stdout = self.run_catkin_lint(os.path.join(self.wsdir, "src", "alpha"), "--rosdistro", "kinetic")
         self.assertEqual(exitcode, 1)
         self.assertIn("error: unknown package", stdout)
 
         del os.environ["ROS_DISTRO"]
-        exitcode, stdout = self.run_catkin_lint(self.wsdir, "--rosdistro", "indigo")
+        exitcode, stdout = self.run_catkin_lint(self.wsdir, "--rosdistro", "kinetic")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)

@@ -319,7 +319,8 @@ class CMakeLinter(object):
             if len(info.conditionals) > 0:
                 info.conditionals.pop()
 
-    def execute_hook(self, info, cmd, args):
+    def execute_hook(self, info, other_cmd, args):
+        cmd = other_cmd.lower()
         if cmd in self._running_hooks:
             return
         if cmd == "project":

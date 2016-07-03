@@ -51,9 +51,6 @@ class Rosdep(object):
             return False
         return name in self.view.keys()
 
-    def ok(self):
-        return self.view is not None
-
 
 def get_rosdep(quiet):
     from rosdep2.lookup import RosdepLookup
