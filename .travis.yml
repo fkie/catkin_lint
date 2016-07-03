@@ -6,8 +6,7 @@ python:
 install:
   - pip install codecov coverage catkin_pkg rosdep
 script:
-  - rm -f .coverage
-  - nosetests --with-coverage --cover-package=catkin_lint test
+- nosetests --verbose --with-coverage --cover-erase --cover-package=catkin_lint test
 after_success:
   - codecov
 
