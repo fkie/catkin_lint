@@ -119,8 +119,8 @@ class CatkinEnvironment(object):
     def __init__(self, os_env=None, use_rosdep=True, use_rosdistro=True, use_cache=True, quiet=False):
         self.package_path_order = []
         self.searched_paths = {}
-        self.known_catkin_pkgs = set([])
-        self.known_other_pkgs = set([])
+        self.known_catkin_pkgs = set()
+        self.known_other_pkgs = set()
         self.ok = True
         self.os_env = os_env
         self.use_cache = use_cache
