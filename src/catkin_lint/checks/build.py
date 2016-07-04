@@ -47,9 +47,7 @@ def includes(linter):
 
     def on_final(info):
         for incl in info.build_includes:
-            if os.path.isabs(incl) or not incl:
-                continue
-            if not os.path.isdir(info.real_path(incl)):
+            if incl and not os.path.isabs(incl) and not os.path.isdir(info.real_path(incl)):
                 info.report(ERROR, "MISSING_BUILD_INCLUDE_PATH", path=incl)
 
     linter.add_init_hook(on_init)
@@ -61,6 +59,7 @@ def targets(linter):
     def on_init(info):
         info.target_outputs = {}
         info.target_links = {}
+        info.target_order_violation = set()
 
     def on_set_target_properties(info, cmd, args):
         opts, args = cmake_argparse(args, {"PROPERTIES": "p"})
@@ -76,17 +75,18 @@ def targets(linter):
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "catkin_package" not in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="catkin_package")
-#        if args[0] in info.targets:
-#            TODO
+        if args[0] in info.target_order_violation:
+            info.report(ERROR, "ORDER_VIOLATION", first_cmd="target_link_libraries", second_cmd=cmd)
         if not args[0] in info.target_outputs:
             info.target_outputs[args[0]] = args[0]
         if not args[0] in info.target_links:
             info.target_links[args[0]] = set()
 
     def on_target_link_libraries(info, cmd, args):
-        if args[0] not in info.target_links:
-            info.target_links[args[0]] = set()
-        info.target_links[args[0]] |= set([d for d in args[1:] if not os.path.isabs(d)])
+        if args[0] in info.target_links:
+            info.target_links[args[0]] |= set([d for d in args[1:] if not os.path.isabs(d)])
+        else:
+            info.target_order_violation.add(args[0])
 
     def on_final(info):
         if (info.executables or info.libraries) and info.catkin_components and not os.path.normpath("/catkin-includes") in info.build_includes:
@@ -114,13 +114,9 @@ def source_files(linter):
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
-            if not source_file:
-                continue
-            source_file = info.package_path(source_file)
-            if os.path.isabs(source_file):
-                continue
-            if not os.path.isfile(info.real_path(source_file)):
-                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
+            file_path = info.package_path(source_file)
+            if not os.path.isabs(file_path) and not os.path.isfile(info.real_path(file_path)):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=file_path)
 
     def on_add_library(info, cmd, args):
         if "IMPORTED" in args:
@@ -129,13 +125,9 @@ def source_files(linter):
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
-            if not source_file:
-                continue
-            source_file = info.package_path(source_file)
-            if os.path.isabs(source_file):
-                continue
-            if not os.path.isfile(info.real_path(source_file)):
-                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
+            file_path = info.package_path(source_file)
+            if not os.path.isabs(file_path) and not os.path.isfile(info.real_path(file_path)):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=file_path)
 
     linter.add_command_hook("add_executable", on_add_executable)
     linter.add_command_hook("add_library", on_add_library)
@@ -301,12 +293,11 @@ def exports(linter):
                     if d1.startswith("%s%s" % (d2, os.path.sep)):
                         info.report(WARNING, "AMBIGUOUS_BUILD_INCLUDE", path=d1, parent_path=d2)
         for lib in info.export_libs:
-            if lib not in info.targets:
-                continue
-            if info.target_outputs[lib] != lib:
-                info.report(ERROR, "EXPORT_LIB_RENAMED", target=lib)
-            if lib in info.executables:
-                info.report(ERROR, "EXPORT_LIB_NOT_LIB", target=lib)
+            if lib in info.targets:
+                if info.target_outputs[lib] != lib:
+                    info.report(ERROR, "EXPORT_LIB_RENAMED", target=lib)
+                if lib in info.executables:
+                    info.report(ERROR, "EXPORT_LIB_NOT_LIB", target=lib)
 
     linter.require(manifest_depends)
     linter.require(pkg_config)
@@ -324,13 +315,7 @@ def name_check(linter):
             if "/" in output or "\\" in output:
                 info.report(ERROR, "INVALID_TARGET_OUTPUT", target=target)
             tgl = target.lower()
-            tnc = True
-            for nf in name_fragments:
-                if len(nf) < 2:
-                    continue
-                if nf in tgl:
-                    tnc = False
-                    break
+            tnc = len([nf for nf in name_fragments if len(nf) > 2 and nf in tgl]) == 0
             if tnc and target not in info.export_libs:
                 info.report(NOTICE, "TARGET_NAME_COLLISION", target=target)
             if target in info.libraries and output.startswith("lib"):
@@ -376,33 +361,26 @@ def installs(linter):
         if install_type != "DIRECTORY" and not is_sorted(opts[install_type]):
             info.report(NOTICE, "UNSORTED_LIST", name=install_type)
         for dest in ["DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION"]:
-            if opts[dest] is None:
-                continue
-            if not info.is_catkin_target(opts[dest]):
-                info.report(WARNING, "INSTALL_DESTINATION", type=install_type, dest=dest)
-            if info.is_catkin_target(opts[dest], "include"):
-                info.install_includes = True
+            if opts[dest] is not None:
+                if not info.is_catkin_target(opts[dest]):
+                    info.report(WARNING, "INSTALL_DESTINATION", type=install_type, dest=dest)
+                if info.is_catkin_target(opts[dest], "include"):
+                    info.install_includes = True
 
     def on_final(info):
         for lib in info.export_libs:
-            if lib not in info.targets:
-                continue
-            if lib not in info.install_targets:
+            if lib in info.targets and lib not in info.install_targets:
                 info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_EXPORT_LIB", target=lib)
         for tgt in info.executables - info.install_targets:
-            if "test" in tgt.lower() or "example" in tgt.lower():
-                continue
-            info.report(WARNING, "MISSING_INSTALL_TARGET", target=tgt)
+            if "test" not in tgt.lower() and "example" not in tgt.lower():
+                info.report(WARNING, "MISSING_INSTALL_TARGET", target=tgt)
         if info.export_includes and not info.install_includes:
             info.report(ERROR if "install" in info.commands else WARNING, "MISSING_INSTALL_INCLUDE")
         for target, depends in iteritems(info.target_links):
-            if target not in info.install_targets:
-                continue
-            for lib in depends:
-                if lib not in info.libraries:
-                    continue
-                if lib not in info.install_targets:
-                    info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib)
+            if target in info.install_targets:
+                for lib in depends:
+                    if lib in info.libraries and lib not in info.install_targets:
+                        info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib)
         for target in info.install_targets:
             if target not in info.libraries and target not in info.executables:
                 info.report(ERROR, "UNDEFINED_INSTALL_TARGET", target=target)

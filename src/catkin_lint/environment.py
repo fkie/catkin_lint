@@ -64,8 +64,7 @@ class PackageCacheData(object):
 def find_packages(basepath, use_cache=True):
     global _cache
     if use_cache:
-        if _cache is None:
-            _load_cache()
+        _load_cache()
         distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
     packages = {}
     package_paths = []
@@ -182,8 +181,7 @@ class CatkinEnvironment(object):
         if self.use_cache:
             cache_updated = False
             distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
-            if _cache is None:
-                _load_cache()
+            _load_cache()
             if distro_id not in _cache.packages:
                 _cache.packages[distro_id] = {}
             if name in _cache.packages[distro_id]:
@@ -235,13 +233,14 @@ except ImportError:
 def _load_cache():
     global _cache
     global _cache_dir
-    try:
-        with open(os.path.join(_cache_dir, "packages.pickle"), "rb") as f:
-            _cache = pickle.loads(f.read())
-            if not isinstance(_cache, Cache) or _cache.version != 1:
-                raise RuntimeError()
-    except:
-        _cache = Cache()
+    if _cache is None:
+        try:
+            with open(os.path.join(_cache_dir, "packages.pickle"), "rb") as f:
+                _cache = pickle.loads(f.read())
+                if not isinstance(_cache, Cache) or _cache.version != 1:
+                    raise RuntimeError()
+        except:
+            _cache = Cache()
 
 
 def _store_cache():
@@ -262,8 +261,7 @@ def _clear_cache():
 
 def _dump_cache():
     global _cache
-    if _cache is None:
-        _load_cache()
+    _load_cache()
     sys.stdout.write("Cache version is %d\n" % _cache.version)
     sys.stdout.write("Cached local paths: %d\n" % len(_cache.local_paths))
     t0 = time()

@@ -22,6 +22,8 @@ class ChecksBuildTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "include_directories(include)", checks=cc.includes)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg, "include_directories(/somewhere/else/but/absolute)", checks=cc.includes)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg, "find_package(catkin REQUIRED) include_directories(${catkin_INCLUDE_DIRS})", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "include_directories(missing_include)", checks=cc.includes)
@@ -32,6 +34,8 @@ class ChecksBuildTest(unittest.TestCase):
     def do_source_files(self):
         env = create_env()
         pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "add_executable(mock IMPORTED) add_library(mock_lib IMPORTED)", checks=cc.source_files)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg, "add_executable(mock src/a.cpp src/b.cpp) add_library(mock_lib src/a.cpp src/b.cpp)", checks=cc.source_files)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp) add_library(mock_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp)", checks=cc.source_files)
@@ -253,6 +257,19 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
+            include_directories(${catkin_INCLUDE_DIRS})
+            target_link_libraries(${PROJECT_NAME}/prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}/prog src/source.cpp)
+            set_target_properties(${PROJECT_NAME}/prog PROPERTIES OUTPUT_NAME "prog")
+            """,
+        checks=cc.targets)
+        self.assertEqual([ "ORDER_VIOLATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            catkin_package()
             add_executable(${PROJECT_NAME}_prog src/source.cpp)
             target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
@@ -362,6 +379,16 @@ class ChecksBuildTest(unittest.TestCase):
             install(FILES share/file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
             install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             install(DIRECTORY include/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(EXPORT stuff DESTINATION "${missing_variable}")
             """,
         checks=cc.installs)
         self.assertEqual([], result)

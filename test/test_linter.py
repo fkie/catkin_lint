@@ -195,21 +195,26 @@ class LinterTest(unittest.TestCase):
         mock_packages[os.path.normpath("/mock_catkin")] = create_manifest("mock_catkin")
         mock_packages[os.path.normpath("/mock_other")] = create_manifest("mock_other")
         mock_packages[os.path.normpath("/mock_other")].exports += [ Export("random_tag"), Export("build_type", "cmake") ]
-        old_find = catkin_lint.environment.find_packages
-        catkin_lint.environment.find_packages = lambda x, use_cache: mock_packages
-        result = env.add_path(os.path.normpath("/"))
-        self.assertEqual(1, len(result))
-        self.assertTrue(env.is_catkin_pkg("mock_catkin"))
-        self.assertFalse(env.is_catkin_pkg("mock_other"))
-        result = env.add_path(os.path.normpath("/"))
-        self.assertEqual(1, len(result))
-        self.assertTrue(env.is_catkin_pkg("mock_catkin"))
-        self.assertFalse(env.is_catkin_pkg("mock_other"))
-        result = env.add_path(os.path.normpath("/missing"))
-        self.assertEqual([], result)
-        self.assertFalse(env.is_catkin_pkg("invalid"))
-        catkin_lint.environment.find_packages = old_find
-
+        with patch("catkin_lint.environment.find_packages", lambda x, use_cache: mock_packages):
+            result = env.add_path(os.path.normpath("/"))
+            self.assertEqual(1, len(result))
+            self.assertTrue(env.is_catkin_pkg("mock_catkin"))
+            self.assertFalse(env.is_catkin_pkg("mock_other"))
+            result = env.add_path(os.path.normpath("/"))
+            self.assertEqual(1, len(result))
+            self.assertTrue(env.is_catkin_pkg("mock_catkin"))
+            self.assertFalse(env.is_catkin_pkg("mock_other"))
+            result = env.add_path(os.path.normpath("/missing"))
+            self.assertEqual([], result)
+            self.assertFalse(env.is_catkin_pkg("invalid"))
+        def raiseError():
+            raise RuntimeError()
+        with open(os.devnull, "w") as devnull:
+            with patch("catkin_lint.environment.get_rosdep", raiseError):
+                with patch("sys.stderr", devnull):
+                    env = catkin_lint.environment.CatkinEnvironment()
+                    self.assertFalse(env.ok)
+        self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])
     @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/source.cpp") ])
