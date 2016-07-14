@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  
+  <title>catkin_lint</title>
+  
+
+  <link rel="shortcut icon" href="./img/favicon.ico">
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="./css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="./css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="./css/highlight.css">
+
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "None";
+    var mkdocs_page_input_path = "index.md";
+    var mkdocs_page_url = "/";
+  </script>
+  
+  <script src="./js/jquery-2.1.1.min.js"></script>
+  <script src="./js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="./js/highlight.pack.js"></script>
+  <script src="./js/theme.js"></script> 
+
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="." class="icon icon-home"> catkin_lint</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        <ul class="current">
+          
+            <li>
+    <li class="toctree-l1 current">
+        <a class="current" href=".">Home</a>
+        
+            <ul>
+            
+                <li class="toctree-l3"><a href="#catkin_lint">catkin_lint</a></li>
+                
+                    <li><a class="toctree-l4" href="#overview">Overview</a></li>
+                
+                    <li><a class="toctree-l4" href="#installation">Installation</a></li>
+                
+                    <li><a class="toctree-l4" href="#running">Running</a></li>
+                
+                    <li><a class="toctree-l4" href="#limitations">Limitations</a></li>
+                
+                    <li><a class="toctree-l4" href="#diagnostic-levels">Diagnostic Levels</a></li>
+                
+            
+            </ul>
+        
+    </li>
+<li>
+          
+            <li>
+    <li class="toctree-l1 ">
+        <a class="" href="api/">API</a>
+        
+    </li>
+<li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href=".">catkin_lint</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Home</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="catkin_lint">catkin_lint</h1>
+<h2 id="overview">Overview</h2>
+<p><strong>catkin_lint</strong> checks package configurations for the
+<a href="https://github.com/ros/catkin">catkin</a> build system of
+<a href="http://www.ros.org&gt;">ROS</a>. It runs a static analysis of the <code>package.xml</code>
+and <code>CMakeLists.txt</code> files in your package, and it will detect and report a
+number of common problems.</p>
+<h2 id="installation">Installation</h2>
+<h3 id="install-ubuntu-packages">Install Ubuntu packages</h3>
+<p>Prebuilt packages are available from the <a href="http://packages.ros.org/">ROS repository</a>.
+If you have installed ROS already, downloading <strong>catkin_lint</strong> is as simple as:</p>
+<pre><code class="sh">$ sudo apt-get install python-catkin-lint
+</code></pre>
+
+<p>Alternatively, you can use <a href="https://launchpad.net/~roehling/+archive/latest">Timo's PPA</a> on Launchpad:</p>
+<pre><code class="sh">$ sudo add-apt-repository ppa:roehling/latest
+$ sudo apt-get update
+$ sudo apt-get install python-catkin-lint
+</code></pre>
+
+<h3 id="download-from-pypi">Download from PyPI</h3>
+<p>You can download and install <strong>catkin_lint</strong> from the <a href="https://pypi.python.org/pypi/catkin_lint">Python Package Index</a>
+with:</p>
+<pre><code class="sh">$ sudo pip install catkin_lint
+</code></pre>
+
+<h3 id="install-from-source">Install from Source</h3>
+<p>You can clone <strong>catkin_lint</strong> from <a href="https://github.com/fkie/catkin_lint">GitHub</a>:</p>
+<pre><code class="sh">$ git clone https://github.com/fkie/catkin_lint
+$ cd catkin_lint
+$ sudo python setup.py install
+</code></pre>
+
+<p><a href="https://travis-ci.org/fkie/catkin_lint"><img alt="Build Status" src="https://travis-ci.org/fkie/catkin_lint.svg?branch=master" /></a>
+<a href="https://codecov.io/github/fkie/catkin_lint?branch=master"><img alt="Test Coverage" src="https://codecov.io/github/fkie/catkin_lint/coverage.svg?branch=master" /></a></p>
+<h3 id="build-your-own-debian-packages">Build your own Debian packages</h3>
+<p>If your distribution is not supported, you can build yor own packages:</p>
+<pre><code class="sh">$ sudo apt-get install dpkg-dev
+$ git clone https://github.com/fkie/catkin_lint
+$ cd catkin_lint
+$ git checkout debian
+$ ./debian/rules make-orig-tar
+$ dpkg-buildpackage -tc -uc -us
+$ sudo dpkg -i ../python-catkin-lint_*_all.deb
+</code></pre>
+
+<p><a href="https://travis-ci.org/fkie/catkin_lint"><img alt="Build Status" src="https://travis-ci.org/fkie/catkin_lint.svg?branch=debian" /></a></p>
+<h2 id="running">Running</h2>
+<p>If <strong>catkin_lint</strong> is invoked with one or more paths as parameters, it
+searches for packages recursively and checks all of them. Alternatively, the
+<code>--pkg</code> option can be used to add the path of a particular ROS package.</p>
+<p>If neither paths nor packages are specified, <strong>catkin_lint</strong> looks for a
+package in the current working directory.</p>
+<p>A more detailed list of command line options can be obtained by running</p>
+<pre><code class="sh">$ catkin_lint --help
+</code></pre>
+
+<h2 id="limitations">Limitations</h2>
+<p><strong>catkin_lint</strong> works by emulating the way CMake processes your package
+during a build. However, since it does not <em>really</em> build anything,
+the emulation is not perfect. For instance,</p>
+<ul>
+<li><strong>catkin_lint</strong> does not evaluate boolean expressions in <code>if()</code> clauses
+  There is some special purpose code to detect <code>if(CATKIN_ENABLE_TESTING)</code> blocks,
+  but in general, <strong>catkin_lint</strong> will just execute all statements, even mutually exclusive
+  <code>if()</code>/<code>else()</code> blocks.</li>
+<li><strong>catkin_lint</strong> uses mock values for <code>find_package()</code>, <code>find_file()</code>, and <code>find_library()</code>
+  calls. That means that those function calls will always succeed and "find" something.</li>
+<li><strong>catkin_lint</strong> ignores <code>function()</code> definitions. It does, however, expand macros and
+  <code>foreach()</code> loops.</li>
+</ul>
+<h2 id="diagnostic-levels">Diagnostic Levels</h2>
+<p><strong>catkin_lint</strong> has messages in three different categories:
+errors, warnings, and notices. The <code>-W</code> option controls which problems
+are reported to the user:</p>
+<ul>
+<li><code>-W0</code>: only errors are reported</li>
+<li><code>-W1</code>: errors and warnings are reported (this is the default)</li>
+<li><code>-W2</code>: errors, warnings, and notices are reported</li>
+</ul>
+<p>Normally, <strong>catkin_lint</strong> returns a non-zero exit code if and only
+if errors occurred. The <code>--strict</code> option causes <strong>catkin_lint</strong> to
+treat any reported problem as error.</p>
+<h3 id="errors">Errors</h3>
+<p>Errors are severe enough to break the build and/or produce unintended
+side effects. Usually, they violate the rules outlined in the
+<a href="http://docs.ros.org/api/catkin/html/">catkin manual</a>.</p>
+<h3 id="warnings">Warnings</h3>
+<p>Potential errors which may indicate a bug in your package but may be
+justified for reasons <strong>catkin_lint</strong> cannot discern. Constructs which
+trigger a warning can usually be modified in a way that is functionally
+equivalent but more robust.</p>
+<h3 id="notices">Notices</h3>
+<p>Issues which are not objectionable from a technical view point but
+should  be addressed to improve the quality of the package. Many notices
+highlight violations of the recommendations and best practises from the
+catkin manual.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+<div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+      
+        <span style="margin-left: 15px"><a href="api/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 0.15.3
+Build Date UTC : 2016-07-14 09:45:12.117947
+-->

@@ -1,0 +1,159 @@
+{
+    "docs": [
+        {
+            "location": "/", 
+            "text": "catkin_lint\n\n\nOverview\n\n\ncatkin_lint\n checks package configurations for the\n\ncatkin\n build system of\n\nROS\n. It runs a static analysis of the \npackage.xml\n\nand \nCMakeLists.txt\n files in your package, and it will detect and report a\nnumber of common problems.\n\n\nInstallation\n\n\nInstall Ubuntu packages\n\n\nPrebuilt packages are available from the \nROS repository\n.\nIf you have installed ROS already, downloading \ncatkin_lint\n is as simple as:\n\n\n$ sudo apt-get install python-catkin-lint\n\n\n\n\nAlternatively, you can use \nTimo's PPA\n on Launchpad:\n\n\n$ sudo add-apt-repository ppa:roehling/latest\n$ sudo apt-get update\n$ sudo apt-get install python-catkin-lint\n\n\n\n\nDownload from PyPI\n\n\nYou can download and install \ncatkin_lint\n from the \nPython Package Index\n\nwith:\n\n\n$ sudo pip install catkin_lint\n\n\n\n\nInstall from Source\n\n\nYou can clone \ncatkin_lint\n from \nGitHub\n:\n\n\n$ git clone https://github.com/fkie/catkin_lint\n$ cd catkin_lint\n$ sudo python setup.py install\n\n\n\n\n\n\n\n\nBuild your own Debian packages\n\n\nIf your distribution is not supported, you can build yor own packages:\n\n\n$ sudo apt-get install dpkg-dev\n$ git clone https://github.com/fkie/catkin_lint\n$ cd catkin_lint\n$ git checkout debian\n$ ./debian/rules make-orig-tar\n$ dpkg-buildpackage -tc -uc -us\n$ sudo dpkg -i ../python-catkin-lint_*_all.deb\n\n\n\n\n\n\nRunning\n\n\nIf \ncatkin_lint\n is invoked with one or more paths as parameters, it\nsearches for packages recursively and checks all of them. Alternatively, the\n\n--pkg\n option can be used to add the path of a particular ROS package.\n\n\nIf neither paths nor packages are specified, \ncatkin_lint\n looks for a\npackage in the current working directory.\n\n\nA more detailed list of command line options can be obtained by running\n\n\n$ catkin_lint --help\n\n\n\n\nLimitations\n\n\ncatkin_lint\n works by emulating the way CMake processes your package\nduring a build. However, since it does not \nreally\n build anything,\nthe emulation is not perfect. For instance,\n\n\n\n\ncatkin_lint\n does not evaluate boolean expressions in \nif()\n clauses\n  There is some special purpose code to detect \nif(CATKIN_ENABLE_TESTING)\n blocks,\n  but in general, \ncatkin_lint\n will just execute all statements, even mutually exclusive\n  \nif()\n/\nelse()\n blocks.\n\n\ncatkin_lint\n uses mock values for \nfind_package()\n, \nfind_file()\n, and \nfind_library()\n\n  calls. That means that those function calls will always succeed and \"find\" something.\n\n\ncatkin_lint\n ignores \nfunction()\n definitions. It does, however, expand macros and\n  \nforeach()\n loops.\n\n\n\n\nDiagnostic Levels\n\n\ncatkin_lint\n has messages in three different categories:\nerrors, warnings, and notices. The \n-W\n option controls which problems\nare reported to the user:\n\n\n\n\n-W0\n: only errors are reported\n\n\n-W1\n: errors and warnings are reported (this is the default)\n\n\n-W2\n: errors, warnings, and notices are reported\n\n\n\n\nNormally, \ncatkin_lint\n returns a non-zero exit code if and only\nif errors occurred. The \n--strict\n option causes \ncatkin_lint\n to\ntreat any reported problem as error.\n\n\nErrors\n\n\nErrors are severe enough to break the build and/or produce unintended\nside effects. Usually, they violate the rules outlined in the\n\ncatkin manual\n.\n\n\nWarnings\n\n\nPotential errors which may indicate a bug in your package but may be\njustified for reasons \ncatkin_lint\n cannot discern. Constructs which\ntrigger a warning can usually be modified in a way that is functionally\nequivalent but more robust.\n\n\nNotices\n\n\nIssues which are not objectionable from a technical view point but\nshould  be addressed to improve the quality of the package. Many notices\nhighlight violations of the recommendations and best practises from the\ncatkin manual.", 
+            "title": "Home"
+        }, 
+        {
+            "location": "/#catkin_lint", 
+            "text": "", 
+            "title": "catkin_lint"
+        }, 
+        {
+            "location": "/#overview", 
+            "text": "catkin_lint  checks package configurations for the catkin  build system of ROS . It runs a static analysis of the  package.xml \nand  CMakeLists.txt  files in your package, and it will detect and report a\nnumber of common problems.", 
+            "title": "Overview"
+        }, 
+        {
+            "location": "/#installation", 
+            "text": "", 
+            "title": "Installation"
+        }, 
+        {
+            "location": "/#install-ubuntu-packages", 
+            "text": "Prebuilt packages are available from the  ROS repository .\nIf you have installed ROS already, downloading  catkin_lint  is as simple as:  $ sudo apt-get install python-catkin-lint  Alternatively, you can use  Timo's PPA  on Launchpad:  $ sudo add-apt-repository ppa:roehling/latest\n$ sudo apt-get update\n$ sudo apt-get install python-catkin-lint", 
+            "title": "Install Ubuntu packages"
+        }, 
+        {
+            "location": "/#download-from-pypi", 
+            "text": "You can download and install  catkin_lint  from the  Python Package Index \nwith:  $ sudo pip install catkin_lint", 
+            "title": "Download from PyPI"
+        }, 
+        {
+            "location": "/#install-from-source", 
+            "text": "You can clone  catkin_lint  from  GitHub :  $ git clone https://github.com/fkie/catkin_lint\n$ cd catkin_lint\n$ sudo python setup.py install", 
+            "title": "Install from Source"
+        }, 
+        {
+            "location": "/#build-your-own-debian-packages", 
+            "text": "If your distribution is not supported, you can build yor own packages:  $ sudo apt-get install dpkg-dev\n$ git clone https://github.com/fkie/catkin_lint\n$ cd catkin_lint\n$ git checkout debian\n$ ./debian/rules make-orig-tar\n$ dpkg-buildpackage -tc -uc -us\n$ sudo dpkg -i ../python-catkin-lint_*_all.deb", 
+            "title": "Build your own Debian packages"
+        }, 
+        {
+            "location": "/#running", 
+            "text": "If  catkin_lint  is invoked with one or more paths as parameters, it\nsearches for packages recursively and checks all of them. Alternatively, the --pkg  option can be used to add the path of a particular ROS package.  If neither paths nor packages are specified,  catkin_lint  looks for a\npackage in the current working directory.  A more detailed list of command line options can be obtained by running  $ catkin_lint --help", 
+            "title": "Running"
+        }, 
+        {
+            "location": "/#limitations", 
+            "text": "catkin_lint  works by emulating the way CMake processes your package\nduring a build. However, since it does not  really  build anything,\nthe emulation is not perfect. For instance,   catkin_lint  does not evaluate boolean expressions in  if()  clauses\n  There is some special purpose code to detect  if(CATKIN_ENABLE_TESTING)  blocks,\n  but in general,  catkin_lint  will just execute all statements, even mutually exclusive\n   if() / else()  blocks.  catkin_lint  uses mock values for  find_package() ,  find_file() , and  find_library() \n  calls. That means that those function calls will always succeed and \"find\" something.  catkin_lint  ignores  function()  definitions. It does, however, expand macros and\n   foreach()  loops.", 
+            "title": "Limitations"
+        }, 
+        {
+            "location": "/#diagnostic-levels", 
+            "text": "catkin_lint  has messages in three different categories:\nerrors, warnings, and notices. The  -W  option controls which problems\nare reported to the user:   -W0 : only errors are reported  -W1 : errors and warnings are reported (this is the default)  -W2 : errors, warnings, and notices are reported   Normally,  catkin_lint  returns a non-zero exit code if and only\nif errors occurred. The  --strict  option causes  catkin_lint  to\ntreat any reported problem as error.", 
+            "title": "Diagnostic Levels"
+        }, 
+        {
+            "location": "/#errors", 
+            "text": "Errors are severe enough to break the build and/or produce unintended\nside effects. Usually, they violate the rules outlined in the catkin manual .", 
+            "title": "Errors"
+        }, 
+        {
+            "location": "/#warnings", 
+            "text": "Potential errors which may indicate a bug in your package but may be\njustified for reasons  catkin_lint  cannot discern. Constructs which\ntrigger a warning can usually be modified in a way that is functionally\nequivalent but more robust.", 
+            "title": "Warnings"
+        }, 
+        {
+            "location": "/#notices", 
+            "text": "Issues which are not objectionable from a technical view point but\nshould  be addressed to improve the quality of the package. Many notices\nhighlight violations of the recommendations and best practises from the\ncatkin manual.", 
+            "title": "Notices"
+        }, 
+        {
+            "location": "/api/", 
+            "text": "Register your own checks\n\n\ncatkin_lint\n checks are implemented as\nsubmodules, and interact with the main program\nvia callbacks. You can write your own checks for\n\ncatkin_lint\n and load them with the \n-c\n command line option.\n\n\nEach check is included via an entry function which setups\nthe callbacks for the check. The entry function has a single\nparameter \nlinter\n. The Linter object provides the following\nmethods:\n\n\nrequire()\n\n\nlinter.require(check_name)\n\n\n\n\nChecks may depend on the results of other checks.\nThe \nrequire\n method ensures that \ncheck_name\n\nis called exactly once. Circular dependencies of the\nform \nA-\nB-\nC-\nA\n will be detected and cause an\nexception. In particular, tests must not require themselves.\n\n\nadd_init_hook()\n\n\ndef callback(info):\n    ...\n\nlinter.add_init_hook(callback)\n\n\n\n\nRegisters an initialization hook that is called when\nthe lint check for a particular package begins.\n\n\nadd_command_hook()\n\n\ndef callback(info, cmd, args):\n    ...\n\nlinter.add_command_hook(name, callback)\n\n\n\n\nRegisters a command hook that is called each time the\nCMake parser encounters the command \nname\n. The command\nname and a list of its arguments are passed to the callback.\nAll command names are converted to lower-case.\n\n\nadd_final_hook()\n\n\ndef callback(info):\n    ...\n\nlinter.add_final_hook(callback)\n\n\n\n\nRegisters a final hook that is called when the CMake parser\nhas finished parsing the \nCMakeLists.txt\n file.\n\n\nexecute_hook()\n\n\nlinter.execute_hook(info, cmd, args)\n\n\n\n\nExecutes all registered command hooks for \ncmd\n. This is useful\nfor CMake wrapper macros, so you don't have to duplicate all checks\nfor the wrapped call. For example, the \ncuda_add_executable\n\ncommand hook calls the \nadd_executable\n hooks this way.\n\n\nInfo Object\n\n\nFor each linted package, \ncatkin_lint\n creates a\ndedicated info object that is passed to all callbacks.\nThe info object can be used to store relevant data.\nTypically, the init hook is used to initialize check-specific\nvariables in the info object. As a general rule, checks must not\nmodify variables they do not own, and each check must ensure it\nuses unique variable names that do not conflict with other checks.\n\n\nThe following variables are defined by \ncatkin_lint\n itself:\n\n\n\n\nenv\n:\n    A \nCatkinEnvironment\n object that provides information about\n    the ROS environment.\n\n\npath\n:\n    The filesystem path to the package source folder\n\n\nmanifest\n:\n    A \ncatkin_pkg.packages.Package\n object that is created from\n    information in the \npackage.xml\n.\n\n\nfile\n:\n    The currently parsed CMake file, relative to the package source\n    folder. Is either \nCMakeLists.txt\n or an include file. Only\n    valid in command hooks.\n\n\nline\n:\n    The line number of the currently processed CMake command. Only\n    valid in command hooks.\n\n\ncommands\n:\n    A set of all command names that have been encountered up to this point.\n\n\nfind_packages\n:\n    A set of all packages that have been configured with \nfind_package()\n\n    up to this point.\n\n\ntargets\n:\n    A set of all make targets that have been defined up to this point.\n\n\nexecutables\n:\n    A set of all executables that have been defined up to this point.\n\n\nlibraries\n:\n    A set of all libraries that have been defined up to this point.\n\n\nvar\n:\n    A dictionary of all known CMake variables. Note that many variables\n    have mocked values. In particular, the package source and build folder\n    are \n/pkg-source\n and \npkg-build\n respectively.\n\n\n\n\nreport()\n\n\ninfo.report(level, msg_id, **kwargs)\n\n\n\n\nReports a problem to the user. \nlevel\n must be one of\n\ncatkin_lint.linter.ERROR\n, \ncatkin_lint.linter.WARNING\n, or\n\ncatkin_lint.linter.NOTICE\n. The \nmsg_id\n refers to one\nof the defined diagnostic messages. Certain messages have placeholder\nvariables that must be specified, e.g. \ncmd\n for the command name.\n\n\npackage_path()\n\n\ninfo.package_path(path)\n\n\n\n\nReturns a path relative to the package source directory or\nan absolute path if the path is not within the package. Can handle\n\n${CMAKE_CURRENT_SOURCE_DIR}\n correctly.\n\n\nreal_path()\n\n\ninfo.real_path(path)\n\n\n\n\nReturns the actual file system path for relative package path as\nreturned by \npackage_path()\n.\n\n\nis_internal_path(path)\n\n\ninfo.is_internal_path(path)\n\n\n\n\nReturns \nTrue\n if the path is either below the package source\ndirectory or the package build directory.\n\n\nis_catkin_target()\n\n\ninfo.is_catkin_target(path, subdir=None)\n\n\n\n\nReturns \nTrue\n if the path points to the install space of\nthe catkin workspace. If \nsubdir\n is not \nNone\n, it checks\nif the path points to the specified subdirectory in the install\nspace.\n\n\nCatkinEnvironment object\n\n\nis_catkin_pkg()\n\n\nenv.is_catkin_pkg(name)\n\n\n\n\nReturns \nTrue\n if \nname\n is a catkin package.\n\n\nis_known_pkg()\n\n\nenv.is_known_pkg(name)\n\n\n\n\nReturns \nTrue\n if \nname\n is a known package.\n\n\nok\n\n\n    env.ok\n\n\n\n\nIs \nTrue\n if the list of ROS dependencies was properly\ninitialized. If it is \nFalse\n, the function \nis_catkin_pkg()\n\nmay return wrong results, so checks for invalid dependencies should\nbe skipped to prevent false positives.", 
+            "title": "API"
+        }, 
+        {
+            "location": "/api/#register-your-own-checks", 
+            "text": "catkin_lint  checks are implemented as\nsubmodules, and interact with the main program\nvia callbacks. You can write your own checks for catkin_lint  and load them with the  -c  command line option.  Each check is included via an entry function which setups\nthe callbacks for the check. The entry function has a single\nparameter  linter . The Linter object provides the following\nmethods:", 
+            "title": "Register your own checks"
+        }, 
+        {
+            "location": "/api/#require", 
+            "text": "linter.require(check_name)  Checks may depend on the results of other checks.\nThe  require  method ensures that  check_name \nis called exactly once. Circular dependencies of the\nform  A- B- C- A  will be detected and cause an\nexception. In particular, tests must not require themselves.", 
+            "title": "require()"
+        }, 
+        {
+            "location": "/api/#add_init_hook", 
+            "text": "def callback(info):\n    ...\n\nlinter.add_init_hook(callback)  Registers an initialization hook that is called when\nthe lint check for a particular package begins.", 
+            "title": "add_init_hook()"
+        }, 
+        {
+            "location": "/api/#add_command_hook", 
+            "text": "def callback(info, cmd, args):\n    ...\n\nlinter.add_command_hook(name, callback)  Registers a command hook that is called each time the\nCMake parser encounters the command  name . The command\nname and a list of its arguments are passed to the callback.\nAll command names are converted to lower-case.", 
+            "title": "add_command_hook()"
+        }, 
+        {
+            "location": "/api/#add_final_hook", 
+            "text": "def callback(info):\n    ...\n\nlinter.add_final_hook(callback)  Registers a final hook that is called when the CMake parser\nhas finished parsing the  CMakeLists.txt  file.", 
+            "title": "add_final_hook()"
+        }, 
+        {
+            "location": "/api/#execute_hook", 
+            "text": "linter.execute_hook(info, cmd, args)  Executes all registered command hooks for  cmd . This is useful\nfor CMake wrapper macros, so you don't have to duplicate all checks\nfor the wrapped call. For example, the  cuda_add_executable \ncommand hook calls the  add_executable  hooks this way.", 
+            "title": "execute_hook()"
+        }, 
+        {
+            "location": "/api/#info-object", 
+            "text": "For each linted package,  catkin_lint  creates a\ndedicated info object that is passed to all callbacks.\nThe info object can be used to store relevant data.\nTypically, the init hook is used to initialize check-specific\nvariables in the info object. As a general rule, checks must not\nmodify variables they do not own, and each check must ensure it\nuses unique variable names that do not conflict with other checks.  The following variables are defined by  catkin_lint  itself:   env :\n    A  CatkinEnvironment  object that provides information about\n    the ROS environment.  path :\n    The filesystem path to the package source folder  manifest :\n    A  catkin_pkg.packages.Package  object that is created from\n    information in the  package.xml .  file :\n    The currently parsed CMake file, relative to the package source\n    folder. Is either  CMakeLists.txt  or an include file. Only\n    valid in command hooks.  line :\n    The line number of the currently processed CMake command. Only\n    valid in command hooks.  commands :\n    A set of all command names that have been encountered up to this point.  find_packages :\n    A set of all packages that have been configured with  find_package() \n    up to this point.  targets :\n    A set of all make targets that have been defined up to this point.  executables :\n    A set of all executables that have been defined up to this point.  libraries :\n    A set of all libraries that have been defined up to this point.  var :\n    A dictionary of all known CMake variables. Note that many variables\n    have mocked values. In particular, the package source and build folder\n    are  /pkg-source  and  pkg-build  respectively.", 
+            "title": "Info Object"
+        }, 
+        {
+            "location": "/api/#report", 
+            "text": "info.report(level, msg_id, **kwargs)  Reports a problem to the user.  level  must be one of catkin_lint.linter.ERROR ,  catkin_lint.linter.WARNING , or catkin_lint.linter.NOTICE . The  msg_id  refers to one\nof the defined diagnostic messages. Certain messages have placeholder\nvariables that must be specified, e.g.  cmd  for the command name.", 
+            "title": "report()"
+        }, 
+        {
+            "location": "/api/#package_path", 
+            "text": "info.package_path(path)  Returns a path relative to the package source directory or\nan absolute path if the path is not within the package. Can handle ${CMAKE_CURRENT_SOURCE_DIR}  correctly.", 
+            "title": "package_path()"
+        }, 
+        {
+            "location": "/api/#real_path", 
+            "text": "info.real_path(path)  Returns the actual file system path for relative package path as\nreturned by  package_path() .", 
+            "title": "real_path()"
+        }, 
+        {
+            "location": "/api/#is_internal_pathpath", 
+            "text": "info.is_internal_path(path)  Returns  True  if the path is either below the package source\ndirectory or the package build directory.", 
+            "title": "is_internal_path(path)"
+        }, 
+        {
+            "location": "/api/#is_catkin_target", 
+            "text": "info.is_catkin_target(path, subdir=None)  Returns  True  if the path points to the install space of\nthe catkin workspace. If  subdir  is not  None , it checks\nif the path points to the specified subdirectory in the install\nspace.", 
+            "title": "is_catkin_target()"
+        }, 
+        {
+            "location": "/api/#catkinenvironment-object", 
+            "text": "", 
+            "title": "CatkinEnvironment object"
+        }, 
+        {
+            "location": "/api/#is_catkin_pkg", 
+            "text": "env.is_catkin_pkg(name)  Returns  True  if  name  is a catkin package.", 
+            "title": "is_catkin_pkg()"
+        }, 
+        {
+            "location": "/api/#is_known_pkg", 
+            "text": "env.is_known_pkg(name)  Returns  True  if  name  is a known package.", 
+            "title": "is_known_pkg()"
+        }, 
+        {
+            "location": "/api/#ok", 
+            "text": "env.ok  Is  True  if the list of ROS dependencies was properly\ninitialized. If it is  False , the function  is_catkin_pkg() \nmay return wrong results, so checks for invalid dependencies should\nbe skipped to prevent false positives.", 
+            "title": "ok"
+        }
+    ]
+}
