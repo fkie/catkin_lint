@@ -59,7 +59,7 @@ message_list = {
     ("project name '%(name)s' differs from package name",
         """\
         The CMake project name must be identical to the package name. For
-        backwards compatibility reasons, the both names should also be identical
+        backwards compatibility reasons, both names should also be identical
         to the name of the source folder that contains the package.
         """),
     "LITERAL_PROJECT_NAME":

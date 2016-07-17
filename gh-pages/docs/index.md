@@ -91,7 +91,7 @@ the emulation is not perfect. For instance,
 
 ## Diagnostic Levels
 
-**catkin_lint** has messages in three different categories:
+**catkin_lint** has [messages](messages.md) in three different categories:
 errors, warnings, and notices. The `-W` option controls which problems
 are reported to the user:
 
