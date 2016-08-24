@@ -419,6 +419,14 @@ message_list = {
         properly, because one of your installed targets depends on a library from
         your package that is not installed as well.
         """),
+    "UNINSTALLED_SCRIPT":
+    ("executable file '%s(script)s' is not installed",
+        """\
+        Your package contains a file that is marked as executable but not
+        installed. If it is a script intended to be run (e.g. with rosrun), it
+        will not work outside the devel tree. If it is not an executable
+        script, you should fix the file permissions.
+        """),
     "LINK_DIRECTORY":
     ("use of link_directories() is strongly discouraged",
         """\

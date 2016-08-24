@@ -5,9 +5,10 @@ from .helper import create_env, create_manifest, create_manifest2, mock_lint
 import sys
 sys.stderr = sys.stdout
 
-import os.path
+import os
 import posixpath
 import ntpath
+import stat
 
 try:
     from mock import patch
@@ -408,6 +409,16 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            install(PROGRAMS bin/missing_script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "MISSING_FILE" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             install(PROGRAMS bin/script DESTINATION "${missing_variable}")
             """,
         checks=cc.installs)
@@ -768,6 +779,28 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
 
+    @patch("os.walk", lambda x, topdown: iter([("bin", [], ["script"])]))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/bin/script"))
+    @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
+    def do_scripts(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            install(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.scripts)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            """,
+        checks=cc.scripts)
+        self.assertEqual(["UNINSTALLED_SCRIPT"], result)
+
 
     def test_message_generation(self):
         env = create_env()
@@ -985,6 +1018,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.do_targets()
         self.do_name_check()
         self.do_installs()
+        self.do_scripts()
         self.do_exports()
         self.do_plugins()
 
@@ -997,5 +1031,6 @@ class ChecksBuildTest(unittest.TestCase):
         self.do_targets()
         self.do_name_check()
         self.do_installs()
+        self.do_scripts()
         self.do_exports()
         self.do_plugins()

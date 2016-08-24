@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
 import re
+import stat
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
 from ..util import word_split, iteritems, is_sorted
@@ -340,6 +341,7 @@ def pkg_config(linter):
 def installs(linter):
     def on_init(info):
         info.install_targets = set()
+        info.install_programs = set()
         info.install_includes = False
         info.install_files = set()
 
@@ -348,6 +350,11 @@ def installs(linter):
         opts, args = cmake_argparse(args, {"PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "?", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?"})
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
+            for f in opts["PROGRAMS"]:
+                if f:
+                    if not os.path.isfile(info.real_path(f)):
+                        info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
+                    info.install_programs.add(info.package_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
         if opts["FILES"]:
@@ -410,6 +417,20 @@ def plugins(linter):
             info.report(WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)
 
     linter.require(manifest_depends)
+    linter.require(installs)
+    linter.add_final_hook(on_final)
+
+
+def scripts(linter):
+    def on_final(info):
+        for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
+            for filename in filenames:
+                pkg_filename = os.path.join(dirpath, filename)
+                mode = os.stat(info.real_path(pkg_filename)).st_mode
+                if mode & stat.S_IXUSR and pkg_filename not in info.install_programs:
+                    info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
+                dirnames = [d for d in dirnames if not d.startswith(".")]
+
     linter.require(installs)
     linter.add_final_hook(on_final)
 
@@ -490,4 +511,5 @@ def all(linter):
     linter.require(pkg_config)
     linter.require(installs)
     linter.require(plugins)
+    linter.require(scripts)
     linter.require(message_generation)
