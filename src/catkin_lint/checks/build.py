@@ -425,11 +425,15 @@ def scripts(linter):
     def on_final(info):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
             for filename in filenames:
-                pkg_filename = os.path.join(dirpath, filename)
+                pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
                 mode = os.stat(info.real_path(pkg_filename)).st_mode
                 if mode & stat.S_IXUSR and pkg_filename not in info.install_programs:
                     info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
-                dirnames = [d for d in dirnames if not d.startswith(".")]
+            dotdirs = [d for d in dirnames if d.startswith(".")]
+            for d in dotdirs:
+                dirnames.remove(d)
+            if "cfg" in dirnames:
+                dirnames.remove("cfg")  # Ignore dynamic_reconfigure folder
 
     linter.require(installs)
     linter.add_final_hook(on_final)
