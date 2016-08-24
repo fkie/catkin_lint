@@ -186,6 +186,12 @@ of the CMakeLists.txt file.
 - **Severity**: warning
 - **Explanation**:         The behavior of your build should not depend on any         environment variables.         
 
+## executable file '*script*' is not installed
+
+- **ID**: uninstalled_script
+- **Severity**: warning
+- **Explanation**:         Your package contains a file that is marked as executable but not         installed. If it is a script intended to be run (e.g. with rosrun), it         will not work outside the devel tree. If it is not an executable         script, you should fix the file permissions.         
+
 ## exported include path '*path*' does not exist
 
 - **ID**: missing_export_include_path
