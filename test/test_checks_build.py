@@ -779,7 +779,7 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
 
-    @patch("os.walk", lambda x, topdown: iter([("bin", [], ["script"])]))
+    @patch("os.walk", lambda x, topdown: iter([("/mock-path/bin", [], ["script"])]))
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/bin/script"))
     @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     def do_scripts(self):
