@@ -60,6 +60,8 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) set(global CACHE STRING)", checks=cc.global_vars)
         self.assertEqual([ "GLOBAL_VAR_COLLISION" ], result)
+        result = mock_lint(env, pkg, "project(mock) set(global \"value\")", checks=cc.global_vars)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) option(optional test OFF)", checks=cc.global_vars)
         self.assertEqual([ "GLOBAL_VAR_COLLISION" ], result)
 
@@ -121,6 +123,7 @@ class ChecksMiscTest(unittest.TestCase):
             """
             include(FindLocal.cmake)
             include(FindOptional.cmake OPTIONAL)
+            include(FindPackageHandleStandardArgs)
             """,
         checks=cc.cmake_includes)
         self.assertEqual([], result)

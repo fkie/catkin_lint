@@ -59,7 +59,7 @@ message_list = {
     ("project name '%(name)s' differs from package name",
         """\
         The CMake project name must be identical to the package name. For
-        backwards compatibility reasons, the both names should also be identical
+        backwards compatibility reasons, both names should also be identical
         to the name of the source folder that contains the package.
         """),
     "LITERAL_PROJECT_NAME":
@@ -418,6 +418,14 @@ message_list = {
         Your package can be used from the devel space but cannot be installed
         properly, because one of your installed targets depends on a library from
         your package that is not installed as well.
+        """),
+    "UNINSTALLED_SCRIPT":
+    ("executable file '%(script)s' is not installed",
+        """\
+        Your package contains a file that is marked as executable but not
+        installed. If it is a script intended to be run (e.g. with rosrun), it
+        will not work outside the devel tree. If it is not an executable
+        script, you should fix the file permissions.
         """),
     "LINK_DIRECTORY":
     ("use of link_directories() is strongly discouraged",

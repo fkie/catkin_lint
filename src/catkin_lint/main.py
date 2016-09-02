@@ -54,7 +54,7 @@ def prepare_arguments(parser):
     parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
     parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
     parser.add_argument("-W", metavar="LEVEL", type=int, default=1, help="set warning level (0-2)")
-    parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=["all"], help=argparse.SUPPRESS)
+    parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[], help=argparse.SUPPRESS)
     parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
     parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
@@ -146,10 +146,12 @@ def run_linter(args):
             if args.debug:
                 raise
             return 1
+    if not args.check:
+        add_linter_check(linter, "all")
     for path, manifest in pkgs_to_check:
         try:
             linter.lint(path, manifest)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             sys.stderr.write("catkin_lint: cannot lint %s: %s\n" % (manifest.name, str(err)))
             if args.debug:
                 raise
@@ -179,7 +181,7 @@ def run_linter(args):
     return exit_code
 
 
-def main():
+def main():  # pragma: no cover
     try:
         parser = prepare_arguments(argparse.ArgumentParser())
         args = parser.parse_args()

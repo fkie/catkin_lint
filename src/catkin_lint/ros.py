@@ -32,7 +32,7 @@ import sys
 from catkin_pkg.package import parse_package_string
 
 
-class Rosdep(object):  # pragma: no cover
+class Rosdep(object):
 
     def __init__(self, view=None, quiet=False):
         self.view = view
@@ -51,11 +51,8 @@ class Rosdep(object):  # pragma: no cover
             return False
         return name in self.view.keys()
 
-    def ok(self):
-        return self.view is not None
 
-
-def get_rosdep(quiet):  # pragma: no cover
+def get_rosdep(quiet):
     from rosdep2.lookup import RosdepLookup
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
     from rosdep2.sources_list import SourcesListLoader
@@ -64,7 +61,7 @@ def get_rosdep(quiet):  # pragma: no cover
     return Rosdep(view=lookup.get_rosdep_view(DEFAULT_VIEW_KEY), quiet=quiet)
 
 
-class Rosdistro(object):  # pragma: no cover
+class Rosdistro(object):
     def __init__(self, dist=None, quiet=False):
         self.dist = dist
         self.quiet = quiet
@@ -83,18 +80,25 @@ class Rosdistro(object):  # pragma: no cover
         return parse_package_string(package_xml)
 
 
-def get_rosdistro(quiet):  # pragma: no cover
+_rosdistro_cache = {}
+
+
+def get_rosdistro(quiet):
+    global _rosdistro_cache
     dist = None
     if "ROS_DISTRO" in os.environ:
         distro_id = os.environ["ROS_DISTRO"]
-        try:
-            from rosdistro import get_index, get_index_url, get_cached_distribution
-            url = get_index_url()
-            if not quiet:
-                sys.stderr.write("catkin_lint: downloading %s package index from %s\n" % (distro_id, url))
-            index = get_index(url)
-            dist = get_cached_distribution(index, distro_id, allow_lazy_load=True)
-        except Exception as err:
-            if not quiet:
-                sys.stderr.write("catkin_lint: cannot initialize rosdistro: %s\n" % str(err))
+        if distro_id not in _rosdistro_cache:
+            try:
+                from rosdistro import get_index, get_index_url, get_cached_distribution
+                url = get_index_url()
+                if not quiet:
+                    sys.stderr.write("catkin_lint: downloading %s package index from %s\n" % (distro_id, url))
+                index = get_index(url)
+                dist = get_cached_distribution(index, distro_id, allow_lazy_load=True)
+            except Exception as err:
+                if not quiet:
+                    sys.stderr.write("catkin_lint: cannot initialize rosdistro: %s\n" % str(err))
+            _rosdistro_cache[distro_id] = dist
+        dist = _rosdistro_cache[distro_id]
     return Rosdistro(dist=dist, quiet=quiet)

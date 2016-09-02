@@ -81,7 +81,6 @@ _next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), 
 
 
 def _lexer(s):
-    keywords = set([])
     line = 1
     col = 1
     mo = _next_token(s)
@@ -94,8 +93,6 @@ def _lexer(s):
         else:
             if typ != 'SKIP':
                 val = mo.group(typ)
-                if val.upper() in keywords:
-                    typ = val.upper()
                 if typ == "STRING":
                     val = val[1:-1]
                 yield (typ, val, line, col)
@@ -223,12 +220,10 @@ class ParserContext(object):
     def call_depth(self):
         return len(self._call_stack)
 
-    def call(self, name, args, var=None, env_var=None, skip_callable=False):
+    def _call(self, name, args, var, env_var=None, skip_callable=False):
         lname = name.lower()
         if lname in self._call_stack:
             return
-        if var is None:
-            var = {}
         f = self.callable[lname]
         argn = []
         save_vars = {}
@@ -315,7 +310,7 @@ class ParserContext(object):
                 if skip_callable or f.new_context:
                     yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
                 else:
-                    for cmd, args, arg_tokens, loc in self.call(cmdname, args, var, env_var, skip_callable):
+                    for cmd, args, arg_tokens, loc in self._call(cmdname, args, var, env_var, skip_callable):
                         yield (cmd, args, arg_tokens, loc)
             else:
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))

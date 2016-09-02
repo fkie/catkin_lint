@@ -1,0 +1,6 @@
+site_name: "catkin_lint"
+theme: readthedocs
+pages:
+- Home: 'index.md'
+- Messages: 'messages.md'
+- API: 'api.md'

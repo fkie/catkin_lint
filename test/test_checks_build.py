@@ -5,9 +5,10 @@ from .helper import create_env, create_manifest, create_manifest2, mock_lint
 import sys
 sys.stderr = sys.stdout
 
-import os.path
+import os
 import posixpath
 import ntpath
+import stat
 
 try:
     from mock import patch
@@ -22,6 +23,8 @@ class ChecksBuildTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "include_directories(include)", checks=cc.includes)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg, "include_directories(/somewhere/else/but/absolute)", checks=cc.includes)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg, "find_package(catkin REQUIRED) include_directories(${catkin_INCLUDE_DIRS})", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "include_directories(missing_include)", checks=cc.includes)
@@ -32,6 +35,8 @@ class ChecksBuildTest(unittest.TestCase):
     def do_source_files(self):
         env = create_env()
         pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "add_executable(mock IMPORTED) add_library(mock_lib IMPORTED)", checks=cc.source_files)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg, "add_executable(mock src/a.cpp src/b.cpp) add_library(mock_lib src/a.cpp src/b.cpp)", checks=cc.source_files)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp) add_library(mock_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp)", checks=cc.source_files)
@@ -253,6 +258,19 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED COMPONENTS other_catkin)
             catkin_package()
+            include_directories(${catkin_INCLUDE_DIRS})
+            target_link_libraries(${PROJECT_NAME}/prog ${catkin_LIBRARIES})
+            add_executable(${PROJECT_NAME}/prog src/source.cpp)
+            set_target_properties(${PROJECT_NAME}/prog PROPERTIES OUTPUT_NAME "prog")
+            """,
+        checks=cc.targets)
+        self.assertEqual([ "ORDER_VIOLATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            catkin_package()
             add_executable(${PROJECT_NAME}_prog src/source.cpp)
             target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
@@ -371,10 +389,30 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            install(EXPORT stuff DESTINATION "${missing_variable}")
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             install(PROGRAMS bin/script DESTINATION bin)
             """,
         checks=cc.installs)
         self.assertEqual([ "INSTALL_DESTINATION" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(PROGRAMS bin/missing_script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "MISSING_FILE" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -741,6 +779,28 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
 
+    @patch("os.walk", lambda x, topdown: iter([("/mock-path/bin", [], ["script"])]))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/bin/script"))
+    @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
+    def do_scripts(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            install(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.scripts)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            """,
+        checks=cc.scripts)
+        self.assertEqual(["UNINSTALLED_SCRIPT"], result)
+
 
     def test_message_generation(self):
         env = create_env()
@@ -958,6 +1018,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.do_targets()
         self.do_name_check()
         self.do_installs()
+        self.do_scripts()
         self.do_exports()
         self.do_plugins()
 
@@ -970,5 +1031,6 @@ class ChecksBuildTest(unittest.TestCase):
         self.do_targets()
         self.do_name_check()
         self.do_installs()
+        self.do_scripts()
         self.do_exports()
         self.do_plugins()

@@ -1,3 +1,8 @@
+Version 1.4.9
+  * Improved test coverage
+  * Improved documentation
+  * Check for uninstalled executable scripts
+
 Version 1.4.8
   * Fix regression bug in --pkg option
 
