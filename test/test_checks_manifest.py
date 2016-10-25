@@ -11,6 +11,18 @@ class ChecksManifestTest(unittest.TestCase):
     def test_depends(self):
         env = create_env()
 
+        pkg = create_manifest("mock", buildtool_depends=[ "other_catkin", "catkin" ])
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
+
+        pkg = create_manifest("mock", build_depends=[ "second_pkg", "first_pkg" ])
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
+
+        pkg = create_manifest("mock", run_depends=[ "second_pkg", "first_pkg" ])
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([ "UNSORTED_LIST" ], result)
+
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([], result)

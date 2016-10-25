@@ -35,8 +35,18 @@ from .misc import project
 
 def depends(linter):
     def on_init(info):
-        info.buildtool_dep = set([dep.name for dep in info.manifest.buildtool_depends])
-        info.build_dep = set([dep.name for dep in info.manifest.build_depends])
+        buildtool_depends = [dep.name for dep in info.manifest.buildtool_depends]
+        if buildtool_depends != list(sorted(buildtool_depends)):
+            info.report(NOTICE, "UNSORTED_LIST", name="<buildtool_depend>")
+        build_depends = [dep.name for dep in info.manifest.build_depends]
+        if build_depends != list(sorted(build_depends)):
+            info.report(NOTICE, "UNSORTED_LIST", name="<build_depend>")
+        exec_depends = [dep.name for dep in info.manifest.exec_depends]
+        if exec_depends != list(sorted(exec_depends)):
+            info.report(NOTICE, "UNSORTED_LIST", name="<exec_depend>")
+
+        info.buildtool_dep = set(buildtool_depends)
+        info.build_dep = set(build_depends)
         info.export_dep = set()
         info.exec_dep = set()
         if info.manifest.package_format > 1 and hasattr(info.manifest, "build_export_depends"):

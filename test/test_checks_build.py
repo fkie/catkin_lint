@@ -944,7 +944,7 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.message_generation)
         self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
-        pkg = create_manifest("mock", build_depends=[ "message_generation", "first_pkg", "second_pkg" ], run_depends=[ "message_runtime", "first_pkg", "second_pkg" ])
+        pkg = create_manifest("mock", build_depends=[ "first_pkg", "message_generation", "second_pkg" ], run_depends=[ "first_pkg", "message_runtime", "second_pkg" ])
         result = mock_lint(env, pkg,
             """
             project(mock)
