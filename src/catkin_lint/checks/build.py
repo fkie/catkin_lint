@@ -434,6 +434,9 @@ def scripts(linter):
                 dirnames.remove(d)
             if "cfg" in dirnames:
                 dirnames.remove("cfg")  # Ignore dynamic_reconfigure folder
+            testdirs = [d for d in dirnames if "test" in d]
+            for d in testdirs:
+                dirnames.remove(d)
 
     linter.require(installs)
     linter.add_final_hook(on_final)
