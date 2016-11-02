@@ -61,6 +61,10 @@ class CatkinInvokationTest(unittest.TestCase):
                 (('COMPONENTS ' + ' '.join(dep for dep in depends)) if depends else '') + ')\n'
                 'catkin_package()'
             )
+        os.makedirs(os.path.join(pkgdir, ".git"))
+        with open(os.path.join(pkgdir, ".git", "script"), "w") as f:
+            f.write("Random executable file")
+        os.chmod(os.path.join(pkgdir, ".git", "script"), 0o755)
 
     def run_catkin_lint(self, *argv):
         catkin_lint.environment._cache = None  # force cache reloads
