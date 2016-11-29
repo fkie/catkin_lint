@@ -1,3 +1,9 @@
+catkin-lint (1.4.11-1~precise) precise; urgency=medium
+
+  * New release.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 29 Nov 2016 13:56:56 +0100
+
 catkin-lint (1.4.10-1~precise) precise; urgency=medium
 
   * New release.
