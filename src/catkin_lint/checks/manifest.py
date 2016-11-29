@@ -29,64 +29,46 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import re
 from ..linter import ERROR, NOTICE
-from ..util import is_sorted
 from ..cmake import argparse as cmake_argparse
 from .misc import project
 
 
 def depends(linter):
     def on_init(info):
-        deps = [dep.name for dep in info.manifest.buildtool_depends]
-        if not is_sorted(deps):
-            info.report(NOTICE, "UNSORTED_LIST", name="of <buildtool_depend> tags")
-        info.buildtool_dep = set(deps)
-        deps = [dep.name for dep in info.manifest.build_depends]
-        if not is_sorted(deps):
-            info.report(NOTICE, "UNSORTED_LIST", name="of <build_depend> tags")
-        info.build_dep = set(deps)
+        info.buildtool_dep = set([dep.name for dep in info.manifest.buildtool_depends])
+        info.build_dep = set([dep.name for dep in info.manifest.build_depends])
         info.export_dep = set()
         info.exec_dep = set()
         if info.manifest.package_format > 1 and hasattr(info.manifest, "build_export_depends"):
-            deps = [dep.name for dep in info.manifest.build_export_depends]
-            if not is_sorted(deps):
-                info.report(NOTICE, "UNSORTED_LIST", name="of <build_export_depend> tags")
+            deps = set([dep.name for dep in info.manifest.build_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
-            info.export_dep.update(set(deps))
+            info.export_dep.update(deps)
         if info.manifest.package_format > 1 and hasattr(info.manifest, "buildtool_export_depends"):
-            deps = [dep.name for dep in info.manifest.buildtool_export_depends]
-            if not is_sorted(deps):
-                info.report(NOTICE, "UNSORTED_LIST", name="of <buildtool_export_depend> tags")
+            deps = set([dep.name for dep in info.manifest.buildtool_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool_export")
-            info.export_dep.update(set(deps))
+            info.export_dep.update(deps)
         if info.manifest.package_format > 1 and hasattr(info.manifest, "exec_depends"):
-            deps = [dep.name for dep in info.manifest.exec_depends]
-            if not is_sorted(deps):
-                info.report(NOTICE, "UNSORTED_LIST", name="of <exec_depend> tags")
+            deps = set([dep.name for dep in info.manifest.exec_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="exec")
-            info.exec_dep.update(set(deps))
+            info.exec_dep.update(deps)
         if info.manifest.package_format < 2 and hasattr(info.manifest, "run_depends"):
-            deps = [dep.name for dep in info.manifest.run_depends]
-            if not is_sorted(deps):
-                info.report(NOTICE, "UNSORTED_LIST", name="of <run_depend> tags")
-            info.export_dep.update(set(deps))
-            info.exec_dep.update(set(deps))
+            deps = set([dep.name for dep in info.manifest.run_depends])
+            info.export_dep.update(deps)
+            info.exec_dep.update(deps)
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="run")
-        deps = [dep.name for dep in info.manifest.test_depends]
-        if not is_sorted(deps):
-            info.report(NOTICE, "UNSORTED_LIST", name="of <test_depend> tags")
-        info.test_dep = set(deps)
+        info.test_dep = set([dep.name for dep in info.manifest.test_depends])
         for pkg in info.buildtool_dep:
             if not info.env.is_known_pkg(pkg):
                 if info.env.ok:

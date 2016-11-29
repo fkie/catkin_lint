@@ -1,3 +1,6 @@
+Version 1.4.11
+  * Revert check if dependency tags in package.xml are sorted
+
 Version 1.4.10
   * Check if dependency tags in package.xml are sorted
   * Add exceptions to check for uninstalled executable scripts
