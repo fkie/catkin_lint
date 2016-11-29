@@ -55,34 +55,6 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([ "INVALID_META_DEPEND" ], result)
 
-        pkg = create_manifest("mock", buildtool_depends=[ "other_catkin", "catkin" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
-        pkg = create_manifest("mock", build_depends=[ "second_pkg", "first_pkg" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
-        pkg = create_manifest("mock", run_depends=[ "second_pkg", "first_pkg" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
-        pkg = create_manifest("mock", test_depends=[ "second_pkg", "first_pkg" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
-        pkg = create_manifest2("mock", buildtool_export_depends=[ "second_pkg", "first_pkg" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
-        pkg = create_manifest2("mock", build_export_depends=[ "second_pkg", "first_pkg" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
-        pkg = create_manifest2("mock", exec_depends=[ "second_pkg", "first_pkg" ])
-        result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
-
 
     def test_catkin_build(self):
         env = create_env()
