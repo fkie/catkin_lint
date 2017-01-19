@@ -781,6 +781,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.walk", lambda x, topdown: iter([("/mock-path/bin", [], ["script"])]))
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/bin/script"))
+    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/bin"))
     @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     def do_scripts(self):
         env = create_env()
@@ -790,6 +791,14 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             install(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.scripts)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            install(DIRECTORY bin/ DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION} USE_SOURCE_PERMISSIONS)
             """,
         checks=cc.scripts)
         self.assertEqual([], result)
