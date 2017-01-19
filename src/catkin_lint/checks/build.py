@@ -347,7 +347,7 @@ def installs(linter):
 
     def on_install(info, cmd, args):
         install_type = None
-        opts, args = cmake_argparse(args, {"PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "?", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?"})
+        opts, args = cmake_argparse(args, {"PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "USE_SOURCE_PERMISSIONS": "-"})
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
@@ -357,6 +357,19 @@ def installs(linter):
                     info.install_programs.add(info.package_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
+            if opts["USE_SOURCE_PERMISSIONS"]:
+                for d in opts["DIRECTORY"]:
+                    if d:
+                        real_d = info.real_path(d)
+                        if os.path.isdir(real_d):
+                            for dirpath, _, filenames in os.walk(real_d, topdown=True):
+                                for filename in filenames:
+                                    pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
+                                    mode = os.stat(info.real_path(pkg_filename)).st_mode
+                                    if mode & stat.S_IXUSR:
+                                        info.install_programs.add(pkg_filename)
+                        else:
+                            info.report(ERROR, "MISSING_FILE", cmd=cmd, file=d)
         if opts["FILES"]:
             install_type = "FILES"
             info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
@@ -365,7 +378,7 @@ def installs(linter):
             info.install_targets |= set(opts["TARGETS"])
         if install_type is None:
             return
-        if install_type != "DIRECTORY" and not is_sorted(opts[install_type]):
+        if not is_sorted(opts[install_type]):
             info.report(NOTICE, "UNSORTED_LIST", name=install_type)
         for dest in ["DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION"]:
             if opts[dest] is not None:
@@ -422,12 +435,15 @@ def plugins(linter):
 
 
 def scripts(linter):
+    def is_installed(info, pkg_filename):
+        return pkg_filename in info.install_programs
+
     def on_final(info):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
             for filename in filenames:
                 pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
                 mode = os.stat(info.real_path(pkg_filename)).st_mode
-                if mode & stat.S_IXUSR and pkg_filename not in info.install_programs:
+                if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                     info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
             ignoredirs = [d for d in dirnames if d.startswith(".") or d == "cfg" or "test" in d or "build" in d]
             for d in ignoredirs:

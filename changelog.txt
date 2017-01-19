@@ -1,3 +1,6 @@
+Version 1.4.12
+  * Detect if scripts are installed with install(DIRECTORY)
+
 Version 1.4.11
   * Revert check if dependency tags in package.xml are sorted
 
