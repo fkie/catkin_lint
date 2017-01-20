@@ -12,6 +12,7 @@ addons:
       - fakeroot
       - python-setuptools
       - python3-setuptools
+      - dh-python
 before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar
