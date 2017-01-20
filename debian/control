@@ -2,7 +2,8 @@ Source: catkin-lint
 Section: python
 Priority: extra
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
-Build-Depends: debhelper (>= 8.0.0), python-all, python3-all,
+Build-Depends: debhelper (>= 9), dh-python,
+               python-all, python3-all,
                python-setuptools, python3-setuptools
 Homepage: https://github.com/fkie/catkin_lint
 X-Python-Version: >= 2.7
@@ -11,7 +12,7 @@ Standards-Version: 3.9.5
 
 Package: python-catkin-lint
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-catkin-pkg, cmake (>= 2.8.3)
+Depends: ${python:Depends}, ${misc:Depends}
 Recommends: python-catkin-tools
 Conflicts: python3-catkin-lint
 Description: Check catkin packages for common errors
@@ -20,7 +21,7 @@ Description: Check catkin packages for common errors
 
 Package: python3-catkin-lint
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, python3-catkin-pkg, cmake (>= 2.8.3)
+Depends: ${python3:Depends}, ${misc:Depends}
 Recommends: python3-catkin-tools
 Conflicts: python-catkin-lint
 Description: Check catkin packages for common errors

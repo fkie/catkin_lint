@@ -9,46 +9,28 @@
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-DEB_VERSION:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 | cut -d"-" -f1 | cut -d"+" -f1 )
-CUR_VERSION:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__" )
+package_version:=$(shell dpkg-parsechangelog | grep "^Version:" | cut  -d" " -f2 | cut -d- -f1 | cut -d+ -f1)
+actual_version:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__")
+debianized_version:=$(subst a,~a,$(subst b,~b,$(actual_version)))
 
-ifneq ($(DEB_VERSION),$(CUR_VERSION))
-$(error Debian version $(DEB_VERSION) does not match package version $(CUR_VERSION))
+ifneq ($(package_version),$(debianized_version))
+$(error Package version $(package_version) does not match actual version $(debianized_version))
 endif
 
-PYTHON2:=$(shell pyversions -d)
-PYTHON3:=$(shell py3versions -d)
+export PYBUILD_NAME=catkin-lint
+export PYBUILD_DISABLE=test
 
 %:
-	dh $@ --with python2,python3 --buildsystem=python_distutils
-
-override_dh_auto_clean:
-	dh_auto_clean
-	rm -rf build
-
-override_dh_auto_build:
-	true
-
-override_dh_auto_install:
-	set -e; for python in $(PYTHON2); do \
-		$$python setup.py install --install-layout=deb --root=debian/python-catkin-lint; \
-	done
-	set -e; for python in $(PYTHON3); do \
-		$$python setup.py install --install-layout=deb --root=debian/python3-catkin-lint; \
-	done
-	set -e; for python in python python3; do \
-		mkdir -p debian/$$python-catkin-lint/etc/bash_completion.d; \
-		cp bash/catkin_lint debian/$$python-catkin-lint/etc/bash_completion.d; \
-	done
+	dh $@ --with python2,python3 --buildsystem=pybuild
 
 make-orig-tar:
 	git config tar.tar.xz.command "xz -c"
-	git archive --prefix=catkin-lint-$(CUR_VERSION)/ -o ../catkin-lint_$(CUR_VERSION).orig.tar.xz $(shell git merge-base debian $(CUR_VERSION) )
+	git archive --prefix=catkin-lint-$(debianized_version)/ -o ../catkin-lint_$(debianized_version).orig.tar.xz $(shell git merge-base debian $(actual_version) )
 
 make-patches:
 	rm -rf debian/patches
 	mkdir debian/patches
-	git format-patch -o debian/patches $(shell git merge-base debian $(CUR_VERSION) )..master
+	git format-patch -o debian/patches $(shell git merge-base debian $(actual_version) )..master
 	ls debian/patches/[0-9]* | sed -e 's/^debian\/patches\///' > debian/patches/series
 
 clean-patches:
