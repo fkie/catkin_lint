@@ -194,6 +194,12 @@ message_list = {
         This catkin command processes a particular file which is missing
         from the package source folder.
         """),
+    "MISSING_DIRECTORY":
+    ("%(cmd)s() needs missing directory '%(directory)s'",
+        """\
+        This catkin command processes a particular directory which is missing
+        from the package source folder.
+        """),
     "INSTALL_DESTINATION":
     ("install(%(type)s ... %(dest)s) is not one of the ${CATKIN_*_DESTINATION}s",
         """\

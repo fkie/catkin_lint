@@ -419,6 +419,16 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            install(DIRECTORY missing DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "MISSING_DIRECTORY" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             install(PROGRAMS bin/script DESTINATION "${missing_variable}")
             """,
         checks=cc.installs)

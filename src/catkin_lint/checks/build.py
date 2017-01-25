@@ -357,19 +357,19 @@ def installs(linter):
                     info.install_programs.add(info.package_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
-            if opts["USE_SOURCE_PERMISSIONS"]:
-                for d in opts["DIRECTORY"]:
-                    if d:
-                        real_d = info.real_path(d)
-                        if os.path.isdir(real_d):
+            for d in opts["DIRECTORY"]:
+                if d:
+                    real_d = info.real_path(d)
+                    if os.path.isdir(real_d):
+                        if opts["USE_SOURCE_PERMISSIONS"]:
                             for dirpath, _, filenames in os.walk(real_d, topdown=True):
                                 for filename in filenames:
                                     pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
                                     mode = os.stat(info.real_path(pkg_filename)).st_mode
                                     if mode & stat.S_IXUSR:
                                         info.install_programs.add(pkg_filename)
-                        else:
-                            info.report(ERROR, "MISSING_FILE", cmd=cmd, file=d)
+                    else:
+                        info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=d)
         if opts["FILES"]:
             install_type = "FILES"
             info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
