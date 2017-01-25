@@ -3,10 +3,7 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  
   
   <title>Messages - catkin_lint</title>
   
@@ -24,8 +21,6 @@
   <script>
     // Current page data
     var mkdocs_page_name = "Messages";
-    var mkdocs_page_input_path = "messages.md";
-    var mkdocs_page_url = "/messages/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
@@ -76,6 +71,8 @@
                     <li><a class="toctree-l4" href="#cmd-is-deprecated">cmd() is deprecated</a></li>
                 
                     <li><a class="toctree-l4" href="#cmd-is-not-allowed-in-meta-packages">cmd() is not allowed in meta packages</a></li>
+                
+                    <li><a class="toctree-l4" href="#cmd-needs-missing-directory-directory">cmd() needs missing directory 'directory'</a></li>
                 
                     <li><a class="toctree-l4" href="#cmd-needs-missing-file-file">cmd() needs missing file 'file'</a></li>
                 
@@ -129,8 +126,6 @@
                 
                     <li><a class="toctree-l4" href="#environment-variables-should-not-be-used">environment variables should not be used</a></li>
                 
-                    <li><a class="toctree-l4" href="#executable-file-script-is-not-installed">executable file 'script' is not installed</a></li>
-                
                     <li><a class="toctree-l4" href="#exported-include-path-path-does-not-exist">exported include path 'path' does not exist</a></li>
                 
                     <li><a class="toctree-l4" href="#exported-library-target-cannot-have-different-output-name">exported library 'target' cannot have different output name</a></li>
@@ -144,6 +139,8 @@
                     <li><a class="toctree-l4" href="#exported-target-target-is-not-defined">exported target 'target' is not defined</a></li>
                 
                     <li><a class="toctree-l4" href="#extra-arguments-in-cmd">extra arguments in cmd()</a></li>
+                
+                    <li><a class="toctree-l4" href="#file-script-is-executable-but-not-installed">file 'script' is executable but not installed</a></li>
                 
                     <li><a class="toctree-l4" href="#file-setuppy-found-but-no-catkin_python_setup-call">file setup.py found but no catkin_python_setup() call</a></li>
                 
@@ -316,6 +313,12 @@ of the CMakeLists.txt file.</p>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>:         Meta packages do not contain code or data and are merely dependency lists         with very strict requirements for the format of the CMakeLists.txt file.         </li>
 </ul>
+<h2 id="cmd-needs-missing-directory-directory"><em>cmd</em>() needs missing directory '<em>directory</em>'</h2>
+<ul>
+<li><strong>ID</strong>: missing_directory</li>
+<li><strong>Severity</strong>: error</li>
+<li><strong>Explanation</strong>:         This catkin command processes a particular directory which is missing         from the package source folder.         </li>
+</ul>
 <h2 id="cmd-needs-missing-file-file"><em>cmd</em>() needs missing file '<em>file</em>'</h2>
 <ul>
 <li><strong>ID</strong>: missing_file</li>
@@ -472,12 +475,6 @@ of the CMakeLists.txt file.</p>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>:         The behavior of your build should not depend on any         environment variables.         </li>
 </ul>
-<h2 id="executable-file-script-is-not-installed">executable file '<em>script</em>' is not installed</h2>
-<ul>
-<li><strong>ID</strong>: uninstalled_script</li>
-<li><strong>Severity</strong>: warning</li>
-<li><strong>Explanation</strong>:         Your package contains a file that is marked as executable but not         installed. If it is a script intended to be run (e.g. with rosrun), it         will not work outside the devel tree. If it is not an executable         script, you should fix the file permissions.         </li>
-</ul>
 <h2 id="exported-include-path-path-does-not-exist">exported include path '<em>path</em>' does not exist</h2>
 <ul>
 <li><strong>ID</strong>: missing_export_include_path</li>
@@ -519,6 +516,12 @@ of the CMakeLists.txt file.</p>
 <li><strong>ID</strong>: endblock_args</li>
 <li><strong>Severity</strong>: notice</li>
 <li><strong>Explanation</strong>:         The catkin manual recommends that <em>cmd</em> and other end-of-block statements         have no arguments. If you have nested blocks, you should indent them         properly instead.         </li>
+</ul>
+<h2 id="file-script-is-executable-but-not-installed">file '<em>script</em>' is executable but not installed</h2>
+<ul>
+<li><strong>ID</strong>: uninstalled_script</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>:         Your package contains a file that is marked as executable but not         installed. If it is a script intended to be run (e.g. with rosrun), it         will not work outside the devel tree. If it is not an executable         script, you should fix the file permissions.         </li>
 </ul>
 <h2 id="file-setuppy-found-but-no-catkin_python_setup-call">file setup.py found but no catkin_python_setup() call</h2>
 <ul>
@@ -815,7 +818,7 @@ of the CMakeLists.txt file.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../api/" class="btn btn-neutral float-right" title="API"/>Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
