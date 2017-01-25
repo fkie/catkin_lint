@@ -413,10 +413,12 @@ def installs(linter):
 
 
 def plugins(linter):
+    PLUGIN_WHITELIST = ["roswtf"]
+
     def on_final(info):
         plugin_dep = set()
         for export in info.manifest.exports:
-            if "plugin" in export.attributes:
+            if "plugin" in export.attributes and export.tagname not in PLUGIN_WHITELIST:
                 plugin = export.attributes["plugin"]
                 plugin_dep.add(export.tagname)
                 if not plugin.startswith("${prefix}/"):
