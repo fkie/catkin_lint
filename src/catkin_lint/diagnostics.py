@@ -420,7 +420,7 @@ message_list = {
         your package that is not installed as well.
         """),
     "UNINSTALLED_SCRIPT":
-    ("executable file '%(script)s' is not installed",
+    ("file '%(script)s' is executable but not installed",
         """\
         Your package contains a file that is marked as executable but not
         installed. If it is a script intended to be run (e.g. with rosrun), it
