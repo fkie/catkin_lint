@@ -66,6 +66,9 @@ class CatkinInvokationTest(unittest.TestCase):
             f.write("Random executable file")
         os.chmod(os.path.join(pkgdir, ".git", "script"), 0o755)
 
+    def raise_io_error(self, *args):
+        raise IOError("mock exception")
+
     def run_catkin_lint(self, *argv):
         catkin_lint.environment._cache = None  # force cache reloads
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -115,6 +118,10 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 1 packages and found 0 problems", stdout)
+        with patch("catkin_lint.linter.CMakeLinter._read_file", self.raise_io_error):
+            exitcode, stdout = self.run_catkin_lint()
+        self.assertEqual(exitcode, 1)
+        self.assertIn("OS error: mock exception", stdout)
         os.chdir(pwd)
 
         exitcode, stdout = self.run_catkin_lint(self.wsdir, "--explain")

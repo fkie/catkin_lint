@@ -39,17 +39,15 @@ class Rosdep(object):
         self.quiet = quiet
 
     def is_ros(self, name):
-        if self.view is None:
-            return False
         try:
-            return self.view.lookup(name).data["_is_ros"]
+            if self.view is not None:
+                return self.view.lookup(name).data["_is_ros"]
         except KeyError:
-            return False
+            pass
+        return False
 
     def has_key(self, name):
-        if self.view is None:
-            return False
-        return name in self.view.keys()
+        return self.view is not None and name in self.view.keys()
 
 
 def get_rosdep(quiet):
