@@ -200,6 +200,30 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.depends)
         self.assertEqual(["UNGUARDED_TEST_DEPEND"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            if(CATKIN_ENABLE_TESTING)
+            else()
+                find_package(other_catkin REQUIRED)
+            endif()
+            """,
+        checks=cc.depends)
+        self.assertEqual(["UNGUARDED_TEST_DEPEND"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            if(CATKIN_ENABLE_TESTING)
+            else()
+                if(CATKIN_ENABLE_TESTING)
+                    find_package(other_catkin REQUIRED)
+                endif()
+            endif()
+            """,
+        checks=cc.depends)
+        self.assertEqual([], result)
         pkg = create_manifest("mock", build_depends=[ "other_catkin"], test_depends=[ "other_catkin" ])
         result = mock_lint(env, pkg,
             """

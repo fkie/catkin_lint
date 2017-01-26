@@ -119,14 +119,11 @@ class LintInfo(object):
             catkin_dir = os.path.join(catkin_dir, subdir)
         return os.path.normpath(path).startswith(os.path.normpath(catkin_dir))
 
-    def condition_is_true(self, expr):
-        ret = False
+    def condition_is_checked(self, expr):
         for c in self.conditionals:
-            if c.expr == expr and not c.value:
-                return False
             if c.expr == expr and c.value:
-                ret = True
-        return ret
+                return True
+        return False
 
 
 class IfCondition(object):

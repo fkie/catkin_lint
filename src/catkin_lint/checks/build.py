@@ -160,7 +160,7 @@ def depends(linter):
             info.report(ERROR, "DUPLICATE_FIND", pkg=args[0])
         if opts["REQUIRED"]:
             info.required_packages.add(args[0])
-        if info.condition_is_true("CATKIN_ENABLE_TESTING"):
+        if info.condition_is_checked("CATKIN_ENABLE_TESTING"):
             info.test_packages.add(args[0])
         else:
             if args[0] in info.test_dep - info.build_dep - info.buildtool_dep:
@@ -217,7 +217,7 @@ def depends(linter):
 
 def tests(linter):
     def on_test_cmd(info, cmd, args, dep=None):
-        if not info.condition_is_true("CATKIN_ENABLE_TESTING"):
+        if not info.condition_is_checked("CATKIN_ENABLE_TESTING"):
             info.report(ERROR, "UNGUARDED_TEST_CMD", cmd=cmd)
         if dep is None:
             return
