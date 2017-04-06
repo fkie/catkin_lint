@@ -364,7 +364,7 @@ def installs(linter):
                         if opts["USE_SOURCE_PERMISSIONS"]:
                             for dirpath, _, filenames in os.walk(real_d, topdown=True):
                                 for filename in filenames:
-                                    pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
+                                    pkg_filename = os.path.join(dirpath, filename)[len(info.path)+1:]
                                     mode = os.stat(info.real_path(pkg_filename)).st_mode
                                     if mode & stat.S_IXUSR:
                                         info.install_programs.add(pkg_filename)
@@ -443,7 +443,7 @@ def scripts(linter):
     def on_final(info):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
             for filename in filenames:
-                pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
+                pkg_filename = os.path.join(dirpath, filename)[len(info.path) + 1:]
                 mode = os.stat(info.real_path(pkg_filename)).st_mode
                 if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                     info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
