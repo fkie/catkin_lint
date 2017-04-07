@@ -3,6 +3,8 @@ dist: trusty
 sudo: false
 compiler:
   - gcc
+env:
+  - PYBUILD_DISABLE=test
 addons:
   apt:
     packages:
@@ -18,7 +20,7 @@ before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar
 script:
-  - dpkg-buildpackage -tc -uc -us -i\\..*
+  - dpkg-buildpackage -tc -uc -us -d
 after_success:
   - for d in ../*.deb; do dpkg-deb -I $d; dpkg-deb -c $d; done
 
