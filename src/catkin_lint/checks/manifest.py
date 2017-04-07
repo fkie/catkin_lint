@@ -39,28 +39,26 @@ def depends(linter):
         info.build_dep = set([dep.name for dep in info.manifest.build_depends])
         info.export_dep = set()
         info.exec_dep = set()
-        if info.manifest.package_format > 1 and hasattr(info.manifest, "build_export_depends"):
+        if info.manifest.package_format > 1:
             deps = set([dep.name for dep in info.manifest.build_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
             info.export_dep.update(deps)
-        if info.manifest.package_format > 1 and hasattr(info.manifest, "buildtool_export_depends"):
             deps = set([dep.name for dep in info.manifest.buildtool_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool_export")
             info.export_dep.update(deps)
-        if info.manifest.package_format > 1 and hasattr(info.manifest, "exec_depends"):
             deps = set([dep.name for dep in info.manifest.exec_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="exec")
             info.exec_dep.update(deps)
-        if info.manifest.package_format < 2 and hasattr(info.manifest, "run_depends"):
+        if info.manifest.package_format < 2:
             deps = set([dep.name for dep in info.manifest.run_depends])
             info.export_dep.update(deps)
             info.exec_dep.update(deps)
