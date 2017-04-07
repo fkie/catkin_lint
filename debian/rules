@@ -18,7 +18,7 @@ $(error Package version $(package_version) does not match actual version $(debia
 endif
 
 export PYBUILD_NAME=catkin-lint
-export PYBUILD_DISABLE=test
+export PYBUILD_DISABLE_python3=test
 
 %:
 	dh $@ --with python2,python3 --buildsystem=pybuild
