@@ -24,7 +24,8 @@ setup(
   package_dir   = { "" : "src" },
   scripts       = [ "bin/catkin_lint" ],
   version       = catkin_lint_version,
-  requires      = [ "catkin_pkg" ],
+  install_requires = [ "catkin_pkg" ],
+  test_suite    = "nose.collector",
   classifiers   = [
                     "Development Status :: 5 - Production/Stable",
                     "Intended Audience :: Developers",

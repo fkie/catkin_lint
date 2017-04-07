@@ -29,7 +29,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
 import re
-from functools import total_ordering
 from fnmatch import fnmatch
 from copy import copy
 from .cmake import ParserContext, argparse as cmake_argparse, CMakeSyntaxError
@@ -40,7 +39,6 @@ WARNING = 1
 NOTICE = 2
 
 
-@total_ordering
 class Message(object):
 
     def __init__(self, package, file, line, level, id, text, description):
@@ -51,9 +49,6 @@ class Message(object):
         self.id = id
         self.text = text
         self.description = description
-
-    def __eq__(self, other):
-        return (self.package, self.level, self.file, self.line, self.id) == (other.package, other.level, other.file, other.line, other.id)
 
     def __lt__(self, other):
         return (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
@@ -99,9 +94,7 @@ class LintInfo(object):
         ))
 
     def package_path(self, path):
-        if not path:
-            return ""
-        new_path = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
+        new_path = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path or ""))
         if new_path.startswith(self._pkg_source):
             new_path = new_path[len(self._pkg_source) + 1:]
         return new_path
@@ -119,14 +112,11 @@ class LintInfo(object):
             catkin_dir = os.path.join(catkin_dir, subdir)
         return os.path.normpath(path).startswith(os.path.normpath(catkin_dir))
 
-    def condition_is_true(self, expr):
-        ret = False
+    def condition_is_checked(self, expr):
         for c in self.conditionals:
-            if c.expr == expr and not c.value:
-                return False
             if c.expr == expr and c.value:
-                ret = True
-        return ret
+                return True
+        return False
 
 
 class IfCondition(object):
@@ -185,7 +175,7 @@ class CMakeLinter(object):
             incl_file = "NOTFOUND"
         else:
             incl_file = info.package_path(args[0])
-            if incl_file.startswith(os.path.normpath("/find-path")):
+            if incl_file.startswith(os.path.normpath("/find-file")):
                 return
             skip_parsing = False
             if info.manifest.name in self._include_blacklist:
@@ -321,57 +311,56 @@ class CMakeLinter(object):
 
     def execute_hook(self, info, other_cmd, args):
         cmd = other_cmd.lower()
-        if cmd in self._running_hooks:
-            return
-        if cmd == "project":
-            info.var["PROJECT_NAME"] = args[0]
-            info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
-            info.var["PROJECT_BINARY_DIR"] = info.var["CMAKE_CURRENT_BINARY_DIR"]
-        self._running_hooks.add(cmd)
-        if cmd in self._cmd_hooks:
-            for cb in self._cmd_hooks[cmd]:
-                cb(info, cmd, args)
-        if cmd == "set":
-            opts, args = cmake_argparse(args, {"PARENT_SCOPE": "-", "FORCE": "-", "CACHE": "*"})
-            if opts["PARENT_SCOPE"]:
-                info.parent_var[args[0]] = ';'.join(args[1:])
-            else:
-                info.var[args[0]] = ';'.join(args[1:])
-        if cmd == "unset":
-            opts, args = cmake_argparse(args, {"CACHE": "-"})
-            info.var[args[0]] = ""
-        if cmd == "list":
-            self._handle_list(info, args)
-        if cmd == "include":
-            self._include_file(info, args)
-        if cmd == "add_subdirectory":
-            saved_hooks = self._running_hooks
-            self._running_hooks = set()
-            self._subdirectory(info, args)
-            self._running_hooks = saved_hooks
-        if cmd == "find_package":
-            info.var["%s_INCLUDE_DIRS" % args[0]] = "/%s-includes" % args[0]
-            info.var["%s_INCLUDE_DIRS" % args[0].upper()] = "/%s-includes" % args[0]
-            info.var["%s_LIBRARIES" % args[0]] = "/%s-libs/library.so" % args[0]
-            info.var["%s_LIBRARIES" % args[0].upper()] = "/%s-libs/library.so" % args[0]
-            info.find_packages.add(args[0])
-        if cmd == "add_executable":
-            info.targets.add(args[0])
-            if "IMPORTED" not in args:
-                info.executables.add(args[0])
-        if cmd == "add_library":
-            info.targets.add(args[0])
-            if "IMPORTED" not in args:
-                info.libraries.add(args[0])
-        if cmd == "add_custom_target":
-            info.targets.add(args[0])
-        if cmd == "find_path":
-            info.var[args[0]] = "/find-path"
-        if cmd == "find_library":
-            info.var[args[0]] = "/find-libs/library.so"
-        if cmd == "find_file":
-            info.var[args[0]] = "/find-file/filename.ext"
-        self._running_hooks.discard(cmd)
+        if cmd not in self._running_hooks:
+            self._running_hooks.add(cmd)
+            if cmd == "project":
+                info.var["PROJECT_NAME"] = args[0]
+                info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
+                info.var["PROJECT_BINARY_DIR"] = info.var["CMAKE_CURRENT_BINARY_DIR"]
+            if cmd in self._cmd_hooks:
+                for cb in self._cmd_hooks[cmd]:
+                    cb(info, cmd, args)
+            if cmd == "set":
+                opts, args = cmake_argparse(args, {"PARENT_SCOPE": "-", "FORCE": "-", "CACHE": "*"})
+                if opts["PARENT_SCOPE"]:
+                    info.parent_var[args[0]] = ';'.join(args[1:])
+                else:
+                    info.var[args[0]] = ';'.join(args[1:])
+            if cmd == "unset":
+                opts, args = cmake_argparse(args, {"CACHE": "-"})
+                info.var[args[0]] = ""
+            if cmd == "list":
+                self._handle_list(info, args)
+            if cmd == "include":
+                self._include_file(info, args)
+            if cmd == "add_subdirectory":
+                saved_hooks = self._running_hooks
+                self._running_hooks = set()
+                self._subdirectory(info, args)
+                self._running_hooks = saved_hooks
+            if cmd == "find_package":
+                info.var["%s_INCLUDE_DIRS" % args[0]] = "/%s-includes" % args[0]
+                info.var["%s_INCLUDE_DIRS" % args[0].upper()] = "/%s-includes" % args[0]
+                info.var["%s_LIBRARIES" % args[0]] = "/%s-libs/library.so" % args[0]
+                info.var["%s_LIBRARIES" % args[0].upper()] = "/%s-libs/library.so" % args[0]
+                info.find_packages.add(args[0])
+            if cmd == "add_executable":
+                info.targets.add(args[0])
+                if "IMPORTED" not in args:
+                    info.executables.add(args[0])
+            if cmd == "add_library":
+                info.targets.add(args[0])
+                if "IMPORTED" not in args:
+                    info.libraries.add(args[0])
+            if cmd == "add_custom_target":
+                info.targets.add(args[0])
+            if cmd == "find_path":
+                info.var[args[0]] = "/find-path"
+            if cmd == "find_library":
+                info.var[args[0]] = "/find-libs/library.so"
+            if cmd == "find_file":
+                info.var[args[0]] = "/find-file/filename.ext"
+            self._running_hooks.discard(cmd)
 
     def _parse_file(self, info, filename):
         save_file = info.file

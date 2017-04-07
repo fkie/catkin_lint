@@ -28,6 +28,7 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import os
+import gc
 import sys
 from time import time
 try:
@@ -129,12 +130,15 @@ class CatkinEnvironment(object):
         self.quiet = quiet
         if use_rosdep:
             try:
+                gc.disable()
                 self.rosdep = get_rosdep(quiet=self.quiet)
             except Exception as err:
                 if not self.quiet:
                     sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
                     sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
                 self.ok = False
+            finally:
+                gc.enable()
 
     def add_path(self, path):
         if not os.path.isdir(path):
@@ -235,12 +239,15 @@ def _load_cache():
     global _cache_dir
     if _cache is None:
         try:
+            gc.disable()
             with open(os.path.join(_cache_dir, "packages.pickle"), "rb") as f:
                 _cache = pickle.loads(f.read())
                 if not isinstance(_cache, Cache) or _cache.version != 1:
                     raise RuntimeError()
-        except:
+        except (OSError, IOError, pickle.PickleError):
             _cache = Cache()
+        finally:
+            gc.enable()
 
 
 def _store_cache():
@@ -248,7 +255,7 @@ def _store_cache():
     global _cache_dir
     try:
         os.makedirs(_cache_dir)
-    except:
+    except OSError:
         pass
     write_atomic(os.path.join(_cache_dir, "packages.pickle"), pickle.dumps(_cache, -1))
 

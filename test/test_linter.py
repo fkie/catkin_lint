@@ -39,6 +39,20 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all)
         self.assertEqual([ "CMD_CASE"], result)
 
+    def test_include(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            include()
+            find_file(FOO_INCLUDE foo.cmake)
+            include(${FOO_INCLUDE})
+            """, checks=cc.all)
+        self.assertEqual([], result)
+
     def test_pragma(self):
         env = create_env()
         pkg = create_manifest("mock")
@@ -83,6 +97,8 @@ class LinterTest(unittest.TestCase):
             endif()
             """, checks=cc.all)
         self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "else()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(A STREQUAL) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL A) endif()")

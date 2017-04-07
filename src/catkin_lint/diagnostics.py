@@ -194,6 +194,12 @@ message_list = {
         This catkin command processes a particular file which is missing
         from the package source folder.
         """),
+    "MISSING_DIRECTORY":
+    ("%(cmd)s() needs missing directory '%(directory)s'",
+        """\
+        This catkin command processes a particular directory which is missing
+        from the package source folder.
+        """),
     "INSTALL_DESTINATION":
     ("install(%(type)s ... %(dest)s) is not one of the ${CATKIN_*_DESTINATION}s",
         """\
@@ -420,7 +426,7 @@ message_list = {
         your package that is not installed as well.
         """),
     "UNINSTALLED_SCRIPT":
-    ("executable file '%(script)s' is not installed",
+    ("file '%(script)s' is executable but not installed",
         """\
         Your package contains a file that is marked as executable but not
         installed. If it is a script intended to be run (e.g. with rosrun), it

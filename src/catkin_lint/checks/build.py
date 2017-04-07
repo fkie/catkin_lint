@@ -160,7 +160,7 @@ def depends(linter):
             info.report(ERROR, "DUPLICATE_FIND", pkg=args[0])
         if opts["REQUIRED"]:
             info.required_packages.add(args[0])
-        if info.condition_is_true("CATKIN_ENABLE_TESTING"):
+        if info.condition_is_checked("CATKIN_ENABLE_TESTING"):
             info.test_packages.add(args[0])
         else:
             if args[0] in info.test_dep - info.build_dep - info.buildtool_dep:
@@ -217,7 +217,7 @@ def depends(linter):
 
 def tests(linter):
     def on_test_cmd(info, cmd, args, dep=None):
-        if not info.condition_is_true("CATKIN_ENABLE_TESTING"):
+        if not info.condition_is_checked("CATKIN_ENABLE_TESTING"):
             info.report(ERROR, "UNGUARDED_TEST_CMD", cmd=cmd)
         if dep is None:
             return
@@ -357,19 +357,20 @@ def installs(linter):
                     info.install_programs.add(info.package_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
-            if opts["USE_SOURCE_PERMISSIONS"]:
-                for d in opts["DIRECTORY"]:
-                    if d:
-                        real_d = info.real_path(d)
-                        if os.path.isdir(real_d):
+            for d in opts["DIRECTORY"]:
+                if d:
+                    real_d = info.real_path(d)
+                    if os.path.isdir(real_d):
+                        if opts["USE_SOURCE_PERMISSIONS"]:
                             for dirpath, _, filenames in os.walk(real_d, topdown=True):
                                 for filename in filenames:
-                                    pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
-                                    mode = os.stat(info.real_path(pkg_filename)).st_mode
+                                    real_filename = os.path.join(dirpath, filename)
+                                    pkg_filename = real_filename[len(info.path)+1:]
+                                    mode = os.stat(real_filename).st_mode
                                     if mode & stat.S_IXUSR:
                                         info.install_programs.add(pkg_filename)
-                        else:
-                            info.report(ERROR, "MISSING_FILE", cmd=cmd, file=d)
+                    else:
+                        info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=d)
         if opts["FILES"]:
             install_type = "FILES"
             info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
@@ -413,10 +414,12 @@ def installs(linter):
 
 
 def plugins(linter):
+    PLUGIN_WHITELIST = ["roswtf"]
+
     def on_final(info):
         plugin_dep = set()
         for export in info.manifest.exports:
-            if "plugin" in export.attributes:
+            if "plugin" in export.attributes and export.tagname not in PLUGIN_WHITELIST:
                 plugin = export.attributes["plugin"]
                 plugin_dep.add(export.tagname)
                 if not plugin.startswith("${prefix}/"):
@@ -441,8 +444,9 @@ def scripts(linter):
     def on_final(info):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
             for filename in filenames:
-                pkg_filename = os.path.relpath(os.path.join(dirpath, filename), info.path)
-                mode = os.stat(info.real_path(pkg_filename)).st_mode
+                full_filename = os.path.join(dirpath, filename)
+                pkg_filename = full_filename[len(info.path) + 1:]
+                mode = os.stat(full_filename).st_mode
                 if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                     info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
             ignoredirs = [d for d in dirnames if d.startswith(".") or d == "cfg" or "test" in d or "build" in d]

@@ -39,28 +39,26 @@ def depends(linter):
         info.build_dep = set([dep.name for dep in info.manifest.build_depends])
         info.export_dep = set()
         info.exec_dep = set()
-        if info.manifest.package_format > 1 and hasattr(info.manifest, "build_export_depends"):
+        if info.manifest.package_format > 1:
             deps = set([dep.name for dep in info.manifest.build_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="build_export")
             info.export_dep.update(deps)
-        if info.manifest.package_format > 1 and hasattr(info.manifest, "buildtool_export_depends"):
             deps = set([dep.name for dep in info.manifest.buildtool_export_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="buildtool_export")
             info.export_dep.update(deps)
-        if info.manifest.package_format > 1 and hasattr(info.manifest, "exec_depends"):
             deps = set([dep.name for dep in info.manifest.exec_depends])
             for pkg in deps:
                 if not info.env.is_known_pkg(pkg):
                     if info.env.ok:
                         info.report(ERROR, "UNKNOWN_DEPEND", pkg=pkg, type="exec")
             info.exec_dep.update(deps)
-        if info.manifest.package_format < 2 and hasattr(info.manifest, "run_depends"):
+        if info.manifest.package_format < 2:
             deps = set([dep.name for dep in info.manifest.run_depends])
             info.export_dep.update(deps)
             info.exec_dep.update(deps)
@@ -165,11 +163,8 @@ def export_targets(linter):
 def package_description(linter):
     # Check for meaningless package descriptions
     buzzwords = [
-        r"(an)?other",
-        r"(python\s+|c(\+\+)?\s+|java\s+)?code(\s+snippets?)?",
-        r"(ros\s+)?nodes?",
         r"\d+",
-        r"a\s+few",
+        r"(an)?other",
         r"add(s|ed)?",
         r"all",
         r"an?",
@@ -178,6 +173,7 @@ def package_description(linter):
         r"be",
         r"boilerplate",
         r"both",
+        r"c(\+\+)?",
         r"can",
         r"comprise(s|d)?",
         r"contain(s|ed)?",
@@ -201,10 +197,12 @@ def package_description(linter):
         r"interfaces?",
         r"into",
         r"is",
+        r"java",
         r"librar(y|ies)",
         r"meaningless",
         r"miscellaneous",
         r"multiple",
+        r"nodes?",
         r"no(thing|ne|t)?",
         r"of",
         r"offer(s|ed)",
@@ -212,12 +210,16 @@ def package_description(linter):
         r"or",
         r"packages?",
         r"programs?",
+        r"progress"
         r"provide(s|d)?",
         r"purpose",
+        r"python",
+        r"ros",
         r"routines?",
         r"runs?",
         r"sets?",
         r"several",
+        r"snippets?",
         r"some",
         r"suppl(y|ies|ied)",
         r"that",
@@ -236,18 +238,28 @@ def package_description(linter):
         r"versions?",
         r"which",
         r"with",
-        r"work\s+in\s+progress",
+        r"work",
+        r"yet",
     ]
+    buzzwords_re = re.compile(r"^(%s)$" % "|".join(buzzwords))
 
     def on_init(info):
-        chatter = re.match(r"((\s|[.,!?;()/])*\b(%s|%s)\b)+" % (info.manifest.name, r"|".join(buzzwords)), info.manifest.description, re.IGNORECASE)
-        if chatter is not None:
-            s = chatter.group(0).replace("\n", " ").strip()
-            if info.manifest.description[chatter.end(0):].strip():
-                if len(s.split()) > 1:
-                    info.report(NOTICE, "DESCRIPTION_BOILERPLATE", text=s)
+        words = info.manifest.description.strip().split()
+        name = info.manifest.name.lower()
+        chatter = []
+        for word in words:
+            word_lc = word.lower()
+            if word_lc == name or buzzwords_re.match(word_lc):
+                chatter.append(word)
             else:
+                break
+        buzzwordiness = len(chatter)
+        if buzzwordiness > 1:
+            s = " ".join(chatter)
+            if buzzwordiness == len(words):
                 info.report(NOTICE, "DESCRIPTION_MEANINGLESS", text=s)
+            elif buzzwordiness > 1:
+                info.report(NOTICE, "DESCRIPTION_BOILERPLATE", text=s)
 
     linter.add_init_hook(on_init)
 

@@ -41,7 +41,7 @@ def _escape(s):
 
 
 def _unescape(s):
-    return re.sub(r'\\(.)', r"\1", s)
+    return s if "\\" not in s else re.sub(r'\\(.)', r"\1", s)
 
 
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search

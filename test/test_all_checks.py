@@ -38,6 +38,28 @@ class AllChecksTest(unittest.TestCase):
         self.assertEqual([], result)
 
 
+class DummyDist(object):
+    def get_release_package_xml(self, name):
+        # We only use rospy as valid dependency for our fake 'alpha' package
+        if name != "rospy":
+            return None
+        return '''<package format="2">
+            <name>rospy</name>
+            <version>0.0.0</version>
+            <description>Mock package</description>
+            <maintainer email="mock@example.com">Mister Mock</maintainer>
+            <license>none</license>
+        </package>'''
+
+def get_dummy_index_url():
+    return "http://127.0.0.1:9"
+
+def get_dummy_index(url):
+    return None
+
+def get_dummy_cached_distribution(index, dist_name, cache=None, allow_lazy_load=False):
+    return DummyDist()
+
 class CatkinInvokationTest(unittest.TestCase):
     
     def fake_package(self, name, depends, wsdir):
@@ -66,6 +88,12 @@ class CatkinInvokationTest(unittest.TestCase):
             f.write("Random executable file")
         os.chmod(os.path.join(pkgdir, ".git", "script"), 0o755)
 
+    def raise_io_error(self, *args):
+        raise IOError("mock exception")
+
+    @patch("rosdistro.get_index_url", get_dummy_index_url)
+    @patch("rosdistro.get_index", get_dummy_index)
+    @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
         catkin_lint.environment._cache = None  # force cache reloads
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -115,6 +143,10 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 1 packages and found 0 problems", stdout)
+        with patch("catkin_lint.linter.CMakeLinter._read_file", self.raise_io_error):
+            exitcode, stdout = self.run_catkin_lint()
+        self.assertEqual(exitcode, 1)
+        self.assertIn("OS error: mock exception", stdout)
         os.chdir(pwd)
 
         exitcode, stdout = self.run_catkin_lint(self.wsdir, "--explain")
