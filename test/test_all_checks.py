@@ -40,16 +40,17 @@ class AllChecksTest(unittest.TestCase):
 
 class DummyDist(object):
     def get_release_package_xml(self, name):
-        # We only use rospy as valid dependency for our fake 'alpha' package
-        if name != "rospy":
-            return None
-        return '''<package format="2">
-            <name>rospy</name>
-            <version>0.0.0</version>
-            <description>Mock package</description>
-            <maintainer email="mock@example.com">Mister Mock</maintainer>
-            <license>none</license>
-        </package>'''
+        if name == "roscpp":
+            raise KeyError("Mock error")
+        if name == "rospy":
+            return '''<package format="2">
+                <name>rospy</name>
+                <version>0.0.0</version>
+                <description>Mock package</description>
+                <maintainer email="mock@example.com">Mister Mock</maintainer>
+                <license>none</license>
+            </package>'''
+        return None
 
 def get_dummy_index_url():
     return "http://127.0.0.1:9"
@@ -116,7 +117,7 @@ class CatkinInvokationTest(unittest.TestCase):
         self.wsdir = mkdtemp()
         self.ws_srcdir = os.path.join(self.wsdir, "src")
         os.makedirs(os.path.join(self.wsdir, "src", "no_packages_here"))
-        self.fake_package("alpha", ["beta", "rospy"], wsdir=self.wsdir)
+        self.fake_package("alpha", ["beta", "rospy", "roscpp"], wsdir=self.wsdir)
         self.fake_package("beta", [], wsdir=self.wsdir)
         self.fake_package("gamma", ["delta"], wsdir=self.wsdir)
         self.fake_package("broken", ["missing"], wsdir=self.wsdir)
