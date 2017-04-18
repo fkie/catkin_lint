@@ -29,6 +29,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 message_list = {
+    "ARGUMENT_ERROR":
+    ("malformed argument list: %(msg)s",
+        """\
+        You invoked a CMake command with a malformed argument list. Most
+        likely, you forgot to properly quote variables which may be empty
+        or undefined.
+        """),
     "DUPLICATE_CMD":
     ("duplicate %(cmd)s()",
         """\

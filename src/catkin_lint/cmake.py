@@ -336,7 +336,7 @@ def argparse(args, opts):
         elif opttype == "p":
             result[optname] = {}
         else:
-            raise RuntimeError("Invalid option '%s': %s" % (optname, opttype))
+            raise RuntimeError("invalid option '%s': %s" % (optname, opttype))
     curname = None
     curtype = None
     t_args = args[:]
@@ -364,7 +364,7 @@ def argparse(args, opts):
                 del t_args[0]
             elif curtype == "p":
                 if len(t_args) < 2:
-                    raise CMakeSyntaxError("Option '%s' has truncated key-value pair" % curname)
+                    raise CMakeSyntaxError("option '%s' has empty, unquoted argument" % curname)
                 result[curname][t_args[0]] = t_args[1]
                 del t_args[:2]
             else:
@@ -375,7 +375,7 @@ def argparse(args, opts):
             del t_args[0]
     for optname, opttype in iteritems(opts):
         if opttype == "+" and not result[optname]:
-            raise CMakeSyntaxError("Option '%s' requires at least one argument" % optname)
+            raise CMakeSyntaxError("option '%s' has empty, unquoted argument" % optname)
         if opttype == "!" and not result[optname]:
-            raise CMakeSyntaxError("Option '%s' requires exactly one argument" % optname)
+            raise CMakeSyntaxError("option '%s' has empty, unquoted argument" % optname)
     return result, remaining
