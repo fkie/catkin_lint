@@ -97,6 +97,14 @@ class ChecksMiscTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) find_package(Eigen)", checks=cc.cmake_modules)
         self.assertEqual([ "DEPRECATED_CMAKE_MODULE" ], result)
 
+    def test_minimum_version(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "cmake_minimum_required(VERSION 2.8.12) project(mock)", checks=cc.minimum_version)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "project(mock) cmake_minimum_required(VERSION 2.8.12)", checks=cc.minimum_version)
+        self.assertEqual([ "ORDER_VIOLATION" ], result)
+
     def test_endblock(self):
         env = create_env()
         pkg = create_manifest("mock")

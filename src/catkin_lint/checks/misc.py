@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import re
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
+from distutils.version import LooseVersion as Version
 
 
 def project(linter):
@@ -135,6 +136,7 @@ def global_vars(linter):
 def singleton_commands(linter):
     # Singleton commands may not appear more than once
     singleton_cmds = frozenset([
+        "cmake_minimum_required",
         "project",
         "generate_messages",
         "catkin_package",
@@ -212,6 +214,21 @@ def cmake_modules(linter):
     linter.add_command_hook("find_package", on_find_package)
 
 
+def minimum_version(linter):
+
+    def on_init(info):
+        info.minimum_version = Version("0.0.0")
+
+    def on_cmake_minimum_required(info, cmd, args):
+        if info.commands:
+            info.report(ERROR, "ORDER_VIOLATION", first_cmd=list(info.commands)[0], second_cmd=cmd)
+        opts, args = cmake_argparse(args, {"VERSION": "!"})
+        info.minimum_version = Version(opts["VERSION"])
+
+    linter.add_init_hook(on_init)
+    linter.add_command_hook("cmake_minimum_required", on_cmake_minimum_required)
+
+
 def all(linter):
     linter.require(project)
     linter.require(special_vars)
@@ -221,3 +238,4 @@ def all(linter):
     linter.require(endblock)
     linter.require(deprecated)
     linter.require(cmake_modules)
+    linter.require(minimum_version)
