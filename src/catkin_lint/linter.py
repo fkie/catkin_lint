@@ -114,7 +114,7 @@ class LintInfo(object):
 
     def condition_is_checked(self, expr):
         for c in self.conditionals:
-            if c.expr == expr and c.value:
+            if expr in c.expr and c.value:
                 return True
         return False
 

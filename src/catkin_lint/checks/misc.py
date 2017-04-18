@@ -49,7 +49,6 @@ def project(linter):
 def special_vars(linter):
     # Immutable variables must not be changed at all
     immutable_vars = frozenset([
-        "CMAKE_BUILD_TYPE",
         "CMAKE_C_COMPILER",
         "CMAKE_CXX_COMPILER",
         "PROJECT_NAME",
@@ -86,6 +85,12 @@ def special_vars(linter):
             info.var[key] = "@%s@" % key
 
     def on_set_or_unset(info, cmd, args):
+        if args[0] == "CMAKE_BUILD_TYPE":
+            # Some developers prefer to set CMAKE_BUILD_TYPE to a
+            # default value if it is not specified by the user, so
+            # we accomodate them here
+            if not info.condition_is_checked("NOT CMAKE_BUILD_TYPE") and not info.condition_is_checked("NOT DEFINED CMAKE_BUILD_TYPE"):
+                info.report(ERROR, "CMAKE_BUILD_TYPE")
         if args[0] in immutable_vars or args[0].startswith("ENV{"):
             info.report(ERROR, "IMMUTABLE_VAR", var=args[0])
         if args[0] in critical_vars:

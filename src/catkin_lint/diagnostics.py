@@ -167,6 +167,13 @@ message_list = {
         The catkin_metapackage() command signals your intent to declare
         a meta package, but the package.xml does not contain a <meta> tag.
         """),
+    "CMAKE_BUILD_TYPE":
+    ("variable CMAKE_BUILD_TYPE is overwritten unconditionally",
+        """\
+        If you wish to provide a default value for CMAKE_BUILD_TYPE, make
+        sure that you do not overwrite user preferences. You should guard
+        the set() command with an appropriate if(NOT CMAKE_BUILD_TYPE) block.
+        """),
     "IMMUTABLE_VAR":
     ("variable %(var)s is modified",
         """\
