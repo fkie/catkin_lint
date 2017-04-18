@@ -3,31 +3,28 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Messages - catkin_lint</title>
   
-
   <link rel="shortcut icon" href="../img/favicon.ico">
-
-  
+  <title>Messages - catkin_lint</title>
   <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
 
   <link rel="stylesheet" href="../css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
   <link rel="stylesheet" href="../css/highlight.css">
-
   
   <script>
     // Current page data
     var mkdocs_page_name = "Messages";
+    var mkdocs_page_input_path = "messages.md";
+    var mkdocs_page_url = "/messages/";
   </script>
   
   <script src="../js/jquery-2.1.1.min.js"></script>
   <script src="../js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="../js/highlight.pack.js"></script>
-  <script src="../js/theme.js"></script> 
-
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
   
 </head>
 
@@ -47,7 +44,7 @@
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-        <ul class="current">
+	<ul class="current">
           
             <li>
     <li class="toctree-l1 ">
@@ -168,6 +165,8 @@
                 
                     <li><a class="toctree-l4" href="#list-name-should-be-sorted">list name should be sorted</a></li>
                 
+                    <li><a class="toctree-l4" href="#malformed-argument-list-msg">malformed argument list: msg</a></li>
+                
                     <li><a class="toctree-l4" href="#meaningless-package-description-text">meaningless package description 'text'</a></li>
                 
                     <li><a class="toctree-l4" href="#message-dependency-pkg-is-not-listed-as-type_depend">message dependency 'pkg' is not listed as type_depend</a></li>
@@ -237,6 +236,8 @@
                     <li><a class="toctree-l4" href="#variable-var-is-modified_1">variable var is modified</a></li>
                 
                     <li><a class="toctree-l4" href="#variable-var-is-overwritten">variable var is overwritten</a></li>
+                
+                    <li><a class="toctree-l4" href="#variable-cmake_build_type-is-overwritten-unconditionally">variable CMAKE_BUILD_TYPE is overwritten unconditionally</a></li>
                 
             
             </ul>
@@ -601,6 +602,12 @@ of the CMakeLists.txt file.</p>
 <li><strong>Severity</strong>: notice</li>
 <li><strong>Explanation</strong>:         The catkin manual recommends that list element be kept in order.         </li>
 </ul>
+<h2 id="malformed-argument-list-msg">malformed argument list: <em>msg</em></h2>
+<ul>
+<li><strong>ID</strong>: argument_error</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>:         You invoked a CMake command with a malformed argument list. Most         likely, you forgot to properly quote variables which may be empty         or undefined.         </li>
+</ul>
 <h2 id="meaningless-package-description-text">meaningless package description '<em>text</em>'</h2>
 <ul>
 <li><strong>ID</strong>: description_meaningless</li>
@@ -811,6 +818,12 @@ of the CMakeLists.txt file.</p>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>:         You have overwritten a critical CMake variable and its original         content is lost. This will most likely break the build on         different systems or affect the global catkin workspace in         unintended ways.         </li>
 </ul>
+<h2 id="variable-cmake_build_type-is-overwritten-unconditionally">variable CMAKE_BUILD_TYPE is overwritten unconditionally</h2>
+<ul>
+<li><strong>ID</strong>: cmake_build_type</li>
+<li><strong>Severity</strong>: error</li>
+<li><strong>Explanation</strong>:         If you wish to provide a default value for CMAKE_BUILD_TYPE, make         sure that you do not overwrite user preferences. You should guard         the set() command with an appropriate if(NOT CMAKE_BUILD_TYPE) block.         </li>
+</ul>
               
             </div>
           </div>
@@ -818,7 +831,7 @@ of the CMakeLists.txt file.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="../api/" class="btn btn-neutral float-right" title="API"/>Next <span class="icon icon-circle-arrow-right"></span></a>
+        <a href="../api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
       
       
         <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
@@ -840,10 +853,10 @@ of the CMakeLists.txt file.</p>
       </div>
 
     </section>
-
+    
   </div>
 
-<div class="rst-versions" role="note" style="cursor: pointer">
+  <div class="rst-versions" role="note" style="cursor: pointer">
     <span class="rst-current-version" data-toggle="rst-current-version">
       
       
@@ -854,6 +867,7 @@ of the CMakeLists.txt file.</p>
       
     </span>
 </div>
+    <script src="../js/theme.js"></script>
 
 </body>
 </html>
