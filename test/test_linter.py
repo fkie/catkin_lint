@@ -65,6 +65,28 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all)
         self.assertEqual([], result)
 
+    def test_argparse_error(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_executable(${PROJECT_NAME} IMPORTED)
+            set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${empty_var})
+            """, checks=cc.all)
+        self.assertEqual(["ARGUMENT_ERROR"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_executable(${PROJECT_NAME} IMPORTED)
+            set_target_properties(${PROJECT_NAME} PROPERTIES VERSION "${empty_var}")
+            """, checks=cc.all)
+        self.assertEqual([], result)
+
     def test_if(self):
         env = create_env()
         pkg = create_manifest("mock")

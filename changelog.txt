@@ -1,3 +1,7 @@
+Version 1.4.14
+  * Do not complain about setting a default for CMAKE_BUILD_TYPE
+  * Handle argument parse errors in a more transparent way
+
 Version 1.4.13
   * Handle roswtf plugin special case
   * Check if installed directories actually exist

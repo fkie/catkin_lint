@@ -30,6 +30,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import re
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
+from distutils.version import LooseVersion as Version
 
 
 def project(linter):
@@ -49,7 +50,6 @@ def project(linter):
 def special_vars(linter):
     # Immutable variables must not be changed at all
     immutable_vars = frozenset([
-        "CMAKE_BUILD_TYPE",
         "CMAKE_C_COMPILER",
         "CMAKE_CXX_COMPILER",
         "PROJECT_NAME",
@@ -86,6 +86,12 @@ def special_vars(linter):
             info.var[key] = "@%s@" % key
 
     def on_set_or_unset(info, cmd, args):
+        if args[0] == "CMAKE_BUILD_TYPE":
+            # Some developers prefer to set CMAKE_BUILD_TYPE to a
+            # default value if it is not specified by the user, so
+            # we accomodate them here
+            if not info.condition_is_checked("NOT CMAKE_BUILD_TYPE") and not info.condition_is_checked("NOT DEFINED CMAKE_BUILD_TYPE"):
+                info.report(ERROR, "CMAKE_BUILD_TYPE")
         if args[0] in immutable_vars or args[0].startswith("ENV{"):
             info.report(ERROR, "IMMUTABLE_VAR", var=args[0])
         if args[0] in critical_vars:
@@ -130,6 +136,7 @@ def global_vars(linter):
 def singleton_commands(linter):
     # Singleton commands may not appear more than once
     singleton_cmds = frozenset([
+        "cmake_minimum_required",
         "project",
         "generate_messages",
         "catkin_package",
@@ -207,6 +214,21 @@ def cmake_modules(linter):
     linter.add_command_hook("find_package", on_find_package)
 
 
+def minimum_version(linter):
+
+    def on_init(info):
+        info.minimum_version = Version("0.0.0")
+
+    def on_cmake_minimum_required(info, cmd, args):
+        if info.commands:
+            info.report(ERROR, "ORDER_VIOLATION", first_cmd=list(info.commands)[0], second_cmd=cmd)
+        opts, args = cmake_argparse(args, {"VERSION": "!"})
+        info.minimum_version = Version(opts["VERSION"])
+
+    linter.add_init_hook(on_init)
+    linter.add_command_hook("cmake_minimum_required", on_cmake_minimum_required)
+
+
 def all(linter):
     linter.require(project)
     linter.require(special_vars)
@@ -216,3 +238,4 @@ def all(linter):
     linter.require(endblock)
     linter.require(deprecated)
     linter.require(cmake_modules)
+    linter.require(minimum_version)

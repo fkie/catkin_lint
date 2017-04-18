@@ -34,8 +34,12 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) set(ENV{PATH} wrong)", checks=cc.special_vars)
         self.assertEqual([ "IMMUTABLE_VAR" ], result)
-        result = mock_lint(env, pkg, "project(mock) set(CMAKE_BUILD_TYPE wrong)", checks=cc.special_vars)
+        result = mock_lint(env, pkg, "project(mock) set(PROJECT_NAME wrong)", checks=cc.special_vars)
         self.assertEqual([ "IMMUTABLE_VAR" ], result)
+        result = mock_lint(env, pkg, "project(mock) set(CMAKE_BUILD_TYPE wrong)", checks=cc.special_vars)
+        self.assertEqual([ "CMAKE_BUILD_TYPE" ], result)
+        result = mock_lint(env, pkg, "project(mock) if(NOT CMAKE_BUILD_TYPE) set(CMAKE_BUILD_TYPE default) endif()", checks=cc.special_vars)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) set(CMAKE_CXX_FLAGS wrong)", checks=cc.special_vars)
         self.assertEqual([ "CRITICAL_VAR_OVERWRITE" ], result)
         result = mock_lint(env, pkg, "project(mock) unset(CMAKE_CXX_FLAGS)", checks=cc.special_vars)
@@ -92,6 +96,14 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "MISSING_CMAKE_MODULES" ], result)
         result = mock_lint(env, pkg, "project(mock) find_package(Eigen)", checks=cc.cmake_modules)
         self.assertEqual([ "DEPRECATED_CMAKE_MODULE" ], result)
+
+    def test_minimum_version(self):
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg, "cmake_minimum_required(VERSION 2.8.12) project(mock)", checks=cc.minimum_version)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "project(mock) cmake_minimum_required(VERSION 2.8.12)", checks=cc.minimum_version)
+        self.assertEqual([ "ORDER_VIOLATION" ], result)
 
     def test_endblock(self):
         env = create_env()

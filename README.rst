@@ -19,3 +19,8 @@ Build status of packaging branch:
 .. image:: https://travis-ci.org/fkie/catkin_lint.png?branch=debian
    :target: https://travis-ci.org/fkie/catkin_lint
 
+You can get **catkin_lint** from:
+
+* `Ubuntu PPA <https://launchpad.net/~roehling/+archive/latest>`_
+* `PyPI <https://pypi.python.org/pypi/catkin_lint>`_
+* `Github <https://github.com/fkie/catkin_lint>`_

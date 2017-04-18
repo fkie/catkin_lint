@@ -318,6 +318,12 @@ of the CMakeLists.txt file.
 - **Severity**: notice
 - **Explanation**:         The catkin manual recommends that list element be kept in order.         
 
+## malformed argument list: *msg*
+
+- **ID**: argument_error
+- **Severity**: warning
+- **Explanation**:         You invoked a CMake command with a malformed argument list. Most         likely, you forgot to properly quote variables which may be empty         or undefined.         
+
 ## meaningless package description '*text*'
 
 - **ID**: description_meaningless
@@ -527,4 +533,10 @@ of the CMakeLists.txt file.
 - **ID**: critical_var_overwrite
 - **Severity**: error
 - **Explanation**:         You have overwritten a critical CMake variable and its original         content is lost. This will most likely break the build on         different systems or affect the global catkin workspace in         unintended ways.         
+
+## variable CMAKE_BUILD_TYPE is overwritten unconditionally
+
+- **ID**: cmake_build_type
+- **Severity**: error
+- **Explanation**:         If you wish to provide a default value for CMAKE_BUILD_TYPE, make         sure that you do not overwrite user preferences. You should guard         the set() command with an appropriate if(NOT CMAKE_BUILD_TYPE) block.         
 
