@@ -48,7 +48,8 @@ class TextOutput(object):
             else:
                 fn = msg.file
             loc = "%s: %s" % (msg.package, fn)
-        file.write("%s: %s: %s\n" % (loc, self.diagnostic_label[msg.level], msg.text))
+        file.write("[%s] %s: %s: %s\n" % (msg.id.lower(), loc,
+                                          self.diagnostic_label[msg.level], msg.text))
 
     def epilog(self, file=sys.stdout):
         pass
