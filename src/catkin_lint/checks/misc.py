@@ -220,7 +220,7 @@ def minimum_version(linter):
         info.minimum_version = Version("0.0.0")
 
     def on_cmake_minimum_required(info, cmd, args):
-        if info.commands:
+        if info.commands and "cmake_minimum_required" not in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=list(info.commands)[0], second_cmd=cmd)
         opts, args = cmake_argparse(args, {"VERSION": "!"})
         info.minimum_version = Version(opts["VERSION"])
