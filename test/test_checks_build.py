@@ -11,9 +11,9 @@ import ntpath
 import stat
 
 try:
-    from mock import patch
+    from mock import patch, mock_open
 except ImportError:
-    from unittest.mock import patch
+    from unittest.mock import patch, mock_open
 
 class ChecksBuildTest(unittest.TestCase):
 
@@ -519,6 +519,50 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.installs)
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            install_catkin_python(PROGRAMS bin/missing DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual(["MISSING_FILE"], result)
+        open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
+        with patch(open_func, new_callable=mock_open, read_data="no python shebang"):
+            result = mock_lint(env, pkg,
+                """
+                project(mock)
+                find_package(catkin REQUIRED)
+                install_catkin_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                """,
+            checks=cc.installs)
+            self.assertEqual(["MISSING_SHEBANG"], result)
+        with patch(open_func, new_callable=mock_open, read_data="#!/wrong/shebang"):
+            result = mock_lint(env, pkg,
+                """
+                project(mock)
+                find_package(catkin REQUIRED)
+                install_catkin_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                """,
+            checks=cc.installs)
+            self.assertEqual(["MISSING_SHEBANG"], result)
+        with patch(open_func, new_callable=mock_open, read_data="#!/usr/bin/python"):
+            result = mock_lint(env, pkg,
+                """
+                project(mock)
+                find_package(catkin REQUIRED)
+                install_catkin_python(PROGRAMS bin/script DESTINATION wrong/destination)
+                """,
+            checks=cc.installs)
+            self.assertEqual(["INSTALL_DESTINATION"], result)
+            result = mock_lint(env, pkg,
+                """
+                project(mock)
+                find_package(catkin REQUIRED)
+                install_catkin_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                """,
+            checks=cc.installs)
+            self.assertEqual([], result)
 
     def test_tests(self):
         """Test unit test checks"""
@@ -854,7 +898,6 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.scripts)
         self.assertEqual(["UNINSTALLED_SCRIPT"], result)
-
 
     def test_message_generation(self):
         """Test ROS message generation checks"""
