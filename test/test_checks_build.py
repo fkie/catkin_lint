@@ -528,7 +528,14 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.installs)
         self.assertEqual(["MISSING_FILE"], result)
         open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
-        with patch(open_func, create=True, new_callable=mock_open, read_data="no python shebang\ncontent\n"):
+
+        # Work around a limitation of older Python mock_open() implementations
+        with patch(open_func, new_callable=mock_open, read_data="test\nthis\n"):
+            with open("anything", "r") as f:
+                if f.readline() != "test\n":
+                    return
+
+        with patch(open_func, new_callable=mock_open, read_data="no python shebang\ncontent\n"):
             result = mock_lint(env, pkg,
                 """
                 project(mock)
@@ -537,7 +544,7 @@ class ChecksBuildTest(unittest.TestCase):
                 """,
             checks=cc.installs)
             self.assertEqual(["MISSING_SHEBANG"], result)
-        with patch(open_func, create=True, new_callable=mock_open, read_data="#!/wrong/shebang\ncontent\n"):
+        with patch(open_func, new_callable=mock_open, read_data="#!/wrong/shebang\ncontent\n"):
             result = mock_lint(env, pkg,
                 """
                 project(mock)
@@ -546,7 +553,7 @@ class ChecksBuildTest(unittest.TestCase):
                 """,
             checks=cc.installs)
             self.assertEqual(["MISSING_SHEBANG"], result)
-        with patch(open_func, create=True, new_callable=mock_open, read_data="#!/usr/bin/python\ncontent\n"):
+        with patch(open_func, new_callable=mock_open, read_data="#!/usr/bin/python\ncontent\n"):
             result = mock_lint(env, pkg,
                 """
                 project(mock)
