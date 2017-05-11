@@ -1,3 +1,7 @@
+Version 1.4.15
+  * Clean up check for cmake_minimum_required()
+  * Add support for catkin_install_python() command
+
 Version 1.4.14
   * Do not complain about setting a default for CMAKE_BUILD_TYPE
   * Handle argument parse errors in a more transparent way
