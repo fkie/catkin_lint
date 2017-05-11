@@ -8,6 +8,7 @@ import os
 class IndentationTest(unittest.TestCase):
 
     def test_regular(self):
+        """Test indentation check for regular command sequences"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -31,6 +32,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
     def test_macro(self):
+        """Test indentation check for sequences with macro calls"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -113,6 +115,7 @@ class IndentationTest(unittest.TestCase):
             """, checks=None, indentation=True)
 
     def test_if(self):
+        """Test indentation check for if()/else()/endif() blocks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -198,6 +201,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
     def test_foreach(self):
+        """Test indentation checks for foreach()/endforeach) blocks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,

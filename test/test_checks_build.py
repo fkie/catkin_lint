@@ -19,6 +19,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
     def do_includes(self):
+        """Test include_directories()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "include_directories(include)", checks=cc.includes)
@@ -33,6 +34,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x in [os.path.normpath("/mock-path/src/a.cpp"), os.path.normpath("/mock-path/src/b.cpp")])
     def do_source_files(self):
+        """Test add_executable() and add_library()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "add_executable(mock IMPORTED) add_library(mock_lib IMPORTED)", checks=cc.source_files)
@@ -53,6 +55,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/in_package"))
     def do_link_directories(self):
+        """Test link_directories()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "link_directories(in_package)", checks=cc.link_directories)
@@ -63,6 +66,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/FindLocal.cmake"))
     def do_depends(self):
+        """Test dependency checks"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ])
 
@@ -262,6 +266,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     def do_targets(self):
+        """Test checks catkin packages with declared targets"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ], run_depends=[ "other_catkin" ])
         result = mock_lint(env, pkg,
@@ -351,6 +356,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     def do_name_check(self):
+        """Test checks for invalid names"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -389,6 +395,7 @@ class ChecksBuildTest(unittest.TestCase):
     @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/source.cpp") ])
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
     def do_installs(self):
+        """Test installation checks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -514,6 +521,7 @@ class ChecksBuildTest(unittest.TestCase):
 
 
     def test_tests(self):
+        """Test unit test checks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -539,6 +547,7 @@ class ChecksBuildTest(unittest.TestCase):
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/include"), os.path.normpath("/mock-path/include/mock") ])
     def do_exports(self):
+        """Test checks for exported libraries"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin", "other_system" ], run_depends=[ "other_catkin", "other_system" ])
         result = mock_lint(env, pkg,
@@ -777,6 +786,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/config.xml"))
     def do_plugins(self):
+        """Test checks for exported plugins"""
         from catkin_pkg.package import Export
         env = create_env()
         pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
@@ -818,6 +828,7 @@ class ChecksBuildTest(unittest.TestCase):
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/bin"))
     @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     def do_scripts(self):
+        """Test checks for executable scripts"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -846,6 +857,7 @@ class ChecksBuildTest(unittest.TestCase):
 
 
     def test_message_generation(self):
+        """Test ROS message generation checks"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "message_generation", "other_catkin" ], run_depends=[ "message_runtime", "other_catkin" ])
         result = mock_lint(env, pkg,
@@ -1020,6 +1032,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
     def test_format2_message_exports(self):
+        """Test checks for package format version 2 features"""
         env = create_env()
         pkg = create_manifest2("mock", build_depends=["message_generation"], exec_depends=["message_runtime"])
         result = mock_lint(env, pkg,
@@ -1054,6 +1067,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path", posixpath)
     def test_posix(self):
+        """Run various file system related checks on POSIX file system semantics"""
         self.do_includes()
         self.do_source_files()
         self.do_link_directories()
@@ -1067,6 +1081,7 @@ class ChecksBuildTest(unittest.TestCase):
 
     @patch("os.path", ntpath)
     def test_windows(self):
+        """Run various file system related checks on Windows file system semantics"""
         self.do_includes()
         self.do_source_files()
         self.do_link_directories()

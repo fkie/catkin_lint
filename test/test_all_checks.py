@@ -23,6 +23,7 @@ class AllChecksTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     def test_project(self):
+        """Test minimal catkin project for compliance"""
         env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
         pkg = create_manifest("mock", description="Cool Worf", build_depends=[ "foo", "foo_msgs" ], run_depends=[ "foo_msgs" ])
         result = mock_lint(env, pkg,
@@ -141,6 +142,7 @@ class CatkinInvokationTest(unittest.TestCase):
         os.environ = self.old_environ
 
     def runTest(self):
+        """Test catkin_lint invocation on a ROS workspace"""
         pwd = os.getcwd()
         os.chdir(os.path.join(self.ws_srcdir, "beta"))
         exitcode, stdout = self.run_catkin_lint()

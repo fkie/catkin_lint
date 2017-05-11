@@ -19,6 +19,7 @@ class ChecksCudaTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: x in [os.path.normpath("/mock-path/src/a.cpp"), os.path.normpath("/mock-path/src/b.cpp")])
     def do_targets(self):
+        """Test CUDA checks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "cuda_add_executable(target src/a.cpp src/b.cpp) cuda_add_library(target_lib src/a.cpp src/b.cpp)", checks=cc.targets)
@@ -36,8 +37,10 @@ class ChecksCudaTest(unittest.TestCase):
 
     @patch("os.path", posixpath)
     def test_posix(self):
+        """Run CUDA checks on POSIX file system semantics"""
         self.do_targets()
 
     @patch("os.path", ntpath)
     def test_windows(self):
+        """Run CUDA checks on Windows file system semantics"""
         self.do_targets()

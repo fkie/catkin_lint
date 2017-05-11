@@ -18,6 +18,7 @@ class ChecksPythonTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: False)
     def test_setup_without_setup_py(self):
+        """Test check for setup.py if catkin_python_setup() is used"""
         env = create_env()
         pkg = create_manifest("mock")
 
@@ -50,8 +51,10 @@ class ChecksPythonTest(unittest.TestCase):
 
     @patch("os.path", posixpath)
     def test_posix(self):
+        """Test proper placement and handling of catkin_python_setup() on POSIX file systems"""
         self.do_setup_with_setup_py()
 
     @patch("os.path", ntpath)
     def test_windows(self):
+        """Test proper placement and handling of catkin_python_setup() on Windwos file systems"""
         self.do_setup_with_setup_py()

@@ -9,6 +9,7 @@ sys.stderr = sys.stdout
 class ChecksFkieTest(unittest.TestCase):
 
     def test_fkie_find_package(self):
+        """Test FKIE specific checks"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin"] )
 

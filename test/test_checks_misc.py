@@ -18,6 +18,7 @@ import ntpath
 class ChecksMiscTest(unittest.TestCase):
 
     def test_project(self):
+        """Test project()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock)", checks=cc.project)
@@ -28,6 +29,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "LITERAL_PROJECT_NAME" ], result)
 
     def test_special_vars(self):
+        """Test checks for proper handling of special variables"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock)", checks=cc.special_vars)
@@ -58,6 +60,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual(["IMMUTABLE_VAR"], result)
 
     def test_global_vars(self):
+        """Test global variable checks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock) option(${PROJECT_NAME}_option test OFF) set(${PROJECT_NAME}_global CACHE STRING)", checks=cc.global_vars)
@@ -70,6 +73,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "GLOBAL_VAR_COLLISION" ], result)
 
     def test_singleton_command(self):
+        """Test check for singleton commands"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock)", checks=cc.singleton_commands)
@@ -78,6 +82,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "DUPLICATE_CMD" ], result)
 
     def test_deprecated(self):
+        """Test check for deprecated features"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "add_gtest()", checks=cc.deprecated)
@@ -90,6 +95,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "DEPRECATED_CMD" ], result)
 
     def test_cmake_modules(self):
+        """Test check for cmake_modules usage"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock) find_package(NUMPY)", checks=cc.cmake_modules)
@@ -98,6 +104,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "DEPRECATED_CMAKE_MODULE" ], result)
 
     def test_minimum_version(self):
+        """Test check for CMake minimum compatible version"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "cmake_minimum_required(VERSION 2.8.12) project(mock)", checks=cc.minimum_version)
@@ -106,6 +113,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "ORDER_VIOLATION" ], result)
 
     def test_endblock(self):
+        """Test proper style for CMake code blocks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "foreach(a) endforeach()", checks=cc.endblock)
@@ -156,8 +164,10 @@ class ChecksMiscTest(unittest.TestCase):
 
     @patch("os.path", posixpath)
     def test_posix(self):
+        """Test proper style for CMake includes with POSIX file system semantics"""
         self.do_cmake_includes()
 
     @patch("os.path", ntpath)
     def test_windows(self):
+        """Test proper style for CMake includes with Windows file system semantics"""
         self.do_cmake_includes()
