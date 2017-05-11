@@ -9,6 +9,7 @@ sys.stderr = sys.stdout
 class ChecksManifestTest(unittest.TestCase):
 
     def test_depends(self):
+        """Test dependency checks for package.xml"""
         env = create_env()
 
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ])
@@ -57,6 +58,7 @@ class ChecksManifestTest(unittest.TestCase):
 
 
     def test_catkin_build(self):
+        """Test catkin build system checks"""
         env = create_env()
 
         pkg = create_manifest("mock")
@@ -108,6 +110,7 @@ class ChecksManifestTest(unittest.TestCase):
         self.assertEqual([], result)
 
     def test_export_targets(self):
+        """Test check for valid exported targets"""
         env = create_env()
 
         pkg = create_manifest("mock")
@@ -120,6 +123,7 @@ class ChecksManifestTest(unittest.TestCase):
 
 
     def test_package_description(self):
+        """Test check for descriptive package descriptions"""
         env = create_env()
         pkg = create_manifest("mock", description="Cool Worf")
         result = mock_lint(env, pkg, "", checks=cc.package_description)

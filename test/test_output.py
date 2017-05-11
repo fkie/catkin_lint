@@ -31,6 +31,7 @@ class OutputTest(unittest.TestCase):
         return output.getvalue()
 
     def test_text(self):
+        """Test output format for catkin_lint text output"""
         result = self._do_output(o.TextOutput(), self._demo_msgs)
         self.assertEqual(result,
           "mock: mock.cmake(1): error: short text\n"
@@ -41,6 +42,7 @@ class OutputTest(unittest.TestCase):
         )
 
     def test_explained_text(self):
+        """Test output format for catkin_lint text output with explanations"""
         result = self._do_output(o.ExplainedTextOutput(), self._demo_msgs)
         self.assertEqual(result,
           "mock: mock.cmake(1): error: short text\n"
@@ -53,6 +55,7 @@ class OutputTest(unittest.TestCase):
         )
 
     def test_xml(self):
+        """Test output format for catkin_lint XML output"""
         result = self._do_output(o.XmlOutput(), self._demo_msgs)
         self.assertEqual(result,
           '<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">'

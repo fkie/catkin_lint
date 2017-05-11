@@ -7,6 +7,7 @@ import catkin_lint.util as util
 
 class UtilTest(unittest.TestCase):
     def test_word_split(self):
+        """Test word_split() utility function"""
         result = util.word_split("CamelCase")
         self.assertEqual([ "camel", "case" ], result)
         result = util.word_split("HTTPConnector")
@@ -26,6 +27,7 @@ class UtilTest(unittest.TestCase):
         result = util.word_split("c-3po")
         self.assertEqual([ "c", "3po" ], result)
     def test_is_sorted(self):
+        """Test is_sorted() utility function"""
         self.assertTrue(util.is_sorted(["a","b","c","d"]))
         self.assertFalse(util.is_sorted(["b","a","c","d"]))
         self.assertFalse(util.is_sorted(["a","c","b","d"]))

@@ -21,6 +21,7 @@ except ImportError:
 
 class LinterTest(unittest.TestCase):
     def test_circular_depend(self):
+        """Test circular dependencies in custom linter modules"""
         def a(linter):
             linter.require(b)
         def b(linter):
@@ -29,6 +30,7 @@ class LinterTest(unittest.TestCase):
         self.assertRaises(RuntimeError, linter.require, a)
 
     def test_lower_case(self):
+        """Test check for lower-case command names"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -40,6 +42,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([ "CMD_CASE"], result)
 
     def test_include(self):
+        """Test inclusion of other CMake scripts"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -54,6 +57,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
 
     def test_pragma(self):
+        """Test #catkin_lint: pragma handling"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -66,6 +70,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
 
     def test_argparse_error(self):
+        """Test invalid CMake command arguments"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -88,6 +93,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
 
     def test_if(self):
+        """Test if()/else()/endif() block handling"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -163,6 +169,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
 
     def test_list(self):
+        """Test CMake list handling"""
         env = create_env()
         linter = CMakeLinter(env)
         info = LintInfo(env)
@@ -201,6 +208,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(info.var["test"], "one;two;three")
 
     def test_env_var(self):
+        """Test environment variable handling"""
         env = create_env()
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg,
@@ -354,12 +362,14 @@ class LinterTest(unittest.TestCase):
 
     @patch("os.path", posixpath)
     def test_posix(self):
+        """Test CMake parsing on POSIX systems"""
         self.do_blacklist()
         self.do_environment()
         self.do_subdir()
 
     @patch("os.path", ntpath)
     def test_windows(self):
+        """Test CMake parsing on Windows systems"""
         self.do_blacklist()
         self.do_environment()
         self.do_subdir()

@@ -202,6 +202,13 @@ message_list = {
         This might break the build on different systems or affect
         the global catkin workspace in unintended ways.
         """),
+    "MISSING_SHEBANG":
+    ("script '%(file)s' has no %(interpreter)s shebang line",
+        """\
+        All %(interpreter)s scripts need an appropriate shebang line,
+        i.e. the first line has to start with '#!' and needs to name
+        the full path to the %(interpreter)s executable.
+        """),
     "MISSING_FILE":
     ("%(cmd)s() needs missing file '%(file)s'",
         """\

@@ -20,12 +20,14 @@ class CMakeParserTest(unittest.TestCase):
         return result
 
     def test_empty(self):
+        """Test CMake parser with empty file"""
         self.assertEqual(
             self.parse_all(""),
             []
         )
 
     def test_command(self):
+        """Test CMake parser command parsing"""
         self.assertEqual(
             self.parse_all("command()"),
             [ ("command", [])]
@@ -42,6 +44,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "cmd cmd()")
 
     def test_string(self):
+        """Test CMake parser string parsing"""
         self.assertEqual(
             self.parse_all('cmd("simple string")'),
             [ ("cmd", [ "simple string" ]) ]
@@ -60,6 +63,7 @@ class CMakeParserTest(unittest.TestCase):
         )
 
     def test_macro(self):
+        """Test CMake parser macro expansion"""
         self.assertEqual(
             self.parse_all("macro(test) cmd() endmacro() test()"),
             [ ("macro", ["test"]), ("endmacro", []), ("cmd", []) ]
@@ -108,6 +112,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "macro(fun)")
 
     def test_function(self):
+        """Test CMake parser function definitions"""
         self.assertEqual(
             self.parse_all("function(test) cmd() endfunction() test()"),
             [ ("function", ["test"]), ("endfunction", []), ("test", []) ]
@@ -116,6 +121,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "function(fun)")
 
     def test_foreach(self):
+        """Test CMake parser foreach() loop handling"""
         self.assertEqual(
             self.parse_all('foreach(arg RANGE 2) cmd(${arg}) endforeach()'),
             [ ("foreach", ["arg", "RANGE", "2"]), ("cmd", [ "0" ]), ("cmd", [ "1" ]), ("cmd", [ "2" ]), ("endforeach", [])]
@@ -184,6 +190,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, "foreach() endforeach()")
 
     def test_arguments(self):
+        """Test CMake parser argument parsing"""
         self.assertEqual(
             self.parse_all("cmd(one two three)"),
             [ ("cmd", [ "one", "two", "three" ]) ]
@@ -243,6 +250,7 @@ class CMakeParserTest(unittest.TestCase):
         self.assertRaises(cmake.CMakeSyntaxError, self.parse_all, 'cmd("unclosed string)')
 
     def test_substitution(self):
+        """Test CMake parser variable substitution semantics"""
         self.assertEqual(
             self.parse_all("cmd(${args})", var={ "args" : "one;two;three"}),
             [ ("cmd", [ "one", "two", "three" ]) ]
@@ -309,12 +317,14 @@ class CMakeParserTest(unittest.TestCase):
         )
 
     def test_pragma(self):
+        """Test CMake parser catkin_lint pragmas"""
         self.assertEqual(
             self.parse_all("# catkin_lint: extra space\n#catkin_lint:\n#catkin_lint:   \n#catkin_lint:   one   two   three   \n#catkin_lint :\n"),
             [ ("#catkin_lint", []), ("#catkin_lint", []), ("#catkin_lint", ["one","two","three"]) ]
         )
 
     def test_comments(self):
+        """Test CMake parser comment handling"""
         self.assertEqual(
             self.parse_all("""\
             # initial comment
@@ -329,6 +339,7 @@ class CMakeParserTest(unittest.TestCase):
         )
 
     def test_line_numbering(self):
+        """Test CMake parser line numbering"""
         self.assertEqual(
             self.parse_all("""\
             cmd1()
@@ -353,12 +364,14 @@ class CMakeParserTest(unittest.TestCase):
         )
 
     def test_line_columns(self):
+        """Test CMake parser column numbering"""
         self.assertEqual(
             self.parse_all("cmd1()\n cmd2()\n  cmd3()\n", location=2),
             [ ("cmd1", [], 1, 1), ("cmd2", [], 2, 2), ("cmd3", [], 3, 3) ]
         )
 
     def test_argparse(self):
+        """Test CMake parser argparse utility function"""
         self.assertRaises(RuntimeError, cmake.argparse, [], { "TEST" : "xxx"})
 
         opts, args = cmake.argparse([], {})
