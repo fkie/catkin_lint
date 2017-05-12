@@ -523,7 +523,7 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
-            install_catkin_python(PROGRAMS bin/missing DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            catkin_install_python(PROGRAMS bin/missing DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             """,
         checks=cc.installs)
         self.assertEqual(["MISSING_FILE"], result)
@@ -540,7 +540,7 @@ class ChecksBuildTest(unittest.TestCase):
                 """
                 project(mock)
                 find_package(catkin REQUIRED)
-                install_catkin_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                catkin_install_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
                 """,
             checks=cc.installs)
             self.assertEqual(["MISSING_SHEBANG"], result)
@@ -549,7 +549,7 @@ class ChecksBuildTest(unittest.TestCase):
                 """
                 project(mock)
                 find_package(catkin REQUIRED)
-                install_catkin_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                catkin_install_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
                 """,
             checks=cc.installs)
             self.assertEqual(["MISSING_SHEBANG"], result)
@@ -558,7 +558,7 @@ class ChecksBuildTest(unittest.TestCase):
                 """
                 project(mock)
                 find_package(catkin REQUIRED)
-                install_catkin_python(PROGRAMS bin/script DESTINATION wrong/destination)
+                catkin_install_python(PROGRAMS bin/script DESTINATION wrong/destination)
                 """,
             checks=cc.installs)
             self.assertEqual(["INSTALL_DESTINATION"], result)
@@ -566,7 +566,7 @@ class ChecksBuildTest(unittest.TestCase):
                 """
                 project(mock)
                 find_package(catkin REQUIRED)
-                install_catkin_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                catkin_install_python(PROGRAMS bin/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
                 """,
             checks=cc.installs)
             self.assertEqual([], result)

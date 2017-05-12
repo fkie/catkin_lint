@@ -345,7 +345,7 @@ def installs(linter):
         info.install_includes = False
         info.install_files = set()
 
-    def on_install_catkin_python(info, cmd, args):
+    def on_catkin_install_python(info, cmd, args):
         opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
         for f in opts["PROGRAMS"]:
             if f:
@@ -425,7 +425,7 @@ def installs(linter):
     linter.require(targets)
     linter.require(exports)
     linter.add_init_hook(on_init)
-    linter.add_command_hook("install_catkin_python", on_install_catkin_python)
+    linter.add_command_hook("catkin_install_python", on_catkin_install_python)
     linter.add_command_hook("install", on_install)
     linter.add_final_hook(on_final)
 
