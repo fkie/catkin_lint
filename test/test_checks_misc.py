@@ -1,19 +1,10 @@
 import unittest
 import catkin_lint.checks.misc as cc
-from .helper import create_env, create_manifest, mock_lint
+from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 
 import sys
 sys.stderr = sys.stdout
-
-try:
-    from mock import patch
-except ImportError:
-    from unittest.mock import patch
-
-import os.path
-import posixpath
-import ntpath
-
+import os
 
 class ChecksMiscTest(unittest.TestCase):
 
@@ -135,8 +126,10 @@ class ChecksMiscTest(unittest.TestCase):
         result = mock_lint(env, pkg, "function(a) endfunction(a)", checks=cc.endblock)
         self.assertEqual([ "ENDBLOCK_ARGS" ], result)
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/FindLocal.cmake"))
-    def do_cmake_includes(self):
+    def test_cmake_includes(self):
+        """Test CMake includes"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -161,13 +154,3 @@ class ChecksMiscTest(unittest.TestCase):
             """,
         checks=cc.cmake_includes)
         self.assertEqual([ "FIND_BY_INCLUDE" ], result)
-
-    @patch("os.path", posixpath)
-    def test_posix(self):
-        """Test proper style for CMake includes with POSIX file system semantics"""
-        self.do_cmake_includes()
-
-    @patch("os.path", ntpath)
-    def test_windows(self):
-        """Test proper style for CMake includes with Windows file system semantics"""
-        self.do_cmake_includes()

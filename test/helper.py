@@ -3,8 +3,28 @@ from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
 from catkin_lint.checks import all
 from catkin_lint.util import iteritems
+from functools import wraps
 
 import os
+try:
+    from mock import patch, mock_open
+except ImportError:
+    from unittest.mock import patch, mock_open
+
+import posixpath
+import ntpath
+
+# Decorator to run test functions for both POSIX and Windows file systems
+def posix_and_nt(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        with patch("os.path", posixpath):
+            func(*args, **kwargs)
+        with patch("os.path", ntpath):
+            func(*args, **kwargs)
+    if wrapper.__doc__ is not None:
+        wrapper.__doc__ += " (POSIX/NT)"
+    return wrapper
 
 def create_env(catkin_pkgs=[ "catkin", "message_generation", "message_runtime", "other_catkin", "other_msgs", "first_pkg", "second_pkg" ], system_pkgs=[ "other_system" ]):
     env = CatkinEnvironment(use_rosdep=False, use_cache=False)

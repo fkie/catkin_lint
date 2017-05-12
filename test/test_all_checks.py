@@ -1,14 +1,10 @@
 import unittest
-from .helper import create_env, create_manifest, mock_lint
+from .helper import create_env, create_manifest, mock_lint, patch
 
 import sys
 sys.stderr = sys.stdout
 import os
 
-try:
-    from mock import patch
-except ImportError:
-    from unittest.mock import patch
 from tempfile import mkdtemp
 import shutil
 import argparse
