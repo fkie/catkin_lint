@@ -1,24 +1,19 @@
 import unittest
 import catkin_lint.checks.build as cc
-from .helper import create_env, create_manifest, create_manifest2, mock_lint
+from .helper import create_env, create_manifest, create_manifest2, mock_lint, patch, mock_open, posix_and_nt
 
 import sys
 sys.stderr = sys.stdout
 
 import os
-import posixpath
-import ntpath
 import stat
 
-try:
-    from mock import patch, mock_open
-except ImportError:
-    from unittest.mock import patch, mock_open
 
 class ChecksBuildTest(unittest.TestCase):
 
+    @posix_and_nt
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
-    def do_includes(self):
+    def test_includes(self):
         """Test include_directories()"""
         env = create_env()
         pkg = create_manifest("mock")
@@ -32,8 +27,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x in [os.path.normpath("/mock-path/src/a.cpp"), os.path.normpath("/mock-path/src/b.cpp")])
-    def do_source_files(self):
+    def test_source_files(self):
         """Test add_executable() and add_library()"""
         env = create_env()
         pkg = create_manifest("mock")
@@ -53,8 +49,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/in_package"))
-    def do_link_directories(self):
+    def test_link_directories(self):
         """Test link_directories()"""
         env = create_env()
         pkg = create_manifest("mock")
@@ -64,8 +61,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "EXTERNAL_LINK_DIRECTORY" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/FindLocal.cmake"))
-    def do_depends(self):
+    def test_depends(self):
         """Test dependency checks"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ])
@@ -264,8 +262,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
-    def do_targets(self):
+    def test_targets(self):
         """Test checks catkin packages with declared targets"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin" ], run_depends=[ "other_catkin" ])
@@ -354,8 +353,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "INVALID_META_COMMAND" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
-    def do_name_check(self):
+    def test_name_check(self):
         """Test checks for invalid names"""
         env = create_env()
         pkg = create_manifest("mock")
@@ -392,9 +392,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "REDUNDANT_LIB_PREFIX" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/source.cpp") ])
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
-    def do_installs(self):
+    def test_installs(self):
         """Test installation checks"""
         env = create_env()
         pkg = create_manifest("mock")
@@ -595,9 +596,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["MISSING_DEPEND"], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/include"), os.path.normpath("/mock-path/include/mock") ])
-    def do_exports(self):
+    def test_exports(self):
         """Test checks for exported libraries"""
         env = create_env()
         pkg = create_manifest("mock", build_depends=[ "other_catkin", "other_system" ], run_depends=[ "other_catkin", "other_system" ])
@@ -835,8 +837,9 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/config.xml"))
-    def do_plugins(self):
+    def test_plugins(self):
         """Test checks for exported plugins"""
         from catkin_pkg.package import Export
         env = create_env()
@@ -874,11 +877,12 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
 
+    @posix_and_nt
     @patch("os.walk", lambda x, topdown: iter([("/mock-path/bin", [], ["script"])]))
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/bin/script"))
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/bin"))
     @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
-    def do_scripts(self):
+    def test_scripts(self):
         """Test checks for executable scripts"""
         env = create_env()
         pkg = create_manifest("mock")
@@ -1113,32 +1117,3 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual(["MISSING_DEPEND"], result)
-
-
-    @patch("os.path", posixpath)
-    def test_posix(self):
-        """Run various file system related checks on POSIX file system semantics"""
-        self.do_includes()
-        self.do_source_files()
-        self.do_link_directories()
-        self.do_depends()
-        self.do_targets()
-        self.do_name_check()
-        self.do_installs()
-        self.do_scripts()
-        self.do_exports()
-        self.do_plugins()
-
-    @patch("os.path", ntpath)
-    def test_windows(self):
-        """Run various file system related checks on Windows file system semantics"""
-        self.do_includes()
-        self.do_source_files()
-        self.do_link_directories()
-        self.do_depends()
-        self.do_targets()
-        self.do_name_check()
-        self.do_installs()
-        self.do_scripts()
-        self.do_exports()
-        self.do_plugins()

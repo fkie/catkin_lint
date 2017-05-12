@@ -2,22 +2,15 @@ import unittest
 
 import sys
 sys.stderr = sys.stdout
+import os
 
 from catkin_lint.linter import CMakeLinter, LintInfo
-from .helper import create_env, create_manifest, mock_lint
+from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 import catkin_lint.checks.build as cc
 import catkin_lint.environment
 from catkin_lint.cmake import CMakeSyntaxError
 from catkin_pkg.package import Export
 
-import os.path
-import posixpath
-import ntpath
-
-try:
-    from mock import patch
-except ImportError:
-    from unittest.mock import patch
 
 class LinterTest(unittest.TestCase):
     def test_circular_depend(self):
@@ -42,7 +35,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([ "CMD_CASE"], result)
 
     def test_include(self):
-        """Test inclusion of other CMake scripts"""
+        """Test edge cases for CMake include"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -220,8 +213,10 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all)
         self.assertEqual([ "ENV_VAR"], result)
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
-    def do_blacklist(self):
+    def test_blacklist(self):
+        """Test CMake inclusion blacklist"""
         env = create_env()
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg,
@@ -233,9 +228,11 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
 
 
+    @posix_and_nt
     @patch("os.path.isdir", lambda x: x == "/" or x == "\\")
     @patch("os.path.realpath", lambda x: x)
-    def do_environment(self):
+    def test_environment(self):
+        """Test catkin environment"""
         env = catkin_lint.environment.CatkinEnvironment(use_rosdep=False)
         mock_packages = {}
         mock_packages[os.path.normpath("/mock_catkin")] = create_manifest("mock_catkin")
@@ -262,9 +259,11 @@ class LinterTest(unittest.TestCase):
                     self.assertFalse(env.ok)
         self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
+    @posix_and_nt
     @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])
     @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/source.cpp") ])
-    def do_subdir(self):
+    def test_subdir(self):
+        """Test add_subdirectory()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -358,18 +357,3 @@ class LinterTest(unittest.TestCase):
             }, checks=None, return_var=True
         )
         self.assertEqual("subdir", var["foo"])
-
-
-    @patch("os.path", posixpath)
-    def test_posix(self):
-        """Test CMake parsing on POSIX systems"""
-        self.do_blacklist()
-        self.do_environment()
-        self.do_subdir()
-
-    @patch("os.path", ntpath)
-    def test_windows(self):
-        """Test CMake parsing on Windows systems"""
-        self.do_blacklist()
-        self.do_environment()
-        self.do_subdir()

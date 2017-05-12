@@ -1,24 +1,17 @@
 import unittest
 import catkin_lint.checks.python as cc
-from .helper import create_env, create_manifest, mock_lint
+from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 
 import sys
 sys.stderr = sys.stdout
+import os
 
-import os.path
-import posixpath
-import ntpath
-
-try:
-    from mock import patch
-except ImportError:
-    from unittest.mock import patch
 
 class ChecksPythonTest(unittest.TestCase):
 
     @patch("os.path.isfile", lambda x: False)
     def test_setup_without_setup_py(self):
-        """Test check for setup.py if catkin_python_setup() is used"""
+        """Test catkin_python_setup() call without setup.py"""
         env = create_env()
         pkg = create_manifest("mock")
 
@@ -28,8 +21,10 @@ class ChecksPythonTest(unittest.TestCase):
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_python_setup()", checks=cc.setup)
         self.assertEqual([ "MISSING_FILE" ], result)
 
+    @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/setup.py"))
-    def do_setup_with_setup_py(self):
+    def test_setup_with_setup_py(self):
+        """Test proper placement and handling of catkin_python_setup()"""
         env = create_env()
         pkg = create_manifest("mock")
 
@@ -48,13 +43,3 @@ class ChecksPythonTest(unittest.TestCase):
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg, "project(catkin) catkin_python_setup()", checks=cc.setup)
         self.assertEqual([], result)
-
-    @patch("os.path", posixpath)
-    def test_posix(self):
-        """Test proper placement and handling of catkin_python_setup() on POSIX file systems"""
-        self.do_setup_with_setup_py()
-
-    @patch("os.path", ntpath)
-    def test_windows(self):
-        """Test proper placement and handling of catkin_python_setup() on Windwos file systems"""
-        self.do_setup_with_setup_py()
