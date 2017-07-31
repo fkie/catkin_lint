@@ -438,7 +438,8 @@ def plugins(linter):
         for export in info.manifest.exports:
             if "plugin" in export.attributes and export.tagname not in PLUGIN_WHITELIST:
                 plugin = export.attributes["plugin"]
-                plugin_dep.add(export.tagname)
+                if export.tagname != info.manifest.name:
+                    plugin_dep.add(export.tagname)
                 if not plugin.startswith("${prefix}/"):
                     info.report(ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
                 else:

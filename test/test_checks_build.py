@@ -870,6 +870,13 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_DEPEND" ], result)
 
+        pkg = create_manifest("mock")
+        plugin = Export("mock")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([], result)
+
         pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
         plugin = Export("other_catkin")
         plugin.attributes = { "plugin": "${prefix}/missing_config.xml" }
