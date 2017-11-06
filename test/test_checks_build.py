@@ -870,12 +870,60 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_DEPEND" ], result)
 
+        pkg = create_manifest("mock")
+        plugin = Export("mock")
+        plugin.attributes = { "plugin": "${prefix}/config.xml" }
+        pkg.exports += [ plugin ]
+        result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        self.assertEqual([], result)
+
         pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
         plugin = Export("other_catkin")
         plugin.attributes = { "plugin": "${prefix}/missing_config.xml" }
         pkg.exports += [ plugin ]
         result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
+
+    @posix_and_nt
+    @patch("os.path.isfile", lambda x: "exist" in x)
+    @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR if "script" in x else 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
+    def test_dynamic_reconfigure(self):
+        """Test checks for dynamic reconfigure scripts"""
+        env = create_env()
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            generate_dynamic_reconfigure_options(cfg/existing_script.cfg)
+            """,
+        checks=cc.dynamic_reconfigure)
+        self.assertEqual(["UNCONFIGURED_BUILD_DEPEND"], result)
+        pkg = create_manifest("mock", build_depends=["dynamic_reconfigure"])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure)
+            generate_dynamic_reconfigure_options(cfg/existing_script.cfg)
+            """,
+        checks=cc.dynamic_reconfigure)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure)
+            generate_dynamic_reconfigure_options(cfg/missing_script.cfg)
+            """,
+        checks=cc.dynamic_reconfigure)
+        self.assertEqual(["MISSING_FILE"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure)
+            generate_dynamic_reconfigure_options(cfg/existing_non_executable.cfg)
+            """,
+        checks=cc.dynamic_reconfigure)
+        self.assertEqual(["SCRIPT_NOT_EXECUTABLE"], result)
 
     @posix_and_nt
     @patch("os.walk", lambda x, topdown: iter([("/mock-path/bin", [], ["script"])]))
@@ -909,6 +957,15 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.scripts)
         self.assertEqual(["UNINSTALLED_SCRIPT"], result)
+        pkg = create_manifest("mock", build_depends=["dynamic_reconfigure"])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure)
+            generate_dynamic_reconfigure_options(bin/script)
+            """,
+        checks=cc.scripts)
+        self.assertEqual([], result)
 
     def test_message_generation(self):
         """Test ROS message generation checks"""

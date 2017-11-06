@@ -414,6 +414,18 @@ of the CMakeLists.txt file.
 - **Severity**: error
 - **Explanation**:         The CMake project name must be identical to the package name. For         backwards compatibility reasons, both names should also be identical         to the name of the source folder that contains the package.         
 
+## script '*file*' has no *interpreter* shebang line
+
+- **ID**: missing_shebang
+- **Severity**: error
+- **Explanation**:         All *interpreter* scripts need an appropriate shebang line,         i.e. the first line has to start with '#!' and needs to name         the full path to the *interpreter* executable.         
+
+## script '*script*' must be executable
+
+- **ID**: script_not_executable
+- **Severity**: error
+- **Explanation**:         Your package contains a script file that has to be marked as executable.         On Un*x systems, run 'chmod +x "*script*"' to set the executable bit.         
+
 ## subdirectory '*subdir*' contains a subproject
 
 - **ID**: subproject
