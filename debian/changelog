@@ -1,3 +1,9 @@
+catkin-lint (1.4.17-1~16.04) xenial; urgency=medium
+
+  * New release.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Mon, 06 Nov 2017 12:21:52 +0100
+
 catkin-lint (1.4.16-1~16.04) xenial; urgency=medium
 
   * New release.
