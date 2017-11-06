@@ -455,9 +455,35 @@ def plugins(linter):
     linter.add_final_hook(on_final)
 
 
+def dynamic_reconfigure(linter):
+    def on_init(info):
+        info.dynamic_reconfigure_files = set()
+
+    def on_generate_dynamic_reconfigure_options(info, cmd, args):
+        for f in args:
+            if f:
+                real_f = info.real_path(f)
+                if os.path.isfile(real_f):
+                    mode = os.stat(real_f).st_mode
+                    if not mode & stat.S_IXUSR:
+                        info.report(ERROR, "SCRIPT_NOT_EXECUTABLE", script=f)
+                else:
+                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
+                info.dynamic_reconfigure_files.add(info.package_path(f))
+
+    def on_final(info):
+        if "generate_dynamic_reconfigure_options" in info.commands and "dynamic_reconfigure" not in info.find_packages:
+            info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg="dynamic_reconfigure")
+
+    linter.require(depends)
+    linter.add_init_hook(on_init)
+    linter.add_command_hook("generate_dynamic_reconfigure_options", on_generate_dynamic_reconfigure_options)
+    linter.add_final_hook(on_final)
+
+
 def scripts(linter):
     def is_installed(info, pkg_filename):
-        return pkg_filename in info.install_programs
+        return pkg_filename in info.install_programs or pkg_filename in info.dynamic_reconfigure_files
 
     def on_final(info):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
@@ -467,11 +493,12 @@ def scripts(linter):
                 mode = os.stat(full_filename).st_mode
                 if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                     info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
-            ignoredirs = [d for d in dirnames if d.startswith(".") or d == "cfg" or "test" in d or "build" in d]
+            ignoredirs = [d for d in dirnames if d.startswith(".") or "test" in d or "build" in d]
             for d in ignoredirs:
                 dirnames.remove(d)
 
     linter.require(installs)
+    linter.require(dynamic_reconfigure)
     linter.add_final_hook(on_final)
 
 
@@ -550,6 +577,7 @@ def all(linter):
     linter.require(name_check)
     linter.require(pkg_config)
     linter.require(installs)
+    linter.require(dynamic_reconfigure)
     linter.require(plugins)
     linter.require(scripts)
     linter.require(message_generation)

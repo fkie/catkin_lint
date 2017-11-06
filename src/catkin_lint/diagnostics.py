@@ -454,6 +454,12 @@ message_list = {
         will not work outside the devel tree. If it is not an executable
         script, you should fix the file permissions.
         """),
+    "SCRIPT_NOT_EXECUTABLE":
+    ("script '%(script)s' must be executable",
+        """\
+        Your package contains a script file that has to be marked as executable.
+        On Un*x systems, run 'chmod +x "%(script)s"' to set the executable bit.
+        """),
     "LINK_DIRECTORY":
     ("use of link_directories() is strongly discouraged",
         """\
