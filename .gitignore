@@ -2,6 +2,7 @@
 /.pydevproject
 /.settings
 /.coverage
+/build
 /dist
 /MANIFEST
 *.pyc
