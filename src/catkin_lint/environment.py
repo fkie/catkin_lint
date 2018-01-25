@@ -244,7 +244,7 @@ def _load_cache():
                 _cache = pickle.loads(f.read())
                 if not isinstance(_cache, Cache) or _cache.version != 1:
                     raise RuntimeError()
-        except (OSError, IOError, pickle.PickleError):
+        except Exception:
             _cache = Cache()
         finally:
             gc.enable()
