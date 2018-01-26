@@ -33,14 +33,31 @@ from .linter import ERROR, WARNING, NOTICE
 from . import __version__
 
 
+def isatty(fd):
+    return hasattr(fd, "isatty") and fd.isatty()
+
+
+class Color(object):
+    Never = 0
+    Always = 1
+    Auto = 2
+    switch_on = {False: {ERROR: "", WARNING: "", NOTICE: ""},
+                 True: {ERROR: "\033[1;31m", WARNING: "\033[1;33m", NOTICE: "\033[36m"}}
+    switch_off = {False: "", True: "\033[0m"}
+
+
 class TextOutput(object):
 
     diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
+
+    def __init__(self, color):
+        self.color = color
 
     def prolog(self, file=sys.stdout):
         pass
 
     def message(self, msg, file=sys.stdout):
+        use_color = self.color == Color.Always or (self.color == Color.Auto and isatty(file))
         loc = msg.package
         if msg.file:
             if msg.line:
@@ -48,7 +65,7 @@ class TextOutput(object):
             else:
                 fn = msg.file
             loc = "%s: %s" % (msg.package, fn)
-        file.write("%s: %s: %s\n" % (loc, self.diagnostic_label[msg.level], msg.text))
+        file.write("%s: %s%s%s: %s\n" % (loc, Color.switch_on[use_color][msg.level], self.diagnostic_label[msg.level], Color.switch_off[use_color], msg.text))
 
     def epilog(self, file=sys.stdout):
         pass
@@ -56,7 +73,8 @@ class TextOutput(object):
 
 class ExplainedTextOutput(TextOutput):
 
-    def __init__(self):
+    def __init__(self, color):
+        TextOutput.__init__(self, color)
         self.explained = set()
 
     def message(self, msg, file=sys.stdout):
