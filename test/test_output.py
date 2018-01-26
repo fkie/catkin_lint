@@ -32,7 +32,7 @@ class OutputTest(unittest.TestCase):
 
     def test_text(self):
         """Test output format for catkin_lint text output"""
-        result = self._do_output(o.TextOutput(), self._demo_msgs)
+        result = self._do_output(o.TextOutput(o.Color.Never), self._demo_msgs)
         self.assertEqual(result,
           "mock: mock.cmake(1): error: short text\n"
           "mock: mock.cmake(2): warning: short text\n"
@@ -43,7 +43,7 @@ class OutputTest(unittest.TestCase):
 
     def test_explained_text(self):
         """Test output format for catkin_lint text output with explanations"""
-        result = self._do_output(o.ExplainedTextOutput(), self._demo_msgs)
+        result = self._do_output(o.ExplainedTextOutput(o.Color.Never), self._demo_msgs)
         self.assertEqual(result,
           "mock: mock.cmake(1): error: short text\n"
           "     * long text\n"

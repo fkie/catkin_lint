@@ -274,6 +274,7 @@ class LinterTest(unittest.TestCase):
               find_package(catkin REQUIRED)
               catkin_package()
               add_executable(${PROJECT_NAME}_test source.cpp)
+              install(DIRECTORY ../include DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
               """
             }, checks=cc.all
         )

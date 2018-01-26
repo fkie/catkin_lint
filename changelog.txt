@@ -1,3 +1,11 @@
+Version 1.4.19
+  * Set values for project version variables
+  * Properly keep track of current project subdirectory
+  * Add color to terminal output
+
+Version 1.4.18
+  * Fix insufficient exception handling on corrupted cache
+
 Version 1.4.17
   * Fix erroneous missing depend error if a package uses its own plugin
   * Add support for dynamic_reconfigure scripts

@@ -34,7 +34,7 @@ import importlib
 from . import __version__ as catkin_lint_version
 from .linter import CMakeLinter, ERROR, WARNING, NOTICE
 from .environment import CatkinEnvironment
-from .output import TextOutput, ExplainedTextOutput, XmlOutput
+from .output import Color, TextOutput, ExplainedTextOutput, XmlOutput
 
 import catkin_lint.checks
 
@@ -66,6 +66,7 @@ def prepare_arguments(parser):
     group.add_argument("--text", action="store_true", help="output result as text (default)")
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
     group.add_argument("--xml", action="store_true", help="output result as XML")
+    parser.add_argument("--color", metavar="MODE", choices=["never", "always", "auto"], default="auto", help="colorize text output")
     parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
     parser.add_argument("--clear-cache", action="store_true", help="clear internal cache and invalidate all downloaded manifests")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
@@ -129,12 +130,13 @@ def run_linter(args):
             sys.stderr.write("catkin_lint: neither ROS_DISTRO environment variable nor --rosdistro option set\n")
             sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
         env.ok = False
+    use_color = {"never": Color.Never, "always": Color.Always, "auto": Color.Auto}
     if args.xml:
-        output = XmlOutput()
+        output = XmlOutput()  # this is never colored
     elif args.explain:
-        output = ExplainedTextOutput()
+        output = ExplainedTextOutput(use_color[args.color])
     else:
-        output = TextOutput()
+        output = TextOutput(use_color[args.color])
     linter = CMakeLinter(env)
     for a in args.ignore:
         linter.ignore_messages |= set(a.upper().split(","))

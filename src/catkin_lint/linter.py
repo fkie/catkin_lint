@@ -213,8 +213,8 @@ class CMakeLinter(object):
         info.parent_var = info.var
         info.var = copy(info.var)
         try:
-            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, subdir)
-            info.subdir = subdir
+            info.subdir = os.path.join(info.subdir, subdir)
+            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, info.subdir)
             self._parse_file(info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
             info.var = info.parent_var
@@ -315,7 +315,17 @@ class CMakeLinter(object):
             self._running_hooks.add(cmd)
             try:
                 if cmd == "project":
+                    opts, args = cmake_argparse(args, {"VERSION": "?"})
+                    version = opts["VERSION"] or ""
+                    version_parts = version.split(".")
+                    while len(version_parts) < 4:
+                        version_parts.append("")
                     info.var["PROJECT_NAME"] = args[0]
+                    info.var["PROJECT_VERSION"] = info.var["%s_VERSION" % args[0]] = version
+                    info.var["PROJECT_VERSION_MAJOR"] = info.var["%s_VERSION_MAJOR" % args[0]] = version_parts[0]
+                    info.var["PROJECT_VERSION_MINOR"] = info.var["%s_VERSION_MINOR" % args[0]] = version_parts[1]
+                    info.var["PROJECT_VERSION_PATCH"] = info.var["%s_VERSION_PATCH" % args[0]] = version_parts[2]
+                    info.var["PROJECT_VERSION_TWEAK"] = info.var["%s_VERSION_TWEAK" % args[0]] = version_parts[3]
                     info.var["PROJECT_SOURCE_DIR"] = info.var["CMAKE_CURRENT_SOURCE_DIR"]
                     info.var["PROJECT_BINARY_DIR"] = info.var["CMAKE_CURRENT_BINARY_DIR"]
                 if cmd in self._cmd_hooks:

@@ -349,6 +349,7 @@ def installs(linter):
         opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
         for f in opts["PROGRAMS"]:
             if f:
+                f = info.package_path(f)
                 real_f = info.real_path(f)
                 if os.path.isfile(real_f):
                     with open(real_f, "r") as fd:
@@ -368,6 +369,7 @@ def installs(linter):
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
                 if f:
+                    f = info.package_path(f)
                     if not os.path.isfile(info.real_path(f)):
                         info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
                     info.install_programs.add(info.package_path(f))
@@ -375,6 +377,7 @@ def installs(linter):
             install_type = "DIRECTORY"
             for d in opts["DIRECTORY"]:
                 if d:
+                    d = info.package_path(d)
                     real_d = info.real_path(d)
                     if os.path.isdir(real_d):
                         if opts["USE_SOURCE_PERMISSIONS"]:
@@ -462,6 +465,7 @@ def dynamic_reconfigure(linter):
     def on_generate_dynamic_reconfigure_options(info, cmd, args):
         for f in args:
             if f:
+                f = info.package_path(f)
                 real_f = info.real_path(f)
                 if os.path.isfile(real_f):
                     mode = os.stat(real_f).st_mode
