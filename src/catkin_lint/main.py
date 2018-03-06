@@ -80,6 +80,7 @@ def run_linter(args):
     if args.clear_cache:
         from .environment import _clear_cache
         _clear_cache()
+        return 0
     if args.list_check_ids:
         from .diagnostics import message_list
         ids = [k.lower() for k in message_list.keys()]
