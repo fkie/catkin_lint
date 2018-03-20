@@ -28,26 +28,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ..linter import ERROR, WARNING
-from ..cmake import argparse as cmake_argparse
-from .build import depends as build_depends
+from .main import main
 
-
-def rosbuild_compat(linter):
-    def on_fkie_find_package(info, cmd, args):
-        opts, args = cmake_argparse(args, {"REQUIRED": "-", "COMPONENTS": "*"})
-        info.report(ERROR if args[0] == "catkin" else WARNING, "DEPRECATED_ROSBUILD", cmd=cmd)
-        if "project" not in info.commands:
-            info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="project")
-        if args[0] in info.find_packages:
-            info.report(ERROR, "DUPLICATE_FIND", pkg=args[0])
-        if opts["REQUIRED"]:
-            info.required_packages.add(args[0])
-        info.find_packages.add(args[0])
-
-    linter.require(build_depends)
-    linter.add_command_hook("fkie_find_package", on_fkie_find_package)
-
-
-def all(linter):
-    linter.require(rosbuild_compat)
+main()
