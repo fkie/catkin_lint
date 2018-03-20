@@ -260,8 +260,8 @@ class LinterTest(unittest.TestCase):
         self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
     @posix_and_nt
-    @patch("os.path.isdir", lambda x: x in [ os.path.normpath("/mock-path/src"), os.path.normpath("/mock-path/include") ])
-    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath("/other-path/CMakeLists.txt"), os.path.normpath("/mock-path/src/CMakeLists.txt"), os.path.normpath("/mock-path/src/source.cpp") ])
+    @patch("os.path.isdir", lambda x: x in [os.path.normpath(p) for p in ["/mock-path/src", "/mock-path/src/2ndlevel", "/mock-path/include"]])
+    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath(p) for p in ["/other-path/CMakeLists.txt", "/mock-path/src/CMakeLists.txt", "/mock-path/src/2ndlevel/CMakeLists.txt", "/mock-path/src/source.cpp", "/mock-path/src/2ndlevel/source2.cpp"]])
     def test_subdir(self):
         """Test add_subdirectory()"""
         env = create_env()
@@ -275,6 +275,19 @@ class LinterTest(unittest.TestCase):
               catkin_package()
               add_executable(${PROJECT_NAME}_test source.cpp)
               install(DIRECTORY ../include DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+              """
+            }, checks=cc.all
+        )
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            {
+              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
+              "/mock-path/src/CMakeLists.txt" : "add_subdirectory(2ndlevel)",
+              "/mock-path/src/2ndlevel/CMakeLists.txt": """\
+              find_package(catkin REQUIRED)
+              catkin_package()
+              add_executable(${PROJECT_NAME}_test source2.cpp)
               """
             }, checks=cc.all
         )

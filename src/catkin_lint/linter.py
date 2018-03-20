@@ -214,8 +214,8 @@ class CMakeLinter(object):
         info.parent_var = info.var
         info.var = copy(info.var)
         try:
-            info.subdir = os.path.join(info.subdir, subdir)
-            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, info.subdir)
+            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, subdir)
+            info.subdir = subdir
             self._parse_file(info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
             info.var = info.parent_var
