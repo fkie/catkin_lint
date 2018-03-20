@@ -1,3 +1,7 @@
+Version 1.4.20
+  * Fix regression bug in subdirectory handling
+  * Make catkin_lint executable with `python -m catkin_lint`
+
 Version 1.4.19
   * Set values for project version variables
   * Properly keep track of current project subdirectory
