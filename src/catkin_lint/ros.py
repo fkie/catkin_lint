@@ -76,14 +76,10 @@ class Rosdistro(object):
         return self.dist is not None
 
     def download_manifest(self, name):
-        if self.dist is None:
-            raise KeyError()
         if not self.quiet:
             sys.stderr.write("catkin_lint: downloading package manifest for '%s'\n" % name)
         package_xml = self.dist.get_release_package_xml(name)
-        if package_xml is None:
-            return None
-        return parse_package_string(package_xml)
+        return parse_package_string(package_xml) if package_xml else None
 
 
 _rosdistro_cache = {}
