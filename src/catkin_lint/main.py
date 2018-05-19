@@ -103,7 +103,7 @@ def run_linter(args):
             pkgs_to_check += env.add_path(os.getcwd())
         else:
             sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
-            return 127
+            return os.EX_NOINPUT
     if args.package_path:
         for path in args.package_path.split(os.pathsep):
             env.add_path(path)
