@@ -72,6 +72,7 @@ class LintInfo(object):
         self.targets = set([])
         self.executables = set([])
         self.libraries = set([])
+        self.static_libraries = set([])
         self.conditionals = []
         self.var = {}
         self.parent_var = {}
@@ -364,6 +365,8 @@ class CMakeLinter(object):
                     info.targets.add(args[0])
                     if "IMPORTED" not in args:
                         info.libraries.add(args[0])
+                        if "STATIC" in args:
+                            info.static_libraries.add(args[0])
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
                 if cmd == "find_path":
