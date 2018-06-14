@@ -420,7 +420,7 @@ def installs(linter):
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
-                    if lib in info.libraries and lib not in info.install_targets:
+                    if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries:
                         info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib)
         for target in info.install_targets:
             if target not in info.libraries and target not in info.executables:

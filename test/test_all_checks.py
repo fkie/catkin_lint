@@ -59,7 +59,7 @@ def get_dummy_cached_distribution(index, dist_name, cache=None, allow_lazy_load=
     return DummyDist()
 
 class CatkinInvokationTest(unittest.TestCase):
-    
+
     def fake_package(self, name, depends, wsdir):
         pkgdir = os.path.join(wsdir, "src", name)
         os.makedirs(pkgdir)
@@ -99,10 +99,11 @@ class CatkinInvokationTest(unittest.TestCase):
         stdout = StringIO()
         with patch("sys.stdout", stdout):
             with patch("sys.stderr", stdout):
-                returncode =  run_linter(args)
+                returncode = run_linter(args)
         return returncode, stdout.getvalue()
-     
+
     def setUp(self):
+        self.oldcwd = os.getcwd()
         self.old_environ = os.environ
         self.upstream_ws = mkdtemp()
         self.upstream_ws_srcdir = os.path.join(self.upstream_ws, "src")
@@ -130,8 +131,10 @@ class CatkinInvokationTest(unittest.TestCase):
             "ROS_PACKAGE_PATH": self.upstream_ws_srcdir,
         }
         shutil.copytree(os.path.join(os.path.dirname(__file__), "sources.cache"), os.path.join(self.homedir, ".ros", "rosdep", "sources.cache"))
-    
+        os.chdir(self.homedir)
+
     def tearDown(self):
+        os.chdir(self.oldcwd)
         shutil.rmtree(self.homedir, ignore_errors=True)
         shutil.rmtree(self.wsdir, ignore_errors=True)
         shutil.rmtree(self.upstream_ws, ignore_errors=True)
@@ -139,7 +142,10 @@ class CatkinInvokationTest(unittest.TestCase):
 
     def runTest(self):
         """Test catkin_lint invocation on a ROS workspace"""
-        pwd = os.getcwd()
+        exitcode, stdout = self.run_catkin_lint()
+        self.assertEqual(exitcode, os.EX_NOINPUT)
+        self.assertIn("no path given and no package.xml in current directory", stdout)
+
         os.chdir(os.path.join(self.ws_srcdir, "beta"))
         exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 0)
@@ -148,7 +154,6 @@ class CatkinInvokationTest(unittest.TestCase):
             exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 1)
         self.assertIn("OS error: mock exception", stdout)
-        os.chdir(pwd)
 
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--explain")
         self.assertEqual(exitcode, 0)
@@ -222,11 +227,11 @@ class CatkinInvokationTest(unittest.TestCase):
 
         exitcode, stdout = self.run_catkin_lint("--clear-cache")
         self.assertEqual(exitcode, 0)
-        
+
         exitcode, stdout = self.run_catkin_lint("--dump-cache")
         self.assertEqual(exitcode, 0)
         self.assertIn("Cached local paths: 0\n", stdout)
-        
+
         del os.environ["ROS_DISTRO"]
         exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
         self.assertEqual(exitcode, 0)
