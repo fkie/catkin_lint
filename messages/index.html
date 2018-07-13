@@ -293,7 +293,10 @@
 Each diagnostic has a unique ID (such as <em>catkin_order_violation</em>),
 which you can use to disable certain messages, either with the command line option
 <code>--ignore ID</code>, or by adding a pragma line <code>#catkin_lint: ignore ID</code> at the beginning
-of the CMakeLists.txt file.</p>
+of the CMakeLists.txt file. As a third option, you can add a pragma line <code>#catkin_lint: ignore_once ID</code>
+right before the offending statement. Use this if you want to ignore a particular instance
+of a problem but still be notified if the same problem occurs someplace else. You may
+also use <code>#catkin_lint: report ID</code> at any point to override a previous <code>ignore</code>.</p>
 <h2 id="pkg-in-find_packagecatkin-is-not-a-catkin-package">'<em>pkg</em>' in find_package(catkin) is not a catkin package</h2>
 <ul>
 <li><strong>ID</strong>: no_catkin_component</li>
