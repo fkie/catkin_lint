@@ -48,6 +48,14 @@ class LinterTest(unittest.TestCase):
             include(${FOO_INCLUDE})
             """, checks=cc.all)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            include(../foo.cmake)
+            """, checks=cc.all)
+        self.assertEqual(["EXTERNAL_FILE"], result)
 
     def test_pragma(self):
         """Test #catkin_lint: pragma handling"""
@@ -160,6 +168,26 @@ class LinterTest(unittest.TestCase):
             endif()
             """, checks=cc.all)
         self.assertEqual([], result)
+
+    @posix_and_nt
+    def test_package_path(self):
+        """Test package path resolver"""
+        env = create_env()
+        info = LintInfo(env)
+        info.var = {
+            "CMAKE_CURRENT_SOURCE_DIR": "/pkg-source",
+        }
+        self.assertEqual(info.package_path("filename"), os.path.normpath("filename"))
+        self.assertEqual(info.package_path("subdir/filename"), os.path.normpath("subdir/filename"))
+        self.assertEqual(info.package_path("subdir/../filename"), os.path.normpath("filename"))
+        self.assertEqual(info.package_path("../filename"), os.path.normpath("/filename"))
+        self.assertEqual(info.package_path("../../filename"), os.path.normpath("/filename"))
+        self.assertEqual(info.package_path("../../subdir/filename"), os.path.normpath("/subdir/filename"))
+        info.var = {
+            "CMAKE_CURRENT_SOURCE_DIR": "/pkg-source/subdir",
+        }
+        self.assertEqual(info.package_path("filename"), os.path.normpath("subdir/filename"))
+        self.assertEqual(info.package_path("../filename"), os.path.normpath("filename"))
 
     def test_list(self):
         """Test CMake list handling"""

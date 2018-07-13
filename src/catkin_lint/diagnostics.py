@@ -209,6 +209,14 @@ message_list = {
         i.e. the first line has to start with '#!' and needs to name
         the full path to the %(interpreter)s executable.
         """),
+    "EXTERNAL_FILE":
+    ("%(cmd)s() uses file '%(file)s' which is not in package",
+        """\
+        This catkin command uses a file which lies outside of the package
+        source folder. While this may work in your particular setup, you
+        cannot assume file locations in general. Use find_file() to detect
+        external locations insteed.
+        """),
     "MISSING_FILE":
     ("%(cmd)s() needs missing file '%(file)s'",
         """\

@@ -192,7 +192,10 @@ class CMakeLinter(object):
                     self._parse_file(info, real_file)
             else:
                 if not opts["OPTIONAL"]:
-                    info.report(ERROR, "MISSING_FILE", cmd="include", file=incl_file)
+                    if os.path.isabs(incl_file):
+                        info.report(ERROR, "EXTERNAL_FILE", cmd="include", file=args[0])
+                    else:
+                        info.report(ERROR, "MISSING_FILE", cmd="include", file=incl_file)
                 incl_file = "NOTFOUND"
         if opts["RESULT_VARIABLE"]:
             info.var[opts["RESULT_VARIABLE"]] = incl_file

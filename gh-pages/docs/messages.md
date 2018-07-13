@@ -54,6 +54,12 @@ of the CMakeLists.txt file.
 - **Severity**: error
 - **Explanation**:         You have used a test command without properly guarding it by a         if(CATKIN_ENABLE_TESTING) block.         
 
+## *cmd*() uses file '*file*' which is not in package
+
+- **ID**: external_file
+- **Severity**: error
+- **Explanation**:         This catkin command uses a file which lies outside of the package         source folder. While this may work in your particular setup, you         cannot assume file locations in general. Use find_file() to detect         external locations insteed.         
+
 ## *export* plugin file '*file*' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}
 
 - **ID**: plugin_missing_install
