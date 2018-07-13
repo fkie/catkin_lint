@@ -42,12 +42,12 @@ NOTICE = 2
 
 class Message(object):
 
-    def __init__(self, package, file, line, level, id, text, description):
+    def __init__(self, package, file_name, line, level, msg_id, text, description):
         self.package = package
-        self.file = file
+        self.file = file_name
         self.line = line
         self.level = level
-        self.id = id
+        self.id = msg_id
         self.text = text
         self.description = description
 
@@ -87,10 +87,10 @@ class LintInfo(object):
         msg_id, text, description = msg(msg_id, **kwargs)
         self.messages.append(Message(
             package=self.manifest.name,
-            file=self.file,
+            file_name=self.file,
             line=self.line,
             level=level,
-            id=msg_id,
+            msg_id=msg_id,
             text=text,
             description=description
         ))
@@ -278,7 +278,7 @@ class CMakeLinter(object):
             else:
                 return
             info.var[name] = ';'.join(items)
-        except:
+        except Exception:
             pass
 
     def _handle_pragma(self, info, args):

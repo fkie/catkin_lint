@@ -163,7 +163,7 @@ def run_linter(args):
     problems = 0
     exit_code = 0
     diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
-    output.prolog(file=sys.stdout)
+    output.prolog(fd=sys.stdout)
     for msg in sorted(linter.messages):
         if args.W < msg.level:
             suppressed[msg.level] += 1
@@ -172,9 +172,9 @@ def run_linter(args):
             msg.level = ERROR
         if msg.level == ERROR:
             exit_code = 1
-        output.message(msg, file=sys.stdout)
+        output.message(msg, fd=sys.stdout)
         problems += 1
-    output.epilog(file=sys.stdout)
+    output.epilog(fd=sys.stdout)
     if not args.quiet:
         sys.stderr.write("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
         for level in [ERROR, WARNING, NOTICE]:
