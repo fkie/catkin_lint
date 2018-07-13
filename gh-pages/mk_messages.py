@@ -33,7 +33,7 @@ which you can use to disable certain messages, either with the command line opti
 of the CMakeLists.txt file.
 
 """)
-        
+
         messages = {}
         for key in sorted(message_list.keys()):
             if key not in severity:
@@ -42,8 +42,11 @@ of the CMakeLists.txt file.
             short_text, long_text = message_list[key]
             long_text = long_text.replace("\n", " ")
             long_text = long_text.replace("catkin_lint", "**catkin_lint**")
-            short_text = re.sub(r"%\((.*?)\)s", r"*\1*", short_text)          
+            short_text = re.sub(r"%\((.*?)\)s", r"*\1*", short_text)
             long_text = re.sub(r"%\((.*?)\)s", r"*\1*", long_text)
+            long_text = re.sub(r" +", " ", long_text)
+            long_text = long_text.strip()
+            short_text = short_text.strip()
             messages[(short_text, key.lower())] = (long_text, ", ".join(list(severity[key])))
         for msg, key in sorted(messages.keys()):
             long_text, severities = messages[(msg,key)]
