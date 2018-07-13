@@ -79,6 +79,7 @@ class LintInfo(object):
         self.messages = []
         self._pkg_source = os.path.normpath("/pkg-source")
         self._pkg_build = os.path.normpath("/pkg-build")
+        self._catkin_target_dir = os.path.normpath("/catkin-target")
 
     def report(self, level, msg_id, **kwargs):
         if msg_id in self.ignore_messages:
@@ -109,10 +110,10 @@ class LintInfo(object):
         return tmp.startswith(self._pkg_source) or tmp.startswith(self._pkg_build)
 
     def is_catkin_target(self, path, subdir=None):
-        catkin_dir = "/catkin-target"
+        catkin_dir = self._catkin_target_dir
         if subdir is not None:
             catkin_dir = os.path.join(catkin_dir, subdir)
-        return os.path.normpath(path).startswith(os.path.normpath(catkin_dir))
+        return os.path.normpath(path).startswith(catkin_dir)
 
     def condition_is_checked(self, expr):
         for c in self.conditionals:
