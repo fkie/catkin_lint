@@ -65,7 +65,8 @@ class LintInfo(object):
         self.manifest = None
         self.file = ""
         self.line = 0
-        self.ignore_messages = set([])
+        self.ignore_messages = set()
+        self.ignore_messages_once = set()
         self.ignored_messages = 0
         self.commands = set([])
         self.find_packages = set([])
@@ -82,7 +83,7 @@ class LintInfo(object):
         self._catkin_target_dir = os.path.normpath("/catkin-target")
 
     def report(self, level, msg_id, **kwargs):
-        if msg_id in self.ignore_messages:
+        if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
             self.ignored_messages += 1
             return
         msg_id, text, description = msg(msg_id, **kwargs)
@@ -132,7 +133,7 @@ class CMakeLinter(object):
     def __init__(self, env):
         self.env = env
         self.messages = []
-        self.ignore_messages = set([])
+        self.ignore_messages = set()
         self.ignored_messages = 0
         self._cmd_hooks = {}
         self._running_hooks = set([])
@@ -289,6 +290,10 @@ class CMakeLinter(object):
         pragma = args.pop(0)
         if pragma == "ignore":
             info.ignore_messages |= set([a.upper() for a in args])
+        if pragma == "report":
+            info.ignore_messages -= set([a.upper() for a in args])
+        if pragma == "ignore_once":
+            info.ignore_messages_once |= set([a.upper() for a in args])
 
     def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
@@ -448,9 +453,11 @@ class CMakeLinter(object):
                     return
                 self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
+                info.ignore_messages_once.clear()
         finally:
             info.file = save_file
             info.line = save_line
+            info.ignore_messages_once.clear()
 
     def lint(self, path, manifest, info=None):
         if info is None:

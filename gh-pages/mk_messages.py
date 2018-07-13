@@ -30,7 +30,10 @@ This is a list of all messages which might be shown by **catkin_lint**.
 Each diagnostic has a unique ID (such as *catkin_order_violation*),
 which you can use to disable certain messages, either with the command line option
 `--ignore ID`, or by adding a pragma line `#catkin_lint: ignore ID` at the beginning
-of the CMakeLists.txt file.
+of the CMakeLists.txt file. As a third option, you can add a pragma line `#catkin_lint: ignore_once ID`
+right before the offending statement. Use this if you want to ignore a particular instance
+of a problem but still be notified if the same problem occurs someplace else. You may
+also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
 
 """)
 

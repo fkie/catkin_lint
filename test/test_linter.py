@@ -66,9 +66,34 @@ class LinterTest(unittest.TestCase):
             #catkin_lint: ignore cmd_case
             PROJECT(mock)
             find_package(catkin REQUIRED)
-            catkin_package()
+            CATKIN_PACKAGE()
             """, checks=cc.all)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore cmd_case
+            #catkin_lint: report cmd_case
+            PROJECT(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE", "CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore_once cmd_case
+            PROJECT(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore_once cmd_case
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
 
     def test_argparse_error(self):
         """Test invalid CMake command arguments"""
