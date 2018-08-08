@@ -48,7 +48,6 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "add_library(mock src/b.cpp src/a.cpp)", checks=cc.source_files)
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
-
     @posix_and_nt
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/in_package"))
     def test_link_directories(self):
@@ -393,7 +392,7 @@ class ChecksBuildTest(unittest.TestCase):
 
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [ os.path.normpath("/mock-path/bin/script"), os.path.normpath("/mock-path/share/file"), os.path.normpath("/mock-path/src/source.cpp") ])
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/mock-path/bin/script", "/mock-path/bin/script.in", "/mock-path/share/file", "/mock-path/src/source.cpp"]])
     @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
     def test_installs(self):
         """Test installation checks"""
@@ -445,6 +444,17 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.installs)
         self.assertEqual([ "MISSING_FILE" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            configure_file(bin/script.in bin/generated_script @ONLY)
+            install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/bin/generated_script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
             """

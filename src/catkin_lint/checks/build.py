@@ -371,7 +371,7 @@ def installs(linter):
             for f in opts["PROGRAMS"]:
                 if f:
                     f = info.package_path(f)
-                    if not os.path.isfile(info.real_path(f)):
+                    if not os.path.isabs(f) and not os.path.isfile(info.real_path(f)):
                         info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
                     info.install_programs.add(info.package_path(f))
         if opts["DIRECTORY"]:
