@@ -31,7 +31,7 @@
 import os
 import re
 import stat
-from ..linter import ERROR, WARNING, NOTICE
+from ..linter import ERROR, WARNING, NOTICE, PathConstants
 from ..cmake import argparse as cmake_argparse
 from ..util import word_split, iteritems, is_sorted
 from .manifest import depends as manifest_depends
@@ -49,7 +49,7 @@ def includes(linter):
 
     def on_final(info):
         for incl in info.build_includes:
-            if incl and not os.path.isabs(incl) and not os.path.isdir(info.real_path(incl)):
+            if incl and not info.valid_path(incl, check=os.path.isdir, allow_hardcoded_path=True):
                 info.report(ERROR, "MISSING_BUILD_INCLUDE_PATH", path=incl)
 
     linter.add_init_hook(on_init)
@@ -91,11 +91,12 @@ def targets(linter):
             info.target_order_violation.add(args[0])
 
     def on_final(info):
-        if (info.executables or info.libraries) and info.catkin_components and not os.path.normpath("/catkin-includes") in info.build_includes:
+        catkin_include_path = info.find_package_path("catkin", "include")
+        if (info.executables or info.libraries) and info.catkin_components and catkin_include_path not in info.build_includes:
             info.report(ERROR, "MISSING_CATKIN_INCLUDE")
-        if os.path.normpath("/catkin-includes") in info.build_includes:
+        if catkin_include_path in info.build_includes:
             for pkg in info.catkin_components:
-                if os.path.normpath("/%s-includes" % pkg) in info.build_includes:
+                if info.find_package_path(pkg, "include") in info.build_includes:
                     info.report(WARNING, "DUPLICATE_BUILD_INCLUDE", pkg=pkg)
 
     linter.require(includes)
@@ -116,9 +117,8 @@ def source_files(linter):
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
-            file_path = info.package_path(source_file)
-            if not os.path.isabs(file_path) and not os.path.isfile(info.real_path(file_path)):
-                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=file_path)
+            if not info.valid_path(source_file, check=os.path.isfile):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
 
     def on_add_library(info, cmd, args):
         if "IMPORTED" in args:
@@ -127,9 +127,8 @@ def source_files(linter):
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
-            file_path = info.package_path(source_file)
-            if not os.path.isabs(file_path) and not os.path.isfile(info.real_path(file_path)):
-                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=file_path)
+            if not info.valid_path(source_file, check=os.path.isfile):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
 
     linter.add_command_hook("add_executable", on_add_executable)
     linter.add_command_hook("add_library", on_add_library)
@@ -176,8 +175,8 @@ def depends(linter):
         if not is_sorted(opts["COMPONENTS"]):
             info.report(NOTICE, "UNSORTED_LIST", name="COMPONENTS")
         for pkg in opts["COMPONENTS"]:
-            info.var["%s_INCLUDE_DIRS" % pkg] = "/%s-includes" % pkg
-            info.var["%s_LIBRARIES" % pkg] = "/%s-libs/library.so" % pkg
+            info.var["%s_INCLUDE_DIRS" % pkg] = info.find_package_path(pkg, "include")
+            info.var["%s_LIBRARIES" % pkg] = os.path.join(info.find_package_path(pkg, "libs"), "library.so")
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_known_pkg(pkg):
@@ -286,7 +285,7 @@ def exports(linter):
             for incl in info.export_includes - info.build_includes:
                 info.report(WARNING, "MISSING_BUILD_INCLUDE", path=incl)
         for incl in info.export_includes:
-            if not os.path.isdir(info.real_path(incl)):
+            if not info.valid_path(incl, check=os.path.isdir, require_source_folder=True):
                 info.report(ERROR, "MISSING_EXPORT_INCLUDE_PATH", path=incl)
         includes = info.build_includes | info.export_includes
         for d1 in includes:
@@ -350,17 +349,17 @@ def installs(linter):
         opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
         for f in opts["PROGRAMS"]:
             if f:
-                f = info.package_path(f)
-                real_f = info.real_path(f)
-                if os.path.isfile(real_f):
-                    with open(real_f, "r") as fd:
-                        shebang = fd.readline()
-                        if not shebang.startswith("#!") or "python" not in shebang:
-                            info.report(ERROR, "MISSING_SHEBANG", file=f, interpreter="python")
+                if info.valid_path(f, check=os.path.isfile):
+                    real_f = info.real_path(info.package_path(f))
+                    if os.path.isfile(real_f):
+                        with open(real_f, "r") as fd:
+                            shebang = fd.readline()
+                            if not shebang.startswith("#!") or "python" not in shebang:
+                                info.report(ERROR, "MISSING_SHEBANG", file=f, interpreter="python")
                 else:
                     info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
                 info.install_programs.add(info.package_path(f))
-        if not info.is_catkin_target(opts["DESTINATION"]):
+        if not info.is_catkin_install_destination(opts["DESTINATION"]):
             info.report(WARNING, "INSTALL_DESTINATION", type="PROGRAMS", dest="DESTINATION")
 
     def on_install(info, cmd, args):
@@ -370,29 +369,31 @@ def installs(linter):
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
                 if f:
-                    f = info.package_path(f)
-                    if not os.path.isabs(f) and not os.path.isfile(info.real_path(f)):
+                    if not info.valid_path(f, check=os.path.isfile):
                         info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
                     info.install_programs.add(info.package_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
             for d in opts["DIRECTORY"]:
                 if d:
-                    d = info.package_path(d)
-                    real_d = info.real_path(d)
-                    if os.path.isdir(real_d):
-                        if opts["USE_SOURCE_PERMISSIONS"]:
-                            for dirpath, _, filenames in os.walk(real_d, topdown=True):
-                                for filename in filenames:
-                                    real_filename = os.path.join(dirpath, filename)
-                                    pkg_filename = real_filename[len(info.path)+1:]
-                                    mode = os.stat(real_filename).st_mode
-                                    if mode & stat.S_IXUSR:
-                                        info.install_programs.add(pkg_filename)
+                    if info.valid_path(d, check=os.path.isdir):
+                        real_d = info.real_path(info.package_path(d))
+                        if os.path.isdir(real_d):
+                            if opts["USE_SOURCE_PERMISSIONS"]:
+                                for dirpath, _, filenames in os.walk(real_d, topdown=True):
+                                    for filename in filenames:
+                                        real_filename = os.path.join(dirpath, filename)
+                                        pkg_filename = real_filename[len(info.path)+1:]
+                                        mode = os.stat(real_filename).st_mode
+                                        if mode & stat.S_IXUSR:
+                                            info.install_programs.add(pkg_filename)
                     else:
                         info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=d)
         if opts["FILES"]:
             install_type = "FILES"
+            for f in opts["FILES"]:
+                if f and not info.valid_path(f, check=os.path.isfile):
+                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
             info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
         if opts["TARGETS"]:
             install_type = "TARGETS"
@@ -403,9 +404,9 @@ def installs(linter):
             info.report(NOTICE, "UNSORTED_LIST", name=install_type)
         for dest in ["DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION"]:
             if opts[dest] is not None:
-                if not info.is_catkin_target(opts[dest]):
+                if not info.is_catkin_install_destination(opts[dest]):
                     info.report(WARNING, "INSTALL_DESTINATION", type=install_type, dest=dest)
-                if info.is_catkin_target(opts[dest], "include"):
+                if info.is_catkin_install_destination(opts[dest], "include"):
                     info.install_includes = True
 
     def on_final(info):
@@ -446,11 +447,10 @@ def plugins(linter):
                     plugin_dep.add(export.tagname)
                 if not plugin.startswith("${prefix}/"):
                     info.report(ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
-                else:
-                    if not os.path.isfile(info.real_path(plugin[10:])):
-                        info.report(ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
-                    if not os.path.normpath("/catkin-target/share/%s/%s" % (info.manifest.name, plugin[10:])) in info.install_files:
-                        info.report(ERROR if "install" in info.commands else WARNING, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
+                elif not os.path.isfile(info.real_path(plugin[10:])):
+                    info.report(ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
+                elif os.path.normpath("%s/share/%s/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name, plugin[10:])) not in info.install_files:
+                    info.report(ERROR if "install" in info.commands else WARNING, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
         for dep in plugin_dep - info.exec_dep:
             info.report(WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)
 

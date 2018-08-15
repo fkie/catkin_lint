@@ -4,7 +4,7 @@ import sys
 sys.stderr = sys.stdout
 import os
 
-from catkin_lint.linter import CMakeLinter, LintInfo
+from catkin_lint.linter import CMakeLinter, LintInfo, PathConstants
 from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 import catkin_lint.checks.build as cc
 import catkin_lint.environment
@@ -200,16 +200,16 @@ class LinterTest(unittest.TestCase):
         env = create_env()
         info = LintInfo(env)
         info.var = {
-            "CMAKE_CURRENT_SOURCE_DIR": "/pkg-source",
+            "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
         }
         self.assertEqual(info.package_path("filename"), os.path.normpath("filename"))
         self.assertEqual(info.package_path("subdir/filename"), os.path.normpath("subdir/filename"))
         self.assertEqual(info.package_path("subdir/../filename"), os.path.normpath("filename"))
-        self.assertEqual(info.package_path("../filename"), os.path.normpath("/filename"))
-        self.assertEqual(info.package_path("../../filename"), os.path.normpath("/filename"))
-        self.assertEqual(info.package_path("../../subdir/filename"), os.path.normpath("/subdir/filename"))
+        self.assertEqual(info.package_path("/filename"), os.path.normpath("/filename"))
+        self.assertEqual(info.package_path("../../../../filename"), os.path.normpath("/filename"))
+        self.assertEqual(info.package_path("../../../../subdir/filename"), os.path.normpath("/subdir/filename"))
         info.var = {
-            "CMAKE_CURRENT_SOURCE_DIR": "/pkg-source/subdir",
+            "CMAKE_CURRENT_SOURCE_DIR": "%s/subdir" % PathConstants.PACKAGE_SOURCE,
         }
         self.assertEqual(info.package_path("filename"), os.path.normpath("subdir/filename"))
         self.assertEqual(info.package_path("../filename"), os.path.normpath("filename"))

@@ -55,32 +55,42 @@ class Message(object):
         return (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
 
 
+class PathConstants(object):
+    PREFIX = "/catkin-lint"
+    PACKAGE_SOURCE = "%s/source-folder" % PREFIX
+    PACKAGE_BINARY = "%s/build-folder" % PREFIX
+    CATKIN_INSTALL = "%s/install-folder" % PREFIX
+    EXTERNAL_PATH = "%s/external" % PREFIX
+
+
 class LintInfo(object):
 
     def __init__(self, env):
         self.env = env
         self.path = None
         self.subdir = ""
-        self.subdirs = set([])
+        self.subdirs = set()
         self.manifest = None
         self.file = ""
         self.line = 0
         self.ignore_messages = set()
         self.ignore_messages_once = set()
         self.ignored_messages = 0
-        self.commands = set([])
-        self.find_packages = set([])
-        self.targets = set([])
-        self.executables = set([])
-        self.libraries = set([])
-        self.static_libraries = set([])
+        self.commands = set()
+        self.find_packages = set()
+        self.targets = set()
+        self.executables = set()
+        self.libraries = set()
+        self.static_libraries = set()
         self.conditionals = []
         self.var = {}
         self.parent_var = {}
         self.messages = []
-        self._pkg_source = os.path.normpath("/pkg-source")
-        self._pkg_build = os.path.normpath("/pkg-build")
-        self._catkin_target_dir = os.path.normpath("/catkin-target")
+        self.generated_files = set()
+        self._pkg_source = os.path.normpath(PathConstants.PACKAGE_SOURCE)
+        self._pkg_build = os.path.normpath(PathConstants.PACKAGE_BINARY)
+        self._catkin_install_dir = os.path.normpath(PathConstants.CATKIN_INSTALL)
+        self._path_prefix = os.path.normpath(PathConstants.PREFIX)
 
     def report(self, level, msg_id, **kwargs):
         if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
@@ -106,12 +116,30 @@ class LintInfo(object):
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))
 
+    def find_package_path(self, pkg, path):
+        return os.path.normpath(os.path.join(PathConstants.EXTERNAL_PATH, pkg, path))
+
+    def valid_path(self, path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False):
+        tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
+        if tmp.startswith(self._pkg_source):
+            return check(os.path.join(self.path, tmp[len(self._pkg_source) + 1:]))
+        if require_source_folder:
+            return False
+        if tmp.startswith(self._pkg_build):
+            return True  # Cannot handle generated files yet
+            # return tmp[len(self._pkg_build) + 1:] in self.generated_files
+        if tmp.startswith(self._path_prefix):
+            return True
+        if allow_hardcoded_path:
+            return check(tmp)
+        return False
+
     def is_internal_path(self, path):
         tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
         return tmp.startswith(self._pkg_source) or tmp.startswith(self._pkg_build)
 
-    def is_catkin_target(self, path, subdir=None):
-        catkin_dir = self._catkin_target_dir
+    def is_catkin_install_destination(self, path, subdir=None):
+        catkin_dir = self._catkin_install_dir
         if subdir is not None:
             catkin_dir = os.path.join(catkin_dir, subdir)
         return os.path.normpath(path).startswith(catkin_dir)
@@ -179,7 +207,7 @@ class CMakeLinter(object):
             incl_file = "NOTFOUND"
         else:
             incl_file = info.package_path(args[0])
-            if incl_file.startswith(os.path.normpath("/find-file")):
+            if incl_file.startswith(os.path.normpath(PathConstants.EXTERNAL_PATH)):
                 return
             skip_parsing = False
             if info.manifest.name in self._include_blacklist:
@@ -220,7 +248,7 @@ class CMakeLinter(object):
         info.parent_var = info.var
         info.var = copy(info.var)
         try:
-            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(info._pkg_source, subdir)
+            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(PathConstants.PACKAGE_SOURCE, subdir)
             info.subdir = subdir
             self._parse_file(info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
@@ -361,10 +389,10 @@ class CMakeLinter(object):
                     self._subdirectory(info, args)
                     self._running_hooks = saved_hooks
                 if cmd == "find_package":
-                    info.var["%s_INCLUDE_DIRS" % args[0]] = "/%s-includes" % args[0]
-                    info.var["%s_INCLUDE_DIRS" % args[0].upper()] = "/%s-includes" % args[0]
-                    info.var["%s_LIBRARIES" % args[0]] = "/%s-libs/library.so" % args[0]
-                    info.var["%s_LIBRARIES" % args[0].upper()] = "/%s-libs/library.so" % args[0]
+                    info.var["%s_INCLUDE_DIRS" % args[0]] = info.find_package_path(args[0], "include")
+                    info.var["%s_INCLUDE_DIRS" % args[0].upper()] = info.find_package_path(args[0], "include")
+                    info.var["%s_LIBRARIES" % args[0]] = os.path.join(info.find_package_path(args[0], "libs"), "library.so")
+                    info.var["%s_LIBRARIES" % args[0].upper()] = os.path.join(info.find_package_path(args[0], "libs"), "library.so")
                     info.find_packages.add(args[0])
                 if cmd == "add_executable":
                     info.targets.add(args[0])
@@ -379,11 +407,11 @@ class CMakeLinter(object):
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
                 if cmd == "find_path":
-                    info.var[args[0]] = "/find-path"
+                    info.var[args[0]] = "%s/find-path" % PathConstants.EXTERNAL_PATH
                 if cmd == "find_library":
-                    info.var[args[0]] = "/find-libs/library.so"
+                    info.var[args[0]] = "%s/find-libs/library.so" % PathConstants.EXTERNAL_PATH
                 if cmd == "find_file":
-                    info.var[args[0]] = "/find-file/filename.ext"
+                    info.var[args[0]] = "%s/find-file/filename.ext" % PathConstants.EXTERNAL_PATH
             except CMakeSyntaxError as e:
                 info.report(WARNING, "ARGUMENT_ERROR", msg=str(e))
             finally:
@@ -467,21 +495,21 @@ class CMakeLinter(object):
         info.manifest = manifest
         info.conditionals = []
         info.var = {
-            "CMAKE_CURRENT_SOURCE_DIR": "/pkg-source",
-            "CMAKE_CURRENT_BINARY_DIR": "/pkg-build",
-            "CATKIN_PACKAGE_BIN_DESTINATION": "/catkin-target/lib/%s" % info.manifest.name,
-            "CATKIN_PACKAGE_ETC_DESTINATION": "/catkin-target/etc/%s" % info.manifest.name,
-            "CATKIN_PACKAGE_INCLUDE_DESTINATION": "/catkin-target/include/%s" % info.manifest.name,
-            "CATKIN_PACKAGE_LIB_DESTINATION": "/catkin-target/lib/%s" % info.manifest.name,
-            "CATKIN_PACKAGE_PYTHON_DESTINATION": "/catkin-target/lib/python/%s" % info.manifest.name,
-            "CATKIN_PACKAGE_SHARE_DESTINATION": "/catkin-target/share/%s" % info.manifest.name,
-            "CATKIN_GLOBAL_BIN_DESTINATION": "/catkin-target/bin",
-            "CATKIN_GLOBAL_ETC_DESTINATION": "/catkin-target/etc",
-            "CATKIN_GLOBAL_INCLUDE_DESTINATION": "/catkin-target/include",
-            "CATKIN_GLOBAL_LIB_DESTINATION": "/catkin-target/lib",
-            "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "/catkin-target/lib",
-            "CATKIN_GLOBAL_PYTHON_DESTINATION": "/catkin-target/lib/python",
-            "CATKIN_GLOBAL_SHARE_DESTINATION": "/catkin-target/share",
+            "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
+            "CMAKE_CURRENT_BINARY_DIR": PathConstants.PACKAGE_BINARY,
+            "CATKIN_PACKAGE_BIN_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
+            "CATKIN_PACKAGE_ETC_DESTINATION": "%s/etc/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
+            "CATKIN_PACKAGE_INCLUDE_DESTINATION": "%s/include/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
+            "CATKIN_PACKAGE_LIB_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
+            "CATKIN_PACKAGE_PYTHON_DESTINATION": "%s/lib/python/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
+            "CATKIN_PACKAGE_SHARE_DESTINATION": "%s/share/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
+            "CATKIN_GLOBAL_BIN_DESTINATION": "%s/bin" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_GLOBAL_ETC_DESTINATION": "%s/etc" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_GLOBAL_INCLUDE_DESTINATION": "%s/include" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_GLOBAL_LIB_DESTINATION": "%s/lib" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "%s/lib" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_GLOBAL_PYTHON_DESTINATION": "%s/lib/python" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
         }
         self.ctx = ParserContext()
         try:

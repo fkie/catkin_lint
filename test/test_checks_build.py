@@ -12,18 +12,20 @@ import stat
 class ChecksBuildTest(unittest.TestCase):
 
     @posix_and_nt
-    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
+    @patch("os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/mock-path/include", "/some/hardcoded/path"]])
     def test_includes(self):
         """Test include_directories()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "include_directories(include)", checks=cc.includes)
         self.assertEqual([], result)
-        result = mock_lint(env, pkg, "include_directories(/somewhere/else/but/absolute)", checks=cc.includes)
+        result = mock_lint(env, pkg, "include_directories(/some/hardcoded/path)", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "find_package(catkin REQUIRED) include_directories(${catkin_INCLUDE_DIRS})", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "include_directories(missing_include)", checks=cc.includes)
+        self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
+        result = mock_lint(env, pkg, "include_directories(/some/hardcoded/but/missing/path)", checks=cc.includes)
         self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
 
 
@@ -903,7 +905,7 @@ class ChecksBuildTest(unittest.TestCase):
         plugin = Export("other_catkin")
         plugin.attributes = { "plugin": "${prefix}/missing_config.xml" }
         pkg.exports += [ plugin ]
-        result = mock_lint(env, pkg, "install(FILES missing_config.xml DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})", checks=cc.plugins)
+        result = mock_lint(env, pkg, "", checks=cc.plugins)
         self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
 
     @posix_and_nt
