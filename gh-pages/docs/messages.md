@@ -123,6 +123,12 @@ also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
 - **Severity**: error
 - **Explanation**: You have listed an invalid include path in the include_directories() command.
 
+## build include path '*path*' is hardcoded but not part of your package
+
+- **ID**: hardcoded_build_include_path
+- **Severity**: warning
+- **Explanation**: You have listed an explicit, hardcoded include path in the include_directories() command, which is not part of your package. To ensure that your package will build on as many different systems as possible, you should discover such paths with find_path() or find_package() instead.
+
 ## catkin_metapackage() in regular package
 
 - **ID**: catkin_meta_vs_pkg
