@@ -59,7 +59,7 @@ class Message(object):
 
 
 def generate_random_id(L=16):
-    return "".join(random.choice(string.letters + string.digits) for _ in range(L))
+    return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(L))
 
 
 class PathConstants(object):
