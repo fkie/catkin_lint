@@ -58,12 +58,15 @@ class Message(object):
         return (self.package, self.level, self.file, self.line, self.id) < (other.package, other.level, other.file, other.line, other.id)
 
 
+def generate_random_id(L=16):
+    return "".join(random.choice(string.letters + string.digits) for _ in range(L))
+
+
 class PathConstants(object):
-    PREFIX = "/catkin-lint"
-    PACKAGE_SOURCE = "%s/source-folder" % PREFIX
-    PACKAGE_BINARY = "%s/build-folder" % PREFIX
-    CATKIN_INSTALL = "%s/install-folder" % PREFIX
-    EXTERNAL_PATH = "%s/external" % PREFIX
+    PACKAGE_SOURCE = "/%s" % generate_random_id()
+    PACKAGE_BINARY = "/%s" % generate_random_id()
+    CATKIN_INSTALL = "/%s" % generate_random_id()
+    EXTERNAL_PATH = "/%s" % generate_random_id()
 
 
 class LintInfo(object):
