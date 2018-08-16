@@ -1,3 +1,6 @@
+Version 1.5.2
+  * More bugfixes
+
 Version 1.5.1
   * Fix a few corner cases which have been missed by the 1.5.0 release
 
