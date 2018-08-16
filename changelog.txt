@@ -1,3 +1,10 @@
+Version 1.5.0
+  * API changes in LintInfo object
+  * Remove CMAKE_MODULE_PATH fromm critical variables list
+  * Introduce new pragmas "ignore_once" and "report"
+  * Add support for generated files via configure_file or add_custom_command
+  * Improve file path handling
+
 Version 1.4.21
   * Improve handling of static libraries
   * Return appropriate error code if no input given
