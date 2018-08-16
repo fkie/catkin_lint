@@ -85,13 +85,17 @@
         
             <li><a class="toctree-l3" href="#report">report()</a></li>
         
-            <li><a class="toctree-l3" href="#package_path">package_path()</a></li>
+            <li><a class="toctree-l3" href="#source_relative_path">source_relative_path()</a></li>
+        
+            <li><a class="toctree-l3" href="#binary_relative_path">binary_relative_path()</a></li>
         
             <li><a class="toctree-l3" href="#real_path">real_path()</a></li>
         
-            <li><a class="toctree-l3" href="#is_internal_pathpath">is_internal_path(path)</a></li>
+            <li><a class="toctree-l3" href="#is_internal_path">is_internal_path()</a></li>
         
-            <li><a class="toctree-l3" href="#is_catkin_target">is_catkin_target()</a></li>
+            <li><a class="toctree-l3" href="#is_valid_path">is_valid_path()</a></li>
+        
+            <li><a class="toctree-l3" href="#is_catkin_install_destination">is_catkin_install_destination()</a></li>
         
         </ul>
     
@@ -249,27 +253,42 @@ uses unique variable names that do not conflict with other checks.</p>
 <code>catkin_lint.linter.NOTICE</code>. The <code>msg_id</code> refers to one
 of the defined diagnostic messages. Certain messages have placeholder
 variables that must be specified, e.g. <code>cmd</code> for the command name.</p>
-<h2 id="package_path">package_path()</h2>
-<pre><code class="python">info.package_path(path)
+<h2 id="source_relative_path">source_relative_path()</h2>
+<pre><code class="python">info.source_relative_path(path)
 </code></pre>
 
 <p>Returns a path relative to the package source directory or
 an absolute path if the path is not within the package. Can handle
 <code>${CMAKE_CURRENT_SOURCE_DIR}</code> correctly.</p>
+<h2 id="binary_relative_path">binary_relative_path()</h2>
+<pre><code class="python">info.binary_relative_path(path)
+</code></pre>
+
+<p>Returns a path relative to the package build directory or
+an absolute path if the path is not inside the build directory. Can handle
+<code>${CMAKE_CURRENT_BINARY_DIR}</code> correctly.</p>
 <h2 id="real_path">real_path()</h2>
 <pre><code class="python">info.real_path(path)
 </code></pre>
 
 <p>Returns the actual file system path for relative package path as
-returned by <code>package_path()</code>.</p>
-<h2 id="is_internal_pathpath">is_internal_path(path)</h2>
+returned by <code>source_relative_path()</code>.</p>
+<h2 id="is_internal_path">is_internal_path()</h2>
 <pre><code class="python">info.is_internal_path(path)
 </code></pre>
 
 <p>Returns <code>True</code> if the path is either below the package source
 directory or the package build directory.</p>
-<h2 id="is_catkin_target">is_catkin_target()</h2>
-<pre><code class="python">info.is_catkin_target(path, subdir=None)
+<h2 id="is_valid_path">is_valid_path()</h2>
+<pre><code class="python">info.is_valid_path(path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False)
+</code></pre>
+
+<p>Returns <code>True</code> if the path is a valid path argument for a catkin command, which
+means it's either an existing file in the source directory, a generated file
+from the build directory, a path discovered by <code>find_package()</code>, <code>find_path()</code>,
+<code>find_file()</code> or <code>find_library()</code>, or optionally any existing hardcoded path.</p>
+<h2 id="is_catkin_install_destination">is_catkin_install_destination()</h2>
+<pre><code class="python">info.is_catkin_install_destination(path, subdir=None)
 </code></pre>
 
 <p>Returns <code>True</code> if the path points to the install space of

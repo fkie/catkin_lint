@@ -99,6 +99,8 @@
         
             <li><a class="toctree-l3" href="#build-include-path-path-does-not-exist">build include path 'path' does not exist</a></li>
         
+            <li><a class="toctree-l3" href="#build-include-path-path-is-hardcoded-but-not-part-of-your-package">build include path 'path' is hardcoded but not part of your package</a></li>
+        
             <li><a class="toctree-l3" href="#catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</a></li>
         
             <li><a class="toctree-l3" href="#catkin_package-exports-non-package-include-path">catkin_package() exports non-package include path</a></li>
@@ -410,6 +412,12 @@ also use <code>#catkin_lint: report ID</code> at any point to override a previou
 <li><strong>ID</strong>: missing_build_include_path</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: You have listed an invalid include path in the include_directories() command.</li>
+</ul>
+<h2 id="build-include-path-path-is-hardcoded-but-not-part-of-your-package">build include path '<em>path</em>' is hardcoded but not part of your package</h2>
+<ul>
+<li><strong>ID</strong>: hardcoded_build_include_path</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: You have listed an explicit, hardcoded include path in the include_directories() command, which is not part of your package. To ensure that your package will build on as many different systems as possible, you should discover such paths with find_path() or find_package() instead.</li>
 </ul>
 <h2 id="catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</h2>
 <ul>
