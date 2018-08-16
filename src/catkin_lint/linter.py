@@ -134,7 +134,7 @@ class LintInfo(object):
     def find_package_path(self, pkg, path):
         return posixpath.join(PathConstants.EXTERNAL_PATH, pkg, path)
 
-    def valid_path(self, path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False):
+    def is_valid_path(self, path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False):
         tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
         if tmp.startswith(PathConstants.PACKAGE_SOURCE):
             result = check(os.path.join(self.path, os.path.normpath(tmp[len(PathConstants.PACKAGE_SOURCE) + 1:])))

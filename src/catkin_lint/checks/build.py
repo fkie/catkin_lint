@@ -46,9 +46,9 @@ def includes(linter):
     def on_include_directories(info, cmd, args):
         _, args = cmake_argparse(args, {"AFTER": "-", "BEFORE": "-", "SYSTEM": "-"})
         for incl in args:
-            if not info.valid_path(incl, check=os.path.isdir, allow_hardcoded_path=True):
+            if not info.is_valid_path(incl, check=os.path.isdir, allow_hardcoded_path=True):
                 info.report(ERROR, "MISSING_BUILD_INCLUDE_PATH", path=info.report_path(incl))
-            elif not info.valid_path(incl, check=os.path.isdir, allow_hardcoded_path=False):
+            elif not info.is_valid_path(incl, check=os.path.isdir, allow_hardcoded_path=False):
                 info.report(WARNING, "HARDCODED_BUILD_INCLUDE_PATH", path=info.report_path(incl))
         includes = set([info.source_relative_path(d) for d in args])
         info.build_includes |= includes
@@ -111,7 +111,7 @@ def targets(linter):
 
 def generated_files(linter):
     def on_configure_file(info, cmd, args):
-        if not info.valid_path(args[0], check=os.path.isfile):
+        if not info.is_valid_path(args[0], check=os.path.isfile):
             info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(args[0]))
         info.generated_files.add(info.binary_relative_path(args[1]))
 
@@ -132,7 +132,7 @@ def source_files(linter):
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
-            if not info.valid_path(source_file, check=os.path.isfile):
+            if not info.is_valid_path(source_file, check=os.path.isfile):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     def on_add_library(info, cmd, args):
@@ -142,7 +142,7 @@ def source_files(linter):
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
-            if not info.valid_path(source_file, check=os.path.isfile):
+            if not info.is_valid_path(source_file, check=os.path.isfile):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     linter.require(generated_files)
@@ -302,7 +302,7 @@ def exports(linter):
             for incl in info.export_includes - info.build_includes:
                 info.report(WARNING, "MISSING_BUILD_INCLUDE", path=incl)
         for incl in info.export_includes:
-            if not info.valid_path(incl, check=os.path.isdir, require_source_folder=True):
+            if not info.is_valid_path(incl, check=os.path.isdir, require_source_folder=True):
                 info.report(ERROR, "MISSING_EXPORT_INCLUDE_PATH", path=incl)
         includes = info.build_includes | info.export_includes
         for d1 in includes:
@@ -366,7 +366,7 @@ def installs(linter):
         opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
         for f in opts["PROGRAMS"]:
             if f:
-                if info.valid_path(f, check=os.path.isfile):
+                if info.is_valid_path(f, check=os.path.isfile):
                     real_f = info.real_path(info.source_relative_path(f))
                     if os.path.isfile(real_f):
                         with open(real_f, "r") as fd:
@@ -386,14 +386,14 @@ def installs(linter):
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
                 if f:
-                    if not info.valid_path(f, check=os.path.isfile):
+                    if not info.is_valid_path(f, check=os.path.isfile):
                         info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
                     info.install_programs.add(info.source_relative_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
             for d in opts["DIRECTORY"]:
                 if d:
-                    if info.valid_path(d, check=os.path.isdir):
+                    if info.is_valid_path(d, check=os.path.isdir):
                         real_d = info.real_path(info.source_relative_path(d))
                         if os.path.isdir(real_d):
                             if opts["USE_SOURCE_PERMISSIONS"]:
@@ -409,7 +409,7 @@ def installs(linter):
         if opts["FILES"]:
             install_type = "FILES"
             for f in opts["FILES"]:
-                if f and not info.valid_path(f, check=os.path.isfile):
+                if f and not info.is_valid_path(f, check=os.path.isfile):
                     info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
             info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
         if opts["TARGETS"]:
