@@ -47,6 +47,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "EXTERNAL_FILE" ], result)
         result = mock_lint(env, pkg, "add_executable(mock src/missing.cpp)", checks=cc.source_files)
         self.assertEqual([ "MISSING_FILE" ], result)
+        result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/missing.cpp)", checks=cc.source_files)
+        self.assertEqual([ "MISSING_FILE" ], result)
+        result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_BINARY_DIR}/missing.cpp)", checks=cc.source_files)
+        self.assertEqual([ "MISSING_FILE" ], result)
         result = mock_lint(env, pkg, "add_library(mock src/missing.cpp)", checks=cc.source_files)
         self.assertEqual([ "MISSING_FILE" ], result)
         result = mock_lint(env, pkg, "add_executable(mock src/b.cpp src/a.cpp)", checks=cc.source_files)
@@ -358,7 +362,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "INVALID_META_COMMAND" ], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/some/external/file.in"))
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/some/external/file.in", "/mock-path/file.in"]])
     def test_generated_files(self):
         """Test checks for generated files"""
         env = create_env()
@@ -372,11 +376,39 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            configure_file(file.in ${PROJECT_SOURCE_DIR}/generated/file.cpp)
+            add_executable(${PROJECT_NAME} generated/file.cpp)
+            """, checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            configure_file(file.in /some/generated/file.cpp)
+            add_executable(${PROJECT_NAME} /some/generated/file.cpp)
+            """, checks=cc.source_files)
+        self.assertEqual(["EXTERNAL_FILE"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             add_custom_command(OUTPUT generated.cpp COMMAND some command line here)
             add_executable(${PROJECT_NAME} generated.cpp)
             """,
         checks=cc.source_files)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_custom_command(OUTPUT generated.cpp COMMAND some command line here)
+            add_executable(${PROJECT_NAME} other_generated.cpp)
+            """,
+        checks=cc.source_files)
+        self.assertEqual(["MISSING_FILE"], result)
 
     @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))

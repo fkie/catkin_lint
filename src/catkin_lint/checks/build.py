@@ -136,7 +136,7 @@ def source_files(linter):
         for source_file in args[1:]:
             if not info.is_valid_path(source_file):
                 info.report(ERROR, "EXTERNAL_FILE", cmd=cmd, file=info.report_path(source_file))
-            elif not info.is_existing_path(source_file, check=os.path.isfile):
+            if not info.is_existing_path(source_file, check=os.path.isfile):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     def on_add_library(info, cmd, args):
@@ -148,7 +148,7 @@ def source_files(linter):
         for source_file in args[1:]:
             if not info.is_valid_path(source_file):
                 info.report(ERROR, "EXTERNAL_FILE", cmd=cmd, file=info.report_path(source_file))
-            elif not info.is_existing_path(source_file, check=os.path.isfile):
+            if not info.is_existing_path(source_file, check=os.path.isfile):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     linter.require(generated_files)
