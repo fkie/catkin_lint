@@ -31,5 +31,5 @@
 __author__ = "Timo Röhling <timo.roehling@fkie.fraunhofer.de>"
 __copyright__ = "Copyright (c) 2013-2016 Fraunhofer FKIE"
 __license__ = "BSD"
-__version__ = "1.5.0"
+__version__ = "1.5.1"
 __all__ = ["cmake", "diagnostics", "linter", "environment", "main", "output", "ros", "util"]

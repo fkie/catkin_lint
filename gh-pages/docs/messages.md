@@ -57,10 +57,16 @@ also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
 - **Severity**: error
 - **Explanation**: You have used a test command without properly guarding it by a if(CATKIN_ENABLE_TESTING) block.
 
+## *cmd*() uses directory '*directory*' which is not in package
+
+- **ID**: external_directory
+- **Severity**: warning
+- **Explanation**: This catkin command uses a directory which lies outside of the package source folder. While this may work in your particular setup, you cannot assume file locations in general. Use find_path() to detect external locations insteed.
+
 ## *cmd*() uses file '*file*' which is not in package
 
 - **ID**: external_file
-- **Severity**: error
+- **Severity**: warning, error
 - **Explanation**: This catkin command uses a file which lies outside of the package source folder. While this may work in your particular setup, you cannot assume file locations in general. Use find_file() to detect external locations insteed.
 
 ## *export* plugin file '*file*' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}
@@ -116,12 +122,6 @@ also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
 - **ID**: os_error
 - **Severity**: error
 - **Explanation**: An operating system error has occured. This is not a linting problem per se but might be caused by a missing or unreadable file.
-
-## build include path '*path*' does not exist
-
-- **ID**: missing_build_include_path
-- **Severity**: error
-- **Explanation**: You have listed an invalid include path in the include_directories() command.
 
 ## catkin_metapackage() in regular package
 
