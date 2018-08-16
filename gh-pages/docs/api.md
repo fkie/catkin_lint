@@ -127,14 +127,24 @@ of the defined diagnostic messages. Certain messages have placeholder
 variables that must be specified, e.g. `cmd` for the command name.
 
 
-## package_path()
+## source_relative_path()
 
 ```python
-info.package_path(path)
+info.source_relative_path(path)
 ```
 Returns a path relative to the package source directory or
 an absolute path if the path is not within the package. Can handle
 `${CMAKE_CURRENT_SOURCE_DIR}` correctly.
+
+
+## binary_relative_path()
+
+```python
+info.binary_relative_path(path)
+```
+Returns a path relative to the package build directory or
+an absolute path if the path is not inside the build directory. Can handle
+`${CMAKE_CURRENT_BINARY_DIR}` correctly.
 
 
 ## real_path()
@@ -143,10 +153,10 @@ an absolute path if the path is not within the package. Can handle
 info.real_path(path)
 ```
 Returns the actual file system path for relative package path as
-returned by `package_path()`.
+returned by `source_relative_path()`.
 
 
-## is_internal_path(path)
+## is_internal_path()
 
 ```python
 info.is_internal_path(path)
@@ -154,11 +164,21 @@ info.is_internal_path(path)
 Returns `True` if the path is either below the package source
 directory or the package build directory.
 
-
-## is_catkin_target()
+## is_valid_path()
 
 ```python
-info.is_catkin_target(path, subdir=None)
+info.is_valid_path(path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False)
+```
+Returns `True` if the path is a valid path argument for a catkin command, which
+means it's either an existing file in the source directory, a generated file
+from the build directory, a path discovered by `find_package()`, `find_path()`,
+`find_file()` or `find_library()`, or optionally any existing hardcoded path.
+
+
+## is_catkin_install_destination()
+
+```python
+info.is_catkin_install_destination(path, subdir=None)
 ```
 Returns `True` if the path points to the install space of
 the catkin workspace. If `subdir` is not `None`, it checks
