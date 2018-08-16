@@ -15,19 +15,19 @@ except ImportError:
 class OutputTest(unittest.TestCase):
 
     _demo_msgs = [
-        Message(package="mock", file="mock.cmake", line=1, level=ERROR, id="MOCK_MSG", text="short text", description="long text"),
-        Message(package="mock", file="mock.cmake", line=2, level=WARNING, id="MOCK_MSG", text="short text", description="long text"),
-        Message(package="mock", file="mock.cmake", line=3, level=NOTICE, id="MOCK_MSG", text="short text", description="long text"),
-        Message(package="mock", file="", line=0, level=ERROR, id="MOCK_MSG", text="short text", description="long text"),
-        Message(package="mock", file="mock.cmake", line=0, level=ERROR, id="MOCK_MSG", text="short text", description="long text"),
+        Message(package="mock", file_name="mock.cmake", line=1, level=ERROR, msg_id="MOCK_MSG", text="short text", description="long text"),
+        Message(package="mock", file_name="mock.cmake", line=2, level=WARNING, msg_id="MOCK_MSG", text="short text", description="long text"),
+        Message(package="mock", file_name="mock.cmake", line=3, level=NOTICE, msg_id="MOCK_MSG", text="short text", description="long text"),
+        Message(package="mock", file_name="", line=0, level=ERROR, msg_id="MOCK_MSG", text="short text", description="long text"),
+        Message(package="mock", file_name="mock.cmake", line=0, level=ERROR, msg_id="MOCK_MSG", text="short text", description="long text"),
     ]
 
     def _do_output(self, formatter, msgs):
         output = io.StringIO()
-        formatter.prolog(file=output)
+        formatter.prolog(fd=output)
         for msg in msgs:
-            formatter.message(msg, file=output)
-        formatter.epilog(file=output)
+            formatter.message(msg, fd=output)
+        formatter.epilog(fd=output)
         return output.getvalue()
 
     def test_text(self):

@@ -342,17 +342,17 @@ def argparse(args, opts):
     curtype = None
     t_args = args[:]
     while t_args:
-        l = 0
+        L = 0
         for k, v in iteritems(opts):
             kl = k.split()
             ll = len(kl)
             if kl == t_args[:ll]:
-                if l < ll:
-                    l = ll
+                if L < ll:
+                    L = ll
                     curname = k
                     curtype = v
-        if l > 0:
-            del t_args[:l]
+        if L > 0:
+            del t_args[:L]
             if curtype == "-":
                 result[curname] = True
                 curname = None

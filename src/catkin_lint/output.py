@@ -54,11 +54,11 @@ class TextOutput(object):
     def __init__(self, color):
         self.color = color
 
-    def prolog(self, file=sys.stdout):
+    def prolog(self, fd=sys.stdout):
         pass
 
-    def message(self, msg, file=sys.stdout):
-        use_color = self.color == Color.Always or (self.color == Color.Auto and isatty(file))
+    def message(self, msg, fd=sys.stdout):
+        use_color = self.color == Color.Always or (self.color == Color.Auto and isatty(fd))
         loc = msg.package
         if msg.file:
             if msg.line:
@@ -66,9 +66,9 @@ class TextOutput(object):
             else:
                 fn = msg.file
             loc = "%s: %s" % (msg.package, fn)
-        file.write("%s: %s%s%s: %s\n" % (loc, Color.switch_on[use_color][msg.level], self.diagnostic_label[msg.level], Color.switch_off[use_color], msg.text))
+        fd.write("%s: %s%s%s: %s\n" % (loc, Color.switch_on[use_color][msg.level], self.diagnostic_label[msg.level], Color.switch_off[use_color], msg.text))
 
-    def epilog(self, file=sys.stdout):
+    def epilog(self, fd=sys.stdout):
         pass
 
 
@@ -78,12 +78,12 @@ class ExplainedTextOutput(TextOutput):
         TextOutput.__init__(self, color)
         self.explained = set()
 
-    def message(self, msg, file=sys.stdout):
-        TextOutput.message(self, msg, file)
+    def message(self, msg, fd=sys.stdout):
+        TextOutput.message(self, msg, fd)
         if msg.id not in self.explained:
             self.explained.add(msg.id)
-            file.write("%s\n" % textwrap.fill(msg.description, initial_indent="     * ", subsequent_indent="     * "))
-            file.write("     * You can ignore this problem with --ignore %s\n" % msg.id.lower())
+            fd.write("%s\n" % textwrap.fill(msg.description, initial_indent="     * ", subsequent_indent="     * "))
+            fd.write("     * You can ignore this problem with --ignore %s\n" % msg.id.lower())
 
 
 class XmlOutput(object):
@@ -93,17 +93,17 @@ class XmlOutput(object):
     def _quote(self, s):
         return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quote;')
 
-    def prolog(self, file=sys.stdout):
-        file.write('<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">' % {"version": __version__})
+    def prolog(self, fd=sys.stdout):
+        fd.write('<catkin_lint xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/fkie/catkin_lint/%(version)s/catkin_lint.xsd" version="%(version)s">' % {"version": __version__})
 
-    def message(self, msg, file=sys.stdout):
-        file.write('<%s><location><package>%s</package>' % (self.tag_label[msg.level], self._quote(msg.package)))
+    def message(self, msg, fd=sys.stdout):
+        fd.write('<%s><location><package>%s</package>' % (self.tag_label[msg.level], self._quote(msg.package)))
         if msg.file:
-            file.write('<file>%s</file>' % self._quote(msg.file))
+            fd.write('<file>%s</file>' % self._quote(msg.file))
             if msg.line:
-                file.write('<line>%s</line>' % msg.line)
-        file.write('</location><id>%s</id><text>%s</text>' % (msg.id, self._quote(msg.text)))
-        file.write('</%s>' % self.tag_label[msg.level])
+                fd.write('<line>%s</line>' % msg.line)
+        fd.write('</location><id>%s</id><text>%s</text>' % (msg.id, self._quote(msg.text)))
+        fd.write('</%s>' % self.tag_label[msg.level])
 
-    def epilog(self, file=sys.stdout):
-        file.write('</catkin_lint>\n')
+    def epilog(self, fd=sys.stdout):
+        fd.write('</catkin_lint>\n')

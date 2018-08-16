@@ -209,6 +209,14 @@ message_list = {
         i.e. the first line has to start with '#!' and needs to name
         the full path to the %(interpreter)s executable.
         """),
+    "EXTERNAL_FILE":
+    ("%(cmd)s() uses file '%(file)s' which is not in package",
+        """\
+        This catkin command uses a file which lies outside of the package
+        source folder. While this may work in your particular setup, you
+        cannot assume file locations in general. Use find_file() to detect
+        external locations insteed.
+        """),
     "MISSING_FILE":
     ("%(cmd)s() needs missing file '%(file)s'",
         """\
@@ -322,6 +330,14 @@ message_list = {
     ("build include path '%(path)s' does not exist",
         """\
         You have listed an invalid include path in the include_directories() command.
+        """),
+    "HARDCODED_BUILD_INCLUDE_PATH":
+    ("build include path '%(path)s' is hardcoded but not part of your package",
+        """\
+        You have listed an explicit, hardcoded include path in the include_directories() command,
+        which is not part of your package.
+        To ensure that your package will build on as many different systems as possible,
+        you should discover such paths with find_path() or find_package() instead.
         """),
     "EXTERNAL_INCLUDE_PATH":
     ("catkin_package() exports non-package include path",

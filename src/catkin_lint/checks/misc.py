@@ -78,7 +78,6 @@ def special_vars(linter):
         "CMAKE_INCLUDE_PATH",
         "CMAKE_LIBRARY_PATH",
         "CMAKE_FIND_ROOT_PATH",
-        "CMAKE_MODULE_PATH",
         "CMAKE_PREFIX_PATH"
     ])
 

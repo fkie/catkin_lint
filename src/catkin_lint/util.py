@@ -44,6 +44,7 @@ def word_split(s):
     result.append(s.lower())
     return result
 
+
 try:
     from itertools import zip_longest
 except ImportError:
@@ -74,6 +75,7 @@ def is_sorted(lst, key=lambda x, y: x < y):
         if key(el, lst[i]):
             return False
     return True
+
 
 # Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
 try:

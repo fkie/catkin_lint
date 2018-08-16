@@ -30,10 +30,13 @@ This is a list of all messages which might be shown by **catkin_lint**.
 Each diagnostic has a unique ID (such as *catkin_order_violation*),
 which you can use to disable certain messages, either with the command line option
 `--ignore ID`, or by adding a pragma line `#catkin_lint: ignore ID` at the beginning
-of the CMakeLists.txt file.
+of the CMakeLists.txt file. As a third option, you can add a pragma line `#catkin_lint: ignore_once ID`
+right before the offending statement. Use this if you want to ignore a particular instance
+of a problem but still be notified if the same problem occurs someplace else. You may
+also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
 
 """)
-        
+
         messages = {}
         for key in sorted(message_list.keys()):
             if key not in severity:
@@ -42,8 +45,11 @@ of the CMakeLists.txt file.
             short_text, long_text = message_list[key]
             long_text = long_text.replace("\n", " ")
             long_text = long_text.replace("catkin_lint", "**catkin_lint**")
-            short_text = re.sub(r"%\((.*?)\)s", r"*\1*", short_text)          
+            short_text = re.sub(r"%\((.*?)\)s", r"*\1*", short_text)
             long_text = re.sub(r"%\((.*?)\)s", r"*\1*", long_text)
+            long_text = re.sub(r" +", " ", long_text)
+            long_text = long_text.strip()
+            short_text = short_text.strip()
             messages[(short_text, key.lower())] = (long_text, ", ".join(list(severity[key])))
         for msg, key in sorted(messages.keys()):
             long_text, severities = messages[(msg,key)]

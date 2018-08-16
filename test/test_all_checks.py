@@ -198,11 +198,46 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("no packages to check", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
         self.assertEqual(exitcode, 0)
+        self.assertIn("warnings have been ignored", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.upstream_ws_srcdir, self.ws_srcdir]), "--pkg", "gamma")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
         self.assertEqual(exitcode, 1)
+
+        try:
+            # The following tests will not produce meaningful results
+            # if rosdep2 is unavailable
+            import rosdep2
+
+            exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
+            self.assertEqual(exitcode, 0)
+
+            exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.upstream_ws_srcdir, self.ws_srcdir]), "--pkg", "gamma")
+            self.assertEqual(exitcode, 1)
+
+            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_depend")
+            self.assertEqual(exitcode, 1)
+            self.assertIn("messages have been ignored", stdout)
+
+            del os.environ["ROS_DISTRO"]
+            exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
+            self.assertEqual(exitcode, 0)
+
+            exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "kinetic")
+            self.assertEqual(exitcode, 1)
+
+            del os.environ["ROS_DISTRO"]
+            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"))
+            self.assertEqual(exitcode, 0)
+            self.assertNotIn("error: unknown package", stdout)
+
+            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--rosdistro", "kinetic")
+            self.assertEqual(exitcode, 1)
+            self.assertIn("error: unknown package", stdout)
+
+        except ImportError:
+            pass
 
         exitcode, stdout = self.run_catkin_lint("--list-check-ids")
         self.assertEqual(exitcode, 0)
@@ -214,17 +249,6 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertIn("beta", stdout)
         self.assertIn(self.wsdir, stdout)
 
-        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_depend")
-        self.assertEqual(exitcode, 1)
-        self.assertIn("messages have been ignored", stdout)
-
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
-        self.assertEqual(exitcode, 0)
-        self.assertIn("warnings have been ignored", stdout)
-
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
-        self.assertEqual(exitcode, 1)
-
         exitcode, stdout = self.run_catkin_lint("--clear-cache")
         self.assertEqual(exitcode, 0)
 
@@ -233,22 +257,7 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertIn("Cached local paths: 0\n", stdout)
 
         del os.environ["ROS_DISTRO"]
-        exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
-        self.assertEqual(exitcode, 0)
-
-        exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "kinetic")
-        self.assertEqual(exitcode, 1)
-
-        del os.environ["ROS_DISTRO"]
-        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"))
-        self.assertEqual(exitcode, 0)
-        self.assertNotIn("error: unknown package", stdout)
-
-        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--rosdistro", "kinetic")
-        self.assertEqual(exitcode, 1)
-        self.assertIn("error: unknown package", stdout)
-
-        del os.environ["ROS_DISTRO"]
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--rosdistro", "kinetic")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
+

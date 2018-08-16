@@ -4,7 +4,7 @@ import sys
 sys.stderr = sys.stdout
 import os
 
-from catkin_lint.linter import CMakeLinter, LintInfo
+from catkin_lint.linter import CMakeLinter, LintInfo, PathConstants
 from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 import catkin_lint.checks.build as cc
 import catkin_lint.environment
@@ -48,6 +48,14 @@ class LinterTest(unittest.TestCase):
             include(${FOO_INCLUDE})
             """, checks=cc.all)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            include(../foo.cmake)
+            """, checks=cc.all)
+        self.assertEqual(["EXTERNAL_FILE"], result)
 
     def test_pragma(self):
         """Test #catkin_lint: pragma handling"""
@@ -58,9 +66,34 @@ class LinterTest(unittest.TestCase):
             #catkin_lint: ignore cmd_case
             PROJECT(mock)
             find_package(catkin REQUIRED)
-            catkin_package()
+            CATKIN_PACKAGE()
             """, checks=cc.all)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore cmd_case
+            #catkin_lint: report cmd_case
+            PROJECT(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE", "CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore_once cmd_case
+            PROJECT(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+            """
+            #catkin_lint: ignore_once cmd_case
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
 
     def test_argparse_error(self):
         """Test invalid CMake command arguments"""
@@ -160,6 +193,26 @@ class LinterTest(unittest.TestCase):
             endif()
             """, checks=cc.all)
         self.assertEqual([], result)
+
+    @posix_and_nt
+    def test_package_path(self):
+        """Test package path resolver"""
+        env = create_env()
+        info = LintInfo(env)
+        info.var = {
+            "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
+        }
+        self.assertEqual(info.source_relative_path("filename"), "filename")
+        self.assertEqual(info.source_relative_path("subdir/filename"), "subdir/filename")
+        self.assertEqual(info.source_relative_path("subdir/../filename"), "filename")
+        self.assertEqual(info.source_relative_path("/filename"), "/filename")
+        self.assertEqual(info.source_relative_path("../../../../filename"), "/filename")
+        self.assertEqual(info.source_relative_path("../../../../subdir/filename"), "/subdir/filename")
+        info.var = {
+            "CMAKE_CURRENT_SOURCE_DIR": "%s/subdir" % PathConstants.PACKAGE_SOURCE,
+        }
+        self.assertEqual(info.source_relative_path("filename"), "subdir/filename")
+        self.assertEqual(info.source_relative_path("../filename"), "filename")
 
     def test_list(self):
         """Test CMake list handling"""
