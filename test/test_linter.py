@@ -202,17 +202,17 @@ class LinterTest(unittest.TestCase):
         info.var = {
             "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
         }
-        self.assertEqual(info.package_path("filename"), os.path.normpath("filename"))
-        self.assertEqual(info.package_path("subdir/filename"), os.path.normpath("subdir/filename"))
-        self.assertEqual(info.package_path("subdir/../filename"), os.path.normpath("filename"))
-        self.assertEqual(info.package_path("/filename"), os.path.normpath("/filename"))
-        self.assertEqual(info.package_path("../../../../filename"), os.path.normpath("/filename"))
-        self.assertEqual(info.package_path("../../../../subdir/filename"), os.path.normpath("/subdir/filename"))
+        self.assertEqual(info.source_relative_path("filename"), "filename")
+        self.assertEqual(info.source_relative_path("subdir/filename"), "subdir/filename")
+        self.assertEqual(info.source_relative_path("subdir/../filename"), "filename")
+        self.assertEqual(info.source_relative_path("/filename"), "/filename")
+        self.assertEqual(info.source_relative_path("../../../../filename"), "/filename")
+        self.assertEqual(info.source_relative_path("../../../../subdir/filename"), "/subdir/filename")
         info.var = {
             "CMAKE_CURRENT_SOURCE_DIR": "%s/subdir" % PathConstants.PACKAGE_SOURCE,
         }
-        self.assertEqual(info.package_path("filename"), os.path.normpath("subdir/filename"))
-        self.assertEqual(info.package_path("../filename"), os.path.normpath("filename"))
+        self.assertEqual(info.source_relative_path("filename"), "subdir/filename")
+        self.assertEqual(info.source_relative_path("../filename"), "filename")
 
     def test_list(self):
         """Test CMake list handling"""

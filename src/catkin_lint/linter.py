@@ -29,7 +29,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import posixpath
 import re
+import random
+import string
 from fnmatch import fnmatch
 from copy import copy
 from .cmake import ParserContext, argparse as cmake_argparse, CMakeSyntaxError
@@ -86,11 +89,7 @@ class LintInfo(object):
         self.var = {}
         self.parent_var = {}
         self.messages = []
-        self.generated_files = set()
-        self._pkg_source = os.path.normpath(PathConstants.PACKAGE_SOURCE)
-        self._pkg_build = os.path.normpath(PathConstants.PACKAGE_BINARY)
-        self._catkin_install_dir = os.path.normpath(PathConstants.CATKIN_INSTALL)
-        self._path_prefix = os.path.normpath(PathConstants.PREFIX)
+        self.generated_files = set([""])
 
     def report(self, level, msg_id, **kwargs):
         if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
@@ -107,42 +106,55 @@ class LintInfo(object):
             description=description
         ))
 
-    def package_path(self, path):
-        new_path = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path or ""))
-        if new_path.startswith(self._pkg_source):
-            new_path = new_path[len(self._pkg_source) + 1:]
+    def source_relative_path(self, path):
+        new_path = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
+        if new_path.startswith(PathConstants.PACKAGE_SOURCE):
+            new_path = new_path[len(PathConstants.PACKAGE_SOURCE) + 1:]
         return new_path
+
+    def binary_relative_path(self, path):
+        new_path = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_BINARY_DIR"], path.replace(os.path.sep, "/")))
+        if new_path.startswith(PathConstants.PACKAGE_BINARY):
+            new_path = new_path[len(PathConstants.PACKAGE_BINARY) + 1:]
+        return new_path
+
+    def report_path(self, path):
+        if path.startswith(PathConstants.PACKAGE_SOURCE):
+            return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
+        if path.startswith(PathConstants.PACKAGE_BINARY):
+            return posixpath.normpath("${PROJECT_BUILD_DIR}/" + path[len(PathConstants.PACKAGE_BINARY) + 1:])
+        return posixpath.normpath(path)
 
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))
 
     def find_package_path(self, pkg, path):
-        return os.path.normpath(os.path.join(PathConstants.EXTERNAL_PATH, pkg, path))
+        return posixpath.join(PathConstants.EXTERNAL_PATH, pkg, path)
 
     def valid_path(self, path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False):
-        tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
-        if tmp.startswith(self._pkg_source):
-            return check(os.path.join(self.path, tmp[len(self._pkg_source) + 1:]))
+        tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
+        if tmp.startswith(PathConstants.PACKAGE_SOURCE):
+            result = check(os.path.join(self.path, os.path.normpath(tmp[len(PathConstants.PACKAGE_SOURCE) + 1:])))
+            if not require_source_folder:
+                result = result or tmp[len(PathConstants.PACKAGE_SOURCE) + 1:] in self.generated_files
+            return result
         if require_source_folder:
             return False
-        if tmp.startswith(self._pkg_build):
-            return True  # Cannot handle generated files yet
-            # return tmp[len(self._pkg_build) + 1:] in self.generated_files
-        if tmp.startswith(self._path_prefix):
+        if tmp.startswith(PathConstants.PACKAGE_BINARY):
+            return tmp[len(PathConstants.PACKAGE_BINARY) + 1:] in self.generated_files
+        if tmp.startswith(PathConstants.EXTERNAL_PATH):
             return True
         if allow_hardcoded_path:
-            return check(tmp)
+            return check(os.path.normpath(tmp))
         return False
 
     def is_internal_path(self, path):
-        tmp = os.path.normpath(os.path.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
-        return tmp.startswith(self._pkg_source) or tmp.startswith(self._pkg_build)
+        tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
+        return tmp.startswith(PathConstants.PACKAGE_SOURCE) or tmp.startswith(PathConstants.PACKAGE_BINARY)
 
     def is_catkin_install_destination(self, path, subdir=None):
-        catkin_dir = self._catkin_install_dir
-        if subdir is not None:
-            catkin_dir = os.path.join(catkin_dir, subdir)
-        return os.path.normpath(path).startswith(catkin_dir)
+        catkin_dir = posixpath.join(PathConstants.CATKIN_INSTALL, subdir or "")
+        return posixpath.normpath(path).startswith(catkin_dir)
 
     def condition_is_checked(self, expr):
         for c in self.conditionals:
@@ -206,8 +218,8 @@ class CMakeLinter(object):
         if "/" not in args[0] and "." not in args[0]:
             incl_file = "NOTFOUND"
         else:
-            incl_file = info.package_path(args[0])
-            if incl_file.startswith(os.path.normpath(PathConstants.EXTERNAL_PATH)):
+            incl_file = info.source_relative_path(args[0])
+            if incl_file.startswith(PathConstants.EXTERNAL_PATH):
                 return
             skip_parsing = False
             if info.manifest.name in self._include_blacklist:
@@ -215,13 +227,13 @@ class CMakeLinter(object):
                     if fnmatch(incl_file, glob_pattern):
                         skip_parsing = True
                         break
-            real_file = os.path.join(info.path, incl_file)
+            real_file = os.path.join(info.path, os.path.normpath(incl_file))
             if os.path.isfile(real_file):
                 if not skip_parsing:
                     self._parse_file(info, real_file)
             else:
                 if not opts["OPTIONAL"]:
-                    if os.path.isabs(incl_file):
+                    if posixpath.isabs(incl_file):
                         info.report(ERROR, "EXTERNAL_FILE", cmd="include", file=args[0])
                     else:
                         info.report(ERROR, "MISSING_FILE", cmd="include", file=incl_file)
@@ -231,9 +243,9 @@ class CMakeLinter(object):
 
     def _subdirectory(self, info, args):
         _, args = cmake_argparse(args, {"EXCLUDE_FROM_ALL": "-"})
-        subdir = info.package_path(args[0])
+        subdir = info.source_relative_path(args[0])
         real_subdir = info.real_path(subdir)
-        if os.path.isabs(subdir):
+        if posixpath.isabs(subdir):
             info.report(ERROR, "EXTERNAL_SUBDIR", subdir=subdir)
             return
         if not os.path.isdir(real_subdir):
@@ -248,7 +260,8 @@ class CMakeLinter(object):
         info.parent_var = info.var
         info.var = copy(info.var)
         try:
-            info.var["CMAKE_CURRENT_SOURCE_DIR"] = os.path.join(PathConstants.PACKAGE_SOURCE, subdir)
+            info.var["CMAKE_CURRENT_SOURCE_DIR"] = posixpath.join(PathConstants.PACKAGE_SOURCE, subdir)
+            info.var["CMAKE_CURRENT_BINARY_DIR"] = posixpath.join(PathConstants.PACKAGE_BINARY, subdir)
             info.subdir = subdir
             self._parse_file(info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
@@ -391,8 +404,8 @@ class CMakeLinter(object):
                 if cmd == "find_package":
                     info.var["%s_INCLUDE_DIRS" % args[0]] = info.find_package_path(args[0], "include")
                     info.var["%s_INCLUDE_DIRS" % args[0].upper()] = info.find_package_path(args[0], "include")
-                    info.var["%s_LIBRARIES" % args[0]] = os.path.join(info.find_package_path(args[0], "libs"), "library.so")
-                    info.var["%s_LIBRARIES" % args[0].upper()] = os.path.join(info.find_package_path(args[0], "libs"), "library.so")
+                    info.var["%s_LIBRARIES" % args[0]] = posixpath.join(info.find_package_path(args[0], "lib"), "library.so")
+                    info.var["%s_LIBRARIES" % args[0].upper()] = posixpath.join(info.find_package_path(args[0], "lib"), "library.so")
                     info.find_packages.add(args[0])
                 if cmd == "add_executable":
                     info.targets.add(args[0])
@@ -407,11 +420,11 @@ class CMakeLinter(object):
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
                 if cmd == "find_path":
-                    info.var[args[0]] = "%s/find-path" % PathConstants.EXTERNAL_PATH
+                    info.var[args[0]] = PathConstants.EXTERNAL_PATH
                 if cmd == "find_library":
-                    info.var[args[0]] = "%s/find-libs/library.so" % PathConstants.EXTERNAL_PATH
+                    info.var[args[0]] = "%s/library.so" % PathConstants.EXTERNAL_PATH
                 if cmd == "find_file":
-                    info.var[args[0]] = "%s/find-file/filename.ext" % PathConstants.EXTERNAL_PATH
+                    info.var[args[0]] = "%s/filename.ext" % PathConstants.EXTERNAL_PATH
             except CMakeSyntaxError as e:
                 info.report(WARNING, "ARGUMENT_ERROR", msg=str(e))
             finally:

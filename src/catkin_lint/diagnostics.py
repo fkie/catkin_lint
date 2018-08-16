@@ -331,6 +331,14 @@ message_list = {
         """\
         You have listed an invalid include path in the include_directories() command.
         """),
+    "HARDCODED_BUILD_INCLUDE_PATH":
+    ("build include path '%(path)s' is hardcoded but not part of your package",
+        """\
+        You have listed an explicit, hardcoded include path in the include_directories() command,
+        which is not part of your package.
+        To ensure that your package will build on as many different systems as possible,
+        you should discover such paths with find_path() or find_package() instead.
+        """),
     "EXTERNAL_INCLUDE_PATH":
     ("catkin_package() exports non-package include path",
         """\

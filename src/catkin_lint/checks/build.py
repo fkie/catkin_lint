@@ -29,6 +29,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import posixpath
 import re
 import stat
 from ..linter import ERROR, WARNING, NOTICE, PathConstants
@@ -44,17 +45,16 @@ def includes(linter):
 
     def on_include_directories(info, cmd, args):
         _, args = cmake_argparse(args, {"AFTER": "-", "BEFORE": "-", "SYSTEM": "-"})
-        includes = set([info.package_path(d) for d in args])
+        for incl in args:
+            if not info.valid_path(incl, check=os.path.isdir, allow_hardcoded_path=True):
+                info.report(ERROR, "MISSING_BUILD_INCLUDE_PATH", path=info.report_path(incl))
+            elif not info.valid_path(incl, check=os.path.isdir, allow_hardcoded_path=False):
+                info.report(WARNING, "HARDCODED_BUILD_INCLUDE_PATH", path=info.report_path(incl))
+        includes = set([info.source_relative_path(d) for d in args])
         info.build_includes |= includes
-
-    def on_final(info):
-        for incl in info.build_includes:
-            if incl and not info.valid_path(incl, check=os.path.isdir, allow_hardcoded_path=True):
-                info.report(ERROR, "MISSING_BUILD_INCLUDE_PATH", path=incl)
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("include_directories", on_include_directories)
-    linter.add_final_hook(on_final)
 
 
 def targets(linter):
@@ -109,6 +109,21 @@ def targets(linter):
     linter.add_final_hook(on_final)
 
 
+def generated_files(linter):
+    def on_configure_file(info, cmd, args):
+        if not info.valid_path(args[0], check=os.path.isfile):
+            info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(args[0]))
+        info.generated_files.add(info.binary_relative_path(args[1]))
+
+    def on_add_custom_command(info, cmd, args):
+        opts, args = cmake_argparse(args, {"OUTPUT": "+", "COMMAND": "*", "ARGS": "*", "BYPRODUCTS": "*", "WORKING_DIRECTORY": "?", "MAIN_DEPENDENCY": "?", "DEPENDS": "*"})
+        for f in opts["OUTPUT"] + opts["BYPRODUCTS"]:
+            info.generated_files.add(info.binary_relative_path(f))
+
+    linter.add_command_hook("configure_file", on_configure_file)
+    linter.add_command_hook("add_custom_command", on_add_custom_command)
+
+
 def source_files(linter):
     def on_add_executable(info, cmd, args):
         if "IMPORTED" in args:
@@ -118,7 +133,7 @@ def source_files(linter):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
             if not info.valid_path(source_file, check=os.path.isfile):
-                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     def on_add_library(info, cmd, args):
         if "IMPORTED" in args:
@@ -128,8 +143,9 @@ def source_files(linter):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
             if not info.valid_path(source_file, check=os.path.isfile):
-                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=source_file)
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
+    linter.require(generated_files)
     linter.add_command_hook("add_executable", on_add_executable)
     linter.add_command_hook("add_library", on_add_library)
 
@@ -176,7 +192,8 @@ def depends(linter):
             info.report(NOTICE, "UNSORTED_LIST", name="COMPONENTS")
         for pkg in opts["COMPONENTS"]:
             info.var["%s_INCLUDE_DIRS" % pkg] = info.find_package_path(pkg, "include")
-            info.var["%s_LIBRARIES" % pkg] = os.path.join(info.find_package_path(pkg, "libs"), "library.so")
+            info.var["%s_LIBRARIES" % pkg] = posixpath.join(info.find_package_path(pkg, "lib"), "library.so")
+            info.var["%s_PACKAGE_PATH" % pkg] = posixpath.normpath(info.find_package_path(pkg, ""))
             if pkg in info.find_packages:
                 info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_known_pkg(pkg):
@@ -259,7 +276,7 @@ def exports(linter):
                 info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif pkg not in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
                 info.report(ERROR, "UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg)
-        includes = [info.package_path(d) for d in opts["INCLUDE_DIRS"]]
+        includes = [info.source_relative_path(d) for d in opts["INCLUDE_DIRS"]]
         ext_includes = [d for d in includes if not info.is_internal_path(d)]
         if ext_includes:
             info.report(ERROR, "EXTERNAL_INCLUDE_PATH")
@@ -289,10 +306,10 @@ def exports(linter):
                 info.report(ERROR, "MISSING_EXPORT_INCLUDE_PATH", path=incl)
         includes = info.build_includes | info.export_includes
         for d1 in includes:
-            if not os.path.isabs(d1):
+            if not posixpath.isabs(d1):
                 for d2 in includes:
-                    if d1.startswith("%s%s" % (d2, os.path.sep)):
-                        info.report(WARNING, "AMBIGUOUS_BUILD_INCLUDE", path=d1, parent_path=d2)
+                    if d1.startswith("%s/" % d2):
+                        info.report(WARNING, "AMBIGUOUS_BUILD_INCLUDE", path=info.report_path(d1), parent_path=info.report_path(d2))
         for lib in info.export_libs:
             if lib in info.targets:
                 if info.target_outputs[lib] != lib:
@@ -350,15 +367,15 @@ def installs(linter):
         for f in opts["PROGRAMS"]:
             if f:
                 if info.valid_path(f, check=os.path.isfile):
-                    real_f = info.real_path(info.package_path(f))
+                    real_f = info.real_path(info.source_relative_path(f))
                     if os.path.isfile(real_f):
                         with open(real_f, "r") as fd:
                             shebang = fd.readline()
                             if not shebang.startswith("#!") or "python" not in shebang:
-                                info.report(ERROR, "MISSING_SHEBANG", file=f, interpreter="python")
+                                info.report(ERROR, "MISSING_SHEBANG", file=info.report_path(f), interpreter="python")
                 else:
-                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
-                info.install_programs.add(info.package_path(f))
+                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
+                info.install_programs.add(info.source_relative_path(f))
         if not info.is_catkin_install_destination(opts["DESTINATION"]):
             info.report(WARNING, "INSTALL_DESTINATION", type="PROGRAMS", dest="DESTINATION")
 
@@ -370,30 +387,30 @@ def installs(linter):
             for f in opts["PROGRAMS"]:
                 if f:
                     if not info.valid_path(f, check=os.path.isfile):
-                        info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
-                    info.install_programs.add(info.package_path(f))
+                        info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
+                    info.install_programs.add(info.source_relative_path(f))
         if opts["DIRECTORY"]:
             install_type = "DIRECTORY"
             for d in opts["DIRECTORY"]:
                 if d:
                     if info.valid_path(d, check=os.path.isdir):
-                        real_d = info.real_path(info.package_path(d))
+                        real_d = info.real_path(info.source_relative_path(d))
                         if os.path.isdir(real_d):
                             if opts["USE_SOURCE_PERMISSIONS"]:
                                 for dirpath, _, filenames in os.walk(real_d, topdown=True):
                                     for filename in filenames:
                                         real_filename = os.path.join(dirpath, filename)
-                                        pkg_filename = real_filename[len(info.path)+1:]
+                                        pkg_filename = info.source_relative_path(real_filename[len(info.path)+1:])
                                         mode = os.stat(real_filename).st_mode
                                         if mode & stat.S_IXUSR:
                                             info.install_programs.add(pkg_filename)
                     else:
-                        info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=d)
+                        info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(d))
         if opts["FILES"]:
             install_type = "FILES"
             for f in opts["FILES"]:
                 if f and not info.valid_path(f, check=os.path.isfile):
-                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
+                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
             info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
         if opts["TARGETS"]:
             install_type = "TARGETS"
@@ -429,6 +446,7 @@ def installs(linter):
 
     linter.require(targets)
     linter.require(exports)
+    linter.require(generated_files)
     linter.add_init_hook(on_init)
     linter.add_command_hook("catkin_install_python", on_catkin_install_python)
     linter.add_command_hook("install", on_install)
@@ -466,15 +484,14 @@ def dynamic_reconfigure(linter):
     def on_generate_dynamic_reconfigure_options(info, cmd, args):
         for f in args:
             if f:
-                f = info.package_path(f)
-                real_f = info.real_path(f)
+                real_f = info.real_path(info.source_relative_path(f))
                 if os.path.isfile(real_f):
                     mode = os.stat(real_f).st_mode
                     if not mode & stat.S_IXUSR:
-                        info.report(ERROR, "SCRIPT_NOT_EXECUTABLE", script=f)
+                        info.report(ERROR, "SCRIPT_NOT_EXECUTABLE", script=info.report_path(f))
                 else:
-                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=f)
-                info.dynamic_reconfigure_files.add(info.package_path(f))
+                    info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
+                info.dynamic_reconfigure_files.add(info.source_relative_path(f))
 
     def on_final(info):
         if "generate_dynamic_reconfigure_options" in info.commands and "dynamic_reconfigure" not in info.find_packages:
@@ -494,7 +511,7 @@ def scripts(linter):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
             for filename in filenames:
                 full_filename = os.path.join(dirpath, filename)
-                pkg_filename = full_filename[len(info.path) + 1:]
+                pkg_filename = info.source_relative_path(full_filename[len(info.path) + 1:])
                 mode = os.stat(full_filename).st_mode
                 if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                     info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
@@ -574,6 +591,7 @@ def message_generation(linter):
 def all(linter):
     linter.require(includes)
     linter.require(targets)
+    linter.require(generated_files)
     linter.require(source_files)
     linter.require(link_directories)
     linter.require(depends)
