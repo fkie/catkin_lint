@@ -62,6 +62,13 @@ def generate_random_id(L=16):
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(L))
 
 
+class PathClass(object):
+    SOURCE = 0
+    BINARY = 1
+    DISCOVERED = 3
+    OTHER = 4
+
+
 class PathConstants(object):
     PACKAGE_SOURCE = "/%s" % generate_random_id()
     PACKAGE_BINARY = "/%s" % generate_random_id()
@@ -134,22 +141,30 @@ class LintInfo(object):
     def find_package_path(self, pkg, path):
         return posixpath.join(PathConstants.EXTERNAL_PATH, pkg, path)
 
-    def is_valid_path(self, path, check=os.path.exists, allow_hardcoded_path=False, require_source_folder=False):
+    def path_class(self, path):
         tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
         if tmp.startswith(PathConstants.PACKAGE_SOURCE):
-            result = check(os.path.join(self.path, os.path.normpath(tmp[len(PathConstants.PACKAGE_SOURCE) + 1:])))
-            if not require_source_folder:
-                result = result or tmp[len(PathConstants.PACKAGE_SOURCE) + 1:] in self.generated_files
-            return result
-        if require_source_folder:
-            return False
+            return PathClass.SOURCE
         if tmp.startswith(PathConstants.PACKAGE_BINARY):
-            return tmp[len(PathConstants.PACKAGE_BINARY) + 1:] in self.generated_files
-        if tmp.startswith(PathConstants.EXTERNAL_PATH):
+            return PathClass.BINARY
+        if tmp.startswith(PathConstants.CATKIN_INSTALL) or tmp.startswith(PathConstants.EXTERNAL_PATH):
+            return PathClass.DISCOVERED
+        return PathClass.OTHER
+
+    def is_valid_path(self, path, valid=[PathClass.SOURCE, PathClass.BINARY, PathClass.DISCOVERED]):
+        return self.path_class(path) in valid
+
+    def is_existing_path(self, path, check=os.path.exists, require_source_folder=False, discovered_path_ok=True):
+        tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
+        if check(os.path.normpath(os.path.join(self.path, self.subdir, path))):
             return True
-        if allow_hardcoded_path:
-            return check(os.path.normpath(tmp))
-        return False
+        if tmp.startswith(PathConstants.PACKAGE_SOURCE):
+            if not require_source_folder and not posixpath.isabs(path) and tmp[len(PathConstants.PACKAGE_SOURCE) + 1:] in self.generated_files:
+                return True
+            return check(os.path.join(self.path, os.path.normpath(tmp[len(PathConstants.PACKAGE_SOURCE) + 1:])))
+        if not require_source_folder and tmp.startswith(PathConstants.PACKAGE_BINARY):
+            return tmp[len(PathConstants.PACKAGE_BINARY) + 1:] in self.generated_files
+        return tmp.startswith(PathConstants.EXTERNAL_PATH) and discovered_path_ok
 
     def is_internal_path(self, path):
         tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))

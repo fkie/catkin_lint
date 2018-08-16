@@ -20,17 +20,17 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "include_directories(include)", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "include_directories(/some/hardcoded/path)", checks=cc.includes)
-        self.assertEqual(["HARDCODED_BUILD_INCLUDE_PATH"], result)
+        self.assertEqual(["EXTERNAL_DIRECTORY"], result)
         result = mock_lint(env, pkg, "find_package(catkin REQUIRED) include_directories(${catkin_INCLUDE_DIRS})", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "include_directories(missing_include)", checks=cc.includes)
-        self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
+        self.assertEqual([ "MISSING_DIRECTORY" ], result)
         result = mock_lint(env, pkg, "include_directories(/some/hardcoded/but/missing/path)", checks=cc.includes)
-        self.assertEqual([ "MISSING_BUILD_INCLUDE_PATH" ], result)
+        self.assertEqual([ "EXTERNAL_DIRECTORY", "MISSING_DIRECTORY" ], result)
 
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath("/mock-path/src/a.cpp"), os.path.normpath("/mock-path/src/b.cpp")])
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/mock-path/src/a.cpp", "/mock-path/src/b.cpp", "/some/external/file.cpp"]])
     def test_source_files(self):
         """Test add_executable() and add_library()"""
         env = create_env()
@@ -41,6 +41,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "add_executable(mock ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp) add_library(mock_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp)", checks=cc.source_files)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg, "add_executable(mock /some/external/file.cpp)", checks=cc.source_files)
+        self.assertEqual([ "EXTERNAL_FILE" ], result)
+        result = mock_lint(env, pkg, "add_library(mock /some/external/file.cpp)", checks=cc.source_files)
+        self.assertEqual([ "EXTERNAL_FILE" ], result)
         result = mock_lint(env, pkg, "add_executable(mock src/missing.cpp)", checks=cc.source_files)
         self.assertEqual([ "MISSING_FILE" ], result)
         result = mock_lint(env, pkg, "add_library(mock src/missing.cpp)", checks=cc.source_files)
@@ -354,12 +358,14 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "INVALID_META_COMMAND" ], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: False)
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/some/external/file.in"))
     def test_generated_files(self):
         """Test checks for generated files"""
         env = create_env()
         pkg = create_manifest("mock")
-        result = mock_lint(env, pkg, "configure_file(missing.in missing.out)", checks=cc.generated_files)
+        result = mock_lint(env, pkg, "configure_file(/some/external/file.in file)", checks=cc.generated_files)
+        self.assertEqual(["EXTERNAL_FILE"], result)
+        result = mock_lint(env, pkg, "configure_file(missing.in missing)", checks=cc.generated_files)
         self.assertEqual(["MISSING_FILE"], result)
         result = mock_lint(env, pkg,
             """
@@ -412,8 +418,8 @@ class ChecksBuildTest(unittest.TestCase):
 
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/mock-path/bin/script", "/mock-path/bin/script.in", "/mock-path/share/file", "/mock-path/src/source.cpp"]])
-    @patch("os.path.isdir", lambda x: x == os.path.normpath("/mock-path/include"))
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/mock-path/bin/script", "/mock-path/bin/script.in", "/mock-path/share/file", "/mock-path/src/source.cpp", "/some/external/script", "/some/external/file"]])
+    @patch("os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/mock-path/include", "/some/external/dir"]])
     def test_installs(self):
         """Test installation checks"""
         env = create_env()
@@ -460,11 +466,29 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            install(FILES /some/external/file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "EXTERNAL_FILE" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             install(FILES missing_file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
             """,
         checks=cc.installs)
         self.assertEqual([ "MISSING_FILE" ], result)
 
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(PROGRAMS /some/external/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "EXTERNAL_FILE" ], result)
         result = mock_lint(env, pkg,
             """
             project(mock)
@@ -486,6 +510,15 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.installs)
         self.assertEqual([], result)
 
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(DIRECTORY /some/external/dir DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "EXTERNAL_DIRECTORY" ], result)
         result = mock_lint(env, pkg,
             """
             project(mock)
@@ -615,6 +648,14 @@ class ChecksBuildTest(unittest.TestCase):
                 """,
             checks=cc.installs)
             self.assertEqual(["INSTALL_DESTINATION"], result)
+            result = mock_lint(env, pkg,
+                """
+                project(mock)
+                find_package(catkin REQUIRED)
+                catkin_install_python(PROGRAMS /some/external/script DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+                """,
+            checks=cc.installs)
+            self.assertEqual(["EXTERNAL_FILE"], result)
             result = mock_lint(env, pkg,
                 """
                 project(mock)
@@ -960,6 +1001,14 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.dynamic_reconfigure)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS dynamic_reconfigure)
+            generate_dynamic_reconfigure_options(/external/but/existing_script.cfg)
+            """,
+        checks=cc.dynamic_reconfigure)
+        self.assertEqual(["EXTERNAL_FILE"], result)
         result = mock_lint(env, pkg,
             """
             project(mock)

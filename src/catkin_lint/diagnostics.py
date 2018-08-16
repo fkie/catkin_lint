@@ -223,6 +223,14 @@ message_list = {
         This catkin command processes a particular file which is missing
         from the package source folder.
         """),
+    "EXTERNAL_DIRECTORY":
+    ("%(cmd)s() uses directory '%(directory)s' which is not in package",
+        """\
+        This catkin command uses a directory which lies outside of the package
+        source folder. While this may work in your particular setup, you
+        cannot assume file locations in general. Use find_path() to detect
+        external locations insteed.
+        """),
     "MISSING_DIRECTORY":
     ("%(cmd)s() needs missing directory '%(directory)s'",
         """\
