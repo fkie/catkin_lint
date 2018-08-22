@@ -66,14 +66,16 @@ class PathClass(object):
     SOURCE = 0
     BINARY = 1
     DISCOVERED = 3
-    OTHER = 4
+    CATKIN = 4
+    OTHER = 5
 
 
 class PathConstants(object):
     PACKAGE_SOURCE = "/%s" % generate_random_id()
     PACKAGE_BINARY = "/%s" % generate_random_id()
+    CATKIN_DEVEL = "/%s" % generate_random_id()
     CATKIN_INSTALL = "/%s" % generate_random_id()
-    EXTERNAL_PATH = "/%s" % generate_random_id()
+    DISCOVERED_PATH = "/%s" % generate_random_id()
 
 
 class LintInfo(object):
@@ -133,13 +135,17 @@ class LintInfo(object):
             return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
         if path.startswith(PathConstants.PACKAGE_BINARY):
             return posixpath.normpath("${PROJECT_BUILD_DIR}/" + path[len(PathConstants.PACKAGE_BINARY) + 1:])
+        if path.startswith(PathConstants.CATKIN_DEVEL):
+            return posixpath.normpath("${CATKIN_DEVEL_PREFIX}/" + path[len(PathConstants.CATKIN_DEVEL) + 1:])
+        if path.startswith(PathConstants.CATKIN_INSTALL):
+            return posixpath.normpath("${CATKIN_INSTALL_PREFIX}/" + path[len(PathConstants.CATKIN_INSTALL) + 1:])
         return posixpath.normpath(path)
 
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))
 
     def find_package_path(self, pkg, path):
-        return posixpath.join(PathConstants.EXTERNAL_PATH, pkg, path)
+        return posixpath.join(PathConstants.DISCOVERED_PATH, pkg, path)
 
     def path_class(self, path):
         tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
@@ -147,8 +153,10 @@ class LintInfo(object):
             return PathClass.SOURCE
         if tmp.startswith(PathConstants.PACKAGE_BINARY):
             return PathClass.BINARY
-        if tmp.startswith(PathConstants.CATKIN_INSTALL) or tmp.startswith(PathConstants.EXTERNAL_PATH):
+        if tmp.startswith(PathConstants.DISCOVERED_PATH):
             return PathClass.DISCOVERED
+        if tmp.startswith(PathConstants.CATKIN_DEVEL) or tmp.startswith(PathConstants.CATKIN_INSTALL):
+            return PathClass.CATKIN
         return PathClass.OTHER
 
     def is_valid_path(self, path, valid=[PathClass.SOURCE, PathClass.BINARY, PathClass.DISCOVERED]):
@@ -171,7 +179,17 @@ class LintInfo(object):
             return tmp[len(PathConstants.PACKAGE_BINARY) + 1:] in self.generated_files
         if not require_source_folder and tmp in self.generated_files:
             return True
-        return tmp.startswith(PathConstants.EXTERNAL_PATH) and discovered_path_ok
+        if not require_source_folder and tmp.startswith(PathConstants.CATKIN_DEVEL):
+            s = tmp[len(PathConstants.CATKIN_DEVEL) + 1:]
+            for t in ["include", "lib", "share", "bin"]:
+                if s.startswith(t):
+                    return True
+        if not require_source_folder and tmp.startswith(PathConstants.CATKIN_INSTALL):
+            s = tmp[len(PathConstants.CATKIN_INSTALL) + 1:]
+            for t in ["include", "lib", "share", "bin"]:
+                if s.startswith(t):
+                    return True
+        return tmp.startswith(PathConstants.DISCOVERED_PATH) and discovered_path_ok
 
     def is_internal_path(self, path):
         tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path))
@@ -244,7 +262,7 @@ class CMakeLinter(object):
             incl_file = "NOTFOUND"
         else:
             incl_file = info.source_relative_path(args[0])
-            if incl_file.startswith(PathConstants.EXTERNAL_PATH):
+            if incl_file.startswith(PathConstants.DISCOVERED_PATH):
                 return
             skip_parsing = False
             if info.manifest.name in self._include_blacklist:
@@ -287,6 +305,7 @@ class CMakeLinter(object):
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = posixpath.join(PathConstants.PACKAGE_SOURCE, subdir)
             info.var["CMAKE_CURRENT_BINARY_DIR"] = posixpath.join(PathConstants.PACKAGE_BINARY, subdir)
+            info.generated_files.add(subdir)
             info.subdir = subdir
             self._parse_file(info, os.path.join(real_subdir, "CMakeLists.txt"))
         finally:
@@ -445,11 +464,11 @@ class CMakeLinter(object):
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
                 if cmd == "find_path":
-                    info.var[args[0]] = PathConstants.EXTERNAL_PATH
+                    info.var[args[0]] = PathConstants.DISCOVERED_PATH
                 if cmd == "find_library":
-                    info.var[args[0]] = "%s/library.so" % PathConstants.EXTERNAL_PATH
+                    info.var[args[0]] = "%s/library.so" % PathConstants.DISCOVERED_PATH
                 if cmd == "find_file":
-                    info.var[args[0]] = "%s/filename.ext" % PathConstants.EXTERNAL_PATH
+                    info.var[args[0]] = "%s/filename.ext" % PathConstants.DISCOVERED_PATH
             except CMakeSyntaxError as e:
                 info.report(WARNING, "ARGUMENT_ERROR", msg=str(e))
             finally:
@@ -461,6 +480,7 @@ class CMakeLinter(object):
         try:
             cur_file = os.path.relpath(filename, info.path)
             info.var["CMAKE_CURRENT_LIST_FILE"] = cur_file
+            info.var["CMAKE_CURRENT_LIST_DIR"] = os.path.dirname(cur_file) or "."
             info.file = cur_file
             info.line = 0
             content = self._read_file(filename)
@@ -535,6 +555,9 @@ class CMakeLinter(object):
         info.var = {
             "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
             "CMAKE_CURRENT_BINARY_DIR": PathConstants.PACKAGE_BINARY,
+            "CATKIN_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
+            "CMAKE_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
+            "CATKIN_DEVEL_PREFIX": PathConstants.CATKIN_DEVEL,
             "CATKIN_PACKAGE_BIN_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
             "CATKIN_PACKAGE_ETC_DESTINATION": "%s/etc/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
             "CATKIN_PACKAGE_INCLUDE_DESTINATION": "%s/include/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
