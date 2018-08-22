@@ -1,3 +1,8 @@
+Version 1.5.3
+  * Add support for CATKIN_DEVEL_PREFIX and CATKIN_INSTALL_PREFIX
+  * Fix output formatting for detailed explanations
+  * Be more forgiving with empty arguments to PROPERTIES
+
 Version 1.5.2
   * More bugfixes
 
