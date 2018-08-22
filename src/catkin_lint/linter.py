@@ -185,7 +185,7 @@ class LintInfo(object):
                 if s.startswith(t):
                     return True
         if not require_source_folder and tmp.startswith(PathConstants.CATKIN_INSTALL):
-            s = tmp[len(PathConstants.CATKIN_DEVEL) + 1:]
+            s = tmp[len(PathConstants.CATKIN_INSTALL) + 1:]
             for t in ["include", "lib", "share", "bin"]:
                 if s.startswith(t):
                     return True
