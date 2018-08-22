@@ -105,15 +105,6 @@ class LinterTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             catkin_package()
             add_executable(${PROJECT_NAME} IMPORTED)
-            set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${empty_var})
-            """, checks=cc.all)
-        self.assertEqual(["ARGUMENT_ERROR"], result)
-        result = mock_lint(env, pkg,
-            """
-            project(mock)
-            find_package(catkin REQUIRED)
-            catkin_package()
-            add_executable(${PROJECT_NAME} IMPORTED)
             set_target_properties(${PROJECT_NAME} PROPERTIES VERSION "${empty_var}")
             """, checks=cc.all)
         self.assertEqual([], result)

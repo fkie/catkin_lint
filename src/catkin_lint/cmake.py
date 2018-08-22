@@ -365,7 +365,7 @@ def argparse(args, opts):
                 del t_args[0]
             elif curtype == "p":
                 if len(t_args) < 2:
-                    raise CMakeSyntaxError("option '%s' has empty, unquoted argument" % curname)
+                    t_args.append("")
                 result[curname][t_args[0]] = t_args[1]
                 del t_args[:2]
             else:

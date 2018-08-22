@@ -422,7 +422,8 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual({ "PROPERTIES" : { "key1" : "value1", "key2" : "value2" } }, opts)
         self.assertEqual([ "argument" ], args)
 
-        self.assertRaises(cmake.CMakeSyntaxError, cmake.argparse, ["PROPERTIES", "key1", "value1", "key2" ], { "PROPERTIES" : "p"})
+        opts, args = cmake.argparse(["PROPERTIES", "key1", "value1", "key2" ], { "PROPERTIES" : "p"})
+        self.assertEqual({ "PROPERTIES" : { "key1" : "value1", "key2" : "" } }, opts)
 
         opts, args = cmake.argparse([ "DOUBLE", "DOUBLE", "ARGUMENT", "ARGUMENT" ], {"DOUBLE ARGUMENT" : "?"})
         self.assertEqual({ "DOUBLE ARGUMENT" : "ARGUMENT" }, opts)
