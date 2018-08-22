@@ -27,6 +27,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import re
 
 message_list = {
     "ARGUMENT_ERROR":
@@ -677,4 +678,5 @@ message_list = {
 
 def msg(msg_id, **kwargs):
     text, explanation = message_list[msg_id]
+    explanation = re.sub(r"\s+", " ", explanation).strip()
     return (msg_id, text % kwargs, explanation % kwargs)
