@@ -1,3 +1,9 @@
+catkin-lint (1.5.3-1) unstable; urgency=medium
+
+  * New release.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Wed, 22 Aug 2018 14:58:13 +0200
+
 catkin-lint (1.5.2-1~16.04) xenial; urgency=medium
 
   * New release.
