@@ -556,6 +556,7 @@ class CMakeLinter(object):
             "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
             "CMAKE_CURRENT_BINARY_DIR": PathConstants.PACKAGE_BINARY,
             "CATKIN_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
+            "CMAKE_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
             "CATKIN_DEVEL_PREFIX": PathConstants.CATKIN_DEVEL,
             "CATKIN_PACKAGE_BIN_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
             "CATKIN_PACKAGE_ETC_DESTINATION": "%s/etc/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),

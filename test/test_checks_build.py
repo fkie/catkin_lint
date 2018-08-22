@@ -27,6 +27,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "MISSING_DIRECTORY" ], result)
         result = mock_lint(env, pkg, "include_directories(/some/hardcoded/but/missing/path)", checks=cc.includes)
         self.assertEqual([ "EXTERNAL_DIRECTORY", "MISSING_DIRECTORY" ], result)
+        result = mock_lint(env, pkg, "include_directories(${CATKIN_DEVEL_PREFIX}/include)", checks=cc.includes)
+        self.assertEqual([ "EXTERNAL_DIRECTORY"], result)
+        result = mock_lint(env, pkg, "include_directories(${CATKIN_INSTALL_PREFIX}/include)", checks=cc.includes)
+        self.assertEqual([ "EXTERNAL_DIRECTORY"], result)
 
 
     @posix_and_nt
@@ -636,6 +640,15 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.installs)
         self.assertEqual([ "UNSORTED_LIST" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_install_python(PROGRAMS)
+            """,
+        checks=cc.installs)
+        self.assertEqual(["ARGUMENT_ERROR"], result)
 
         result = mock_lint(env, pkg,
             """
