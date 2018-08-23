@@ -25,7 +25,7 @@ export PYBUILD_DISABLE_python3=test
 
 make-orig-tar:
 	git config tar.tar.xz.command "xz -c"
-	git archive --prefix=catkin-lint-$(debianized_version)/ -o ../catkin-lint_$(debianized_version).orig.tar.xz $(shell git merge-base debian $(actual_version) )
+	git archive --prefix=catkin_lint-$(actual_version)/ -o ../catkin-lint_$(debianized_version).orig.tar.xz $(shell git merge-base debian $(actual_version) )
 
 make-patches:
 	rm -rf debian/patches
