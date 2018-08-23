@@ -23,6 +23,9 @@ export PYBUILD_DISABLE_python3=test
 %:
 	dh $@ --with python2,python3 --buildsystem=pybuild
 
+override_dh_installman: debian/catkin_lint.1
+	dh_installman -O--buildsystem=pybuild
+
 make-orig-tar:
 	git config tar.tar.xz.command "xz -c"
 	git archive --prefix=catkin_lint-$(actual_version)/ -o ../catkin-lint_$(debianized_version).orig.tar.xz $(shell git merge-base debian $(actual_version) )
@@ -35,4 +38,8 @@ make-patches:
 
 clean-patches:
 	rm -rf debian/patches
+
+debian/catkin_lint.1: src/catkin_lint/__init__.py
+	PYTHONPATH=src python -m catkin_lint --help | help2man -N -n "check catkin packages for common errors" --version-string="$(actual_version)" -h- cat | sed -e 's/\<cat\>\|\<__main__\.py\>/catkin_lint/g' > $@
+
 
