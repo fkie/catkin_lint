@@ -1,6 +1,6 @@
 Source: catkin-lint
 Section: python
-Priority: extra
+Priority: optional
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
 Build-Depends: debhelper (>= 9), dh-python,
                python-all, python3-all,
@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 9), dh-python,
                python-catkin-pkg, python-rosdistro,
                python-rosdep
 Homepage: https://github.com/fkie/catkin_lint
-Standards-Version: 3.9.7
+Standards-Version: 4.2.0
 
 Package: python-catkin-lint
 Architecture: all
