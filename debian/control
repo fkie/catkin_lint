@@ -9,6 +9,7 @@ Build-Depends: debhelper (>= 9), dh-python,
                python-catkin-pkg, python-rosdistro,
                python-rosdep
 Homepage: https://github.com/fkie/catkin_lint
+Testsuite: autopkgtest-pkg-python
 Standards-Version: 4.2.0
 
 Package: python-catkin-lint
