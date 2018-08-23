@@ -14,7 +14,6 @@ Standards-Version: 4.2.0
 Package: python-catkin-lint
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}
-Recommends: python-catkin-tools
 Conflicts: python3-catkin-lint
 Description: Check catkin packages for common errors
  Lints the package.xml and CMakeLists.txt files of catkin packages
@@ -23,7 +22,6 @@ Description: Check catkin packages for common errors
 Package: python3-catkin-lint
 Architecture: all
 Depends: ${python3:Depends}, ${misc:Depends}
-Recommends: python3-catkin-tools
 Conflicts: python-catkin-lint
 Description: Check catkin packages for common errors
  Lints the package.xml and CMakeLists.txt files of catkin packages
