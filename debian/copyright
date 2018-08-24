@@ -1,9 +1,9 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: catkin_lint
 Source: https://github.com/fkie/catkin_lint
 
 Files: *
-Copyright: 2013 Fraunhofer FKIE
+Copyright: 2013-2018 Fraunhofer FKIE
 License: BSD-3-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
