@@ -15,6 +15,7 @@ Standards-Version: 4.2.0
 Package: python-catkin-lint
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}
+Provides: ${python:Provides}
 Conflicts: python3-catkin-lint
 Description: Check Robot OS catkin packages for common errors
  This package is part of Robot OS (ROS). catkin_lint checks package
