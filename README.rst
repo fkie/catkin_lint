@@ -18,7 +18,7 @@ You can get **catkin_lint** from:
 .. |travis_master| image:: https://img.shields.io/travis/fkie/catkin_lint/master.png
    :target: https://travis-ci.org/fkie/catkin_lint
 .. |codecov_master| image:: https://img.shields.io/codecov/c/github/fkie/catkin_lint/master.png
-   :target: https://codecov.io/github/fkei/catkin_lint?branch=master
+   :target: https://codecov.io/github/fkie/catkin_lint?branch=master
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/catkin_lint.png
    :target: https://pypi.org/project/catkin_lint
 .. |github_release| image:: https://img.shields.io/github/release/fkie/catkin_lint.png
