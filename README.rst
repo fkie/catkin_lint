@@ -1,7 +1,7 @@
 catkin_lint
 ############
 
-|github_release| |pypi_badge| |travis_master| |codecov_master|
+|github_release| |pypi_badge| |debian_badge| |travis_master| |codecov_master|
 
 **catkin_lint** checks package configurations for the
 `catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_.
@@ -23,4 +23,5 @@ You can get **catkin_lint** from:
    :target: https://pypi.org/project/catkin_lint
 .. |github_release| image:: https://img.shields.io/github/release/fkie/catkin_lint.png
    :target: https://github.com/fkie/catkin_lint/releases
-
+.. |debian_badge| image:: https://img.shields.io/badge/dynamic/json.svg?label=Debian&url=https%3A%2F%2Fsources.debian.org%2Fapi%2Fsrc%2Fros-catkin-lint&query=%24.versions%5B0%5D.version&colorB=blue
+   :target: https://packages.debian.org/source/sid/ros-catkin-lint
