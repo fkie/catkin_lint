@@ -78,9 +78,8 @@ def find_packages(basepath, use_cache=True):
             package_paths.append(os.path.relpath(dirpath, basepath))
             del dirnames[:]
             continue
-        for dirname in dirnames:
-            if dirname.startswith('.'):
-                dirnames.remove(dirname)
+        # filter out hidden directories in-place
+        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
     cache_updated = False
     for path in package_paths:
         pkg_dir = os.path.realpath(os.path.join(basepath, path))
