@@ -37,6 +37,7 @@ try:
 except ImportError:
     import pickle
 from catkin_pkg.package import parse_package, PACKAGE_MANIFEST_FILENAME
+from catkin_pkg.packages import find_package_paths
 from .ros import get_rosdep, get_rosdistro
 from .util import iteritems, write_atomic
 
@@ -69,17 +70,7 @@ def find_packages(basepath, use_cache=True):
         _load_cache()
         distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
     packages = {}
-    package_paths = []
-    for dirpath, dirnames, filenames in os.walk(basepath, followlinks=True):
-        if "CATKIN_IGNORE" in filenames:
-            del dirnames[:]
-            continue
-        elif PACKAGE_MANIFEST_FILENAME in filenames:
-            package_paths.append(os.path.relpath(dirpath, basepath))
-            del dirnames[:]
-            continue
-        # filter out hidden directories in-place
-        dirnames[:] = [d for d in dirnames if not d.startswith('.')]
+    package_paths = find_package_paths(basepath)
     cache_updated = False
     for path in package_paths:
         pkg_dir = os.path.realpath(os.path.join(basepath, path))
