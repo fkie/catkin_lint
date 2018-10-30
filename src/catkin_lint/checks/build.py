@@ -557,7 +557,7 @@ def message_generation(linter):
             info.report(ERROR, "CATKIN_ORDER_VIOLATION", cmd=cmd)
         if "catkin_package" in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd="catkin_package", second_cmd=cmd)
-        opts, args = cmake_argparse(args, {"DIRECTORY": "?", "FILES": "*", "BASE_DIR": "?", "NOINSTALL": "-"})
+        opts, args = cmake_argparse(args, {"DIRECTORY": "?", "FILES": "*", "PACKAGE": "?", "BASE_DIR": "?", "NOINSTALL": "-"})
         if not is_sorted(opts["FILES"]):
             info.report(NOTICE, "UNSORTED_LIST", name="FILES")
 
