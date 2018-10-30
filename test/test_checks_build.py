@@ -1123,7 +1123,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED)
             find_package(message_generation REQUIRED)
             find_package(other_catkin REQUIRED)
-            add_message_files(FILES message.msg)
+            add_message_files(FILES message.msg zzz_message.msg NOINSTALL)
             generate_messages(DEPENDENCIES other_catkin)
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
