@@ -464,11 +464,11 @@ class CMakeLinter(object):
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
                 if cmd == "find_path":
-                    info.var[args[0]] = PathConstants.DISCOVERED_PATH
+                    info.var[args[0]] = info.find_package_path(args[0], "folder")
                 if cmd == "find_library":
-                    info.var[args[0]] = "%s/library.so" % PathConstants.DISCOVERED_PATH
+                    info.var[args[0]] = info.find_package_path(args[0], "library.so")
                 if cmd == "find_file":
-                    info.var[args[0]] = "%s/filename.ext" % PathConstants.DISCOVERED_PATH
+                    info.var[args[0]] = info.find_package_path(args[0], "filename.ext")
             except CMakeSyntaxError as e:
                 info.report(WARNING, "ARGUMENT_ERROR", msg=str(e))
             finally:

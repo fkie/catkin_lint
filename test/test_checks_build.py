@@ -510,6 +510,16 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
+            find_file(MOCK_FILE myfile)
+            catkin_package()
+            install(FILES ${MOCK_FILE} DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
             catkin_package()
             install(FILES missing_file DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
             """,
@@ -803,7 +813,6 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.exports)
         self.assertEqual([ "MISSING_EXPORT_INCLUDE_PATH" ], result)
-
         result = mock_lint(env, pkg,
             """
             project(mock)
@@ -864,6 +873,19 @@ class ChecksBuildTest(unittest.TestCase):
             catkin_package(
             CATKIN_DEPENDS other_catkin
             INCLUDE_DIRS /not/in/package
+            )
+            """,
+        checks=cc.exports)
+        self.assertEqual([ "EXTERNAL_INCLUDE_PATH" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(other_catkin REQUIRED)
+            find_path(EXTERNAL_INCLUDE some_file.h)
+            catkin_package(
+            INCLUDE_DIRS ${EXTERNAL_INCLUDE}
+            CATKIN_DEPENDS other_catkin
             )
             """,
         checks=cc.exports)
