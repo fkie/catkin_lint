@@ -574,6 +574,8 @@ class CMakeLinter(object):
         }
         self.ctx = ParserContext()
         try:
+            if os.path.basename(path) != manifest.name:
+                info.report(NOTICE, "PACKAGE_PATH_NAME", path=path)
             for cb in self._init_hooks:
                 cb(info)
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))

@@ -17,7 +17,7 @@ import catkin_lint.environment
 
 class AllChecksTest(unittest.TestCase):
 
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
     def test_project(self):
         """Test minimal catkin project for compliance"""
         env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
