@@ -39,11 +39,9 @@ def all(linter):
     from .manifest import all as manifest_all
     from .misc import all as misc_all
     from .python import all as python_all
-    from .fkie import all as fkie_all
 
     linter.require(build_all)
+    linter.require(cuda_all)
     linter.require(manifest_all)
     linter.require(misc_all)
     linter.require(python_all)
-    linter.require(fkie_all)
-    linter.require(cuda_all)
