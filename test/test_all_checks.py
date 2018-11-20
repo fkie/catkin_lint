@@ -261,6 +261,10 @@ class CatkinInvokationTest(unittest.TestCase):
             self.assertEqual(exitcode, 1)
             self.assertIn("error: unknown package", stdout)
 
+            exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "indigo")
+            self.assertEqual(exitcode, 0)
+            self.assertIn("cannot initialize rosdistro", stdout)
+
         except ImportError:
             pass
 
@@ -285,7 +289,3 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--rosdistro", "kinetic")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
-
-        exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "indigo")
-        self.assertEqual(exitcode, 0)
-        self.assertIn("cannot initialize rosdistro", stdout)
