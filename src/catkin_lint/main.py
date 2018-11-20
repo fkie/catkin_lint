@@ -57,7 +57,10 @@ def prepare_arguments(parser):
     parser.add_argument("-W", metavar="LEVEL", type=int, default=1, help="set warning level (0-2)")
     parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[], help=argparse.SUPPRESS)
     parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
-    parser.add_argument("--strict", action="store_true", help="treat warnings as errors")
+    parser.add_argument("--error", action="append", metavar="ID", default=[], help="treat diagnostic message ID as error")
+    parser.add_argument("--warning", action="append", metavar="ID", default=[], help="treat diagnostic message ID as warning")
+    parser.add_argument("--notice", action="append", metavar="ID", default=[], help="treat diagnostic message ID as notice")
+    parser.add_argument("--strict", action="store_true", help="treat everything reported as error")
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
@@ -95,6 +98,9 @@ def run_linter(args):
         return 0
     nothing_to_do = 0
     pkgs_to_check = []
+    force_error = set([a.upper() for a in args.error])
+    force_warning = set([a.upper() for a in args.warning])
+    force_notice = set([a.upper() for a in args.notice])
     if args.rosdistro:
         os.environ["ROS_DISTRO"] = args.rosdistro
     env = CatkinEnvironment(os_env=os.environ if args.resolve_env else None, use_rosdistro=not args.offline, use_cache=not args.disable_cache)
@@ -165,6 +171,12 @@ def run_linter(args):
     diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
     output.prolog(fd=sys.stdout)
     for msg in sorted(linter.messages):
+        if msg.id in force_notice:
+            msg.level = NOTICE
+        if msg.id in force_warning:
+            msg.level = WARNING
+        if msg.id in force_error:
+            msg.level = ERROR
         if args.W < msg.level:
             suppressed[msg.level] += 1
             continue

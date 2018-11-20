@@ -225,7 +225,7 @@ class CMakeLinter(object):
         self._added_checks = set([])
         self._catch_circular_deps = set([])
         self._include_blacklist = {"catkin": ["*"]}
-        self._ctx = ParserContext()
+        self._ctx = None
 
     def require(self, check):
         if check in self._catch_circular_deps:
@@ -379,11 +379,13 @@ class CMakeLinter(object):
             info.ignore_messages -= set([a.upper() for a in args])
         if pragma == "ignore_once":
             info.ignore_messages_once |= set([a.upper() for a in args])
+        if pragma == "skip":
+            self._ctx.skip_block()
 
     def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
-            if len(arg_tokens) == 1 and re.match("\${[a-z_0-9]+}$", arg_tokens[0][1]):
+            if len(arg_tokens) == 1 and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1]):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD":
@@ -464,11 +466,11 @@ class CMakeLinter(object):
                 if cmd == "add_custom_target":
                     info.targets.add(args[0])
                 if cmd == "find_path":
-                    info.var[args[0]] = PathConstants.DISCOVERED_PATH
+                    info.var[args[0]] = info.find_package_path(args[0], "folder")
                 if cmd == "find_library":
-                    info.var[args[0]] = "%s/library.so" % PathConstants.DISCOVERED_PATH
+                    info.var[args[0]] = info.find_package_path(args[0], "library.so")
                 if cmd == "find_file":
-                    info.var[args[0]] = "%s/filename.ext" % PathConstants.DISCOVERED_PATH
+                    info.var[args[0]] = info.find_package_path(args[0], "filename.ext")
             except CMakeSyntaxError as e:
                 info.report(WARNING, "ARGUMENT_ERROR", msg=str(e))
             finally:
@@ -477,7 +479,9 @@ class CMakeLinter(object):
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
+        save_ctx = self._ctx
         try:
+            self._ctx = ParserContext()
             cur_file = os.path.relpath(filename, info.path)
             info.var["CMAKE_CURRENT_LIST_FILE"] = cur_file
             info.var["CMAKE_CURRENT_LIST_DIR"] = os.path.dirname(cur_file) or "."
@@ -544,6 +548,7 @@ class CMakeLinter(object):
             info.file = save_file
             info.line = save_line
             info.ignore_messages_once.clear()
+            self._ctx = save_ctx
 
     def lint(self, path, manifest, info=None):
         if info is None:
@@ -572,8 +577,9 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_PYTHON_DESTINATION": "%s/lib/python" % PathConstants.CATKIN_INSTALL,
             "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
         }
-        self.ctx = ParserContext()
         try:
+            if os.path.basename(path) != manifest.name:
+                info.report(NOTICE, "PACKAGE_PATH_NAME", path=path)
             for cb in self._init_hooks:
                 cb(info)
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))

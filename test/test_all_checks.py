@@ -17,7 +17,7 @@ import catkin_lint.environment
 
 class AllChecksTest(unittest.TestCase):
 
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/src/source.cpp"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
     def test_project(self):
         """Test minimal catkin project for compliance"""
         env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
@@ -31,6 +31,26 @@ class AllChecksTest(unittest.TestCase):
             add_executable(${PROJECT_NAME}_node src/source.cpp)
             target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
             install(TARGETS ${PROJECT_NAME}_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """)
+        self.assertEqual([], result)
+
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
+    def test_project_with_skip(self):
+        """Test minimal catkin project with skip directive"""
+        env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
+        pkg = create_manifest("mock", description="Cool Worf", build_depends=[ "foo", "foo_msgs" ], run_depends=[ "foo_msgs" ])
+        result = mock_lint(env, pkg,
+            """\
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS foo foo_msgs)
+            catkin_package(CATKIN_DEPENDS foo_msgs)
+            include_directories(${catkin_INCLUDE_DIRS})
+            add_executable(${PROJECT_NAME}_node src/source.cpp)
+            target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+            install(TARGETS ${PROJECT_NAME}_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            if(CONDITION_THAT_IS_USUALLY_FALSE) #catkin_lint: skip
+                find_package(catkin)
+            endif()
             """)
         self.assertEqual([], result)
 
@@ -93,6 +113,19 @@ class CatkinInvokationTest(unittest.TestCase):
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
+        catkin_lint.environment._cache = None  # force cache reloads
+        parser = prepare_arguments(argparse.ArgumentParser())
+        args = parser.parse_args(argv)
+        stdout = StringIO()
+        with patch("sys.stdout", stdout):
+            with patch("sys.stderr", stdout):
+                returncode = run_linter(args)
+        return returncode, stdout.getvalue()
+
+    @patch("rosdistro.get_index_url", get_dummy_index_url)
+    @patch("rosdistro.get_index", get_dummy_index)
+    @patch("rosdistro.get_cached_distribution", raise_io_error)
+    def run_catkin_lint_without_rosdistro(self, *argv):
         catkin_lint.environment._cache = None  # force cache reloads
         parser = prepare_arguments(argparse.ArgumentParser())
         args = parser.parse_args(argv)
@@ -202,6 +235,18 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("warnings have been ignored", stdout)
 
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("delta: notice: package 'std_msgs' should be listed in catkin_package()", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--warning", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("delta: warning: package 'std_msgs' should be listed in catkin_package()", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--error", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("delta: error: package 'std_msgs' should be listed in catkin_package()", stdout)
+
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
         self.assertEqual(exitcode, 1)
 
@@ -236,6 +281,10 @@ class CatkinInvokationTest(unittest.TestCase):
             self.assertEqual(exitcode, 1)
             self.assertIn("error: unknown package", stdout)
 
+            exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "indigo")
+            self.assertEqual(exitcode, 0)
+            self.assertIn("cannot initialize rosdistro", stdout)
+
         except ImportError:
             pass
 
@@ -260,4 +309,3 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--rosdistro", "kinetic")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
-

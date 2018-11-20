@@ -70,6 +70,13 @@ message_list = {
         backwards compatibility reasons, both names should also be identical
         to the name of the source folder that contains the package.
         """),
+    "PACKAGE_PATH_NAME":
+    ("package path name '%(path)s' differs from package name",
+        """\
+        Your package resides in a folder that has a different name than the
+        package itself. This is confusing and might break the assumptions of
+        some tools.
+        """),
     "LITERAL_PROJECT_NAME":
     ("use ${PROJECT_NAME} instead of '%(name)s'",
         """\

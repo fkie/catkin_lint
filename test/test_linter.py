@@ -205,6 +205,15 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(info.source_relative_path("filename"), "subdir/filename")
         self.assertEqual(info.source_relative_path("../filename"), "filename")
 
+        pkg = create_manifest("mock")
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            """, checks=cc.all, package_path="/package-path/other")
+        self.assertEqual([ "PACKAGE_PATH_NAME"], result)
+
     def test_list(self):
         """Test CMake list handling"""
         env = create_env()
@@ -258,15 +267,15 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([ "ENV_VAR"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/mock-path/broken.cmake"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/catkin/broken.cmake"))
     def test_blacklist(self):
         """Test CMake inclusion blacklist"""
         env = create_env()
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg,
             {
-               "/mock-path/CMakeLists.txt": "project(catkin) include(broken.cmake RESULT_VARIABLE gone) catkin_package()",
-               "/mock-path/broken.cmake": "xxxxxx syntax error xxxxx"
+               "/package-path/catkin/CMakeLists.txt": "project(catkin) include(broken.cmake RESULT_VARIABLE gone) catkin_package()",
+               "/package-path/catkin/broken.cmake": "xxxxxx syntax error xxxxx"
             }, checks=cc.all
         )
         self.assertEqual([], result)
@@ -304,16 +313,16 @@ class LinterTest(unittest.TestCase):
         self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
     @posix_and_nt
-    @patch("os.path.isdir", lambda x: x in [os.path.normpath(p) for p in ["/mock-path/src", "/mock-path/src/2ndlevel", "/mock-path/include"]])
-    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath(p) for p in ["/other-path/CMakeLists.txt", "/mock-path/src/CMakeLists.txt", "/mock-path/src/2ndlevel/CMakeLists.txt", "/mock-path/src/source.cpp", "/mock-path/src/2ndlevel/source2.cpp"]])
+    @patch("os.path.isdir", lambda x: x in [os.path.normpath(p) for p in ["/package-path/mock/src", "/package-path/mock/src/2ndlevel", "/package-path/mock/include"]])
+    @patch("os.path.isfile", lambda x: x in  [ os.path.normpath(p) for p in ["/other-path/CMakeLists.txt", "/package-path/mock/src/CMakeLists.txt", "/package-path/mock/src/2ndlevel/CMakeLists.txt", "/package-path/mock/src/source.cpp", "/package-path/mock/src/2ndlevel/source2.cpp"]])
     def test_subdir(self):
         """Test add_subdirectory()"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(${PROJECT_NAME}_test2 src/source.cpp)",
-              "/mock-path/src/CMakeLists.txt" : """
+              "/package-path/mock/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(${PROJECT_NAME}_test2 src/source.cpp)",
+              "/package-path/mock/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
@@ -326,9 +335,9 @@ class LinterTest(unittest.TestCase):
 
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
-              "/mock-path/src/CMakeLists.txt" : "add_subdirectory(2ndlevel)",
-              "/mock-path/src/2ndlevel/CMakeLists.txt": """\
+              "/package-path/mock/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
+              "/package-path/mock/src/CMakeLists.txt" : "add_subdirectory(2ndlevel)",
+              "/package-path/mock/src/2ndlevel/CMakeLists.txt": """\
               find_package(catkin REQUIRED)
               catkin_package()
               add_executable(${PROJECT_NAME}_test source2.cpp)
@@ -339,8 +348,8 @@ class LinterTest(unittest.TestCase):
 
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
-              "/mock-path/src/CMakeLists.txt" : """
+              "/package-path/mock/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
+              "/package-path/mock/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)
               catkin_package()
@@ -353,7 +362,7 @@ class LinterTest(unittest.TestCase):
 
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : "project(mock) add_subdirectory(/other-path)",
+              "/package-path/mock/CMakeLists.txt" : "project(mock) add_subdirectory(/other-path)",
               "/other-path/CMakeLists.txt" : """
               find_package(catkin REQUIRED)
               catkin_package()
@@ -374,13 +383,13 @@ class LinterTest(unittest.TestCase):
 
         result = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : """
+              "/package-path/mock/CMakeLists.txt" : """
               project(mock)
               find_package(catkin REQUIRED)
               catkin_package()
               add_subdirectory(src)
               """,
-              "/mock-path/src/CMakeLists.txt" : """
+              "/package-path/mock/src/CMakeLists.txt" : """
               project(submock)
               """
             }, checks=cc.all
@@ -389,12 +398,12 @@ class LinterTest(unittest.TestCase):
 
         var = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : """
+              "/package-path/mock/CMakeLists.txt" : """
               project(mock)
               set(foo "toplevel")
               add_subdirectory(src)
               """,
-              "/mock-path/src/CMakeLists.txt" : """
+              "/package-path/mock/src/CMakeLists.txt" : """
               set(foo "subdir")
               find_file(bar bar.txt)
               """
@@ -404,12 +413,12 @@ class LinterTest(unittest.TestCase):
         self.assertFalse("bar" in var)
         var = mock_lint(env, pkg,
             {
-              "/mock-path/CMakeLists.txt" : """
+              "/package-path/mock/CMakeLists.txt" : """
               project(mock)
               set(foo "toplevel")
               add_subdirectory(src)
               """,
-              "/mock-path/src/CMakeLists.txt" : """
+              "/package-path/mock/src/CMakeLists.txt" : """
               set(foo "subdir" PARENT_SCOPE)
               """
             }, checks=None, return_var=True
