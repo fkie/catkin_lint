@@ -225,7 +225,7 @@ class CMakeLinter(object):
         self._added_checks = set([])
         self._catch_circular_deps = set([])
         self._include_blacklist = {"catkin": ["*"]}
-        self._ctx = ParserContext()
+        self._ctx = None
 
     def require(self, check):
         if check in self._catch_circular_deps:
@@ -383,7 +383,7 @@ class CMakeLinter(object):
     def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
-            if len(arg_tokens) == 1 and re.match("\${[a-z_0-9]+}$", arg_tokens[0][1]):
+            if len(arg_tokens) == 1 and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1]):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD":
@@ -572,7 +572,7 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_PYTHON_DESTINATION": "%s/lib/python" % PathConstants.CATKIN_INSTALL,
             "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
         }
-        self.ctx = ParserContext()
+        self._ctx = ParserContext()
         try:
             if os.path.basename(path) != manifest.name:
                 info.report(NOTICE, "PACKAGE_PATH_NAME", path=path)
