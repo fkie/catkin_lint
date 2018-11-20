@@ -267,15 +267,15 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([ "ENV_VAR"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/broken.cmake"))
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/catkin/broken.cmake"))
     def test_blacklist(self):
         """Test CMake inclusion blacklist"""
         env = create_env()
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg,
             {
-               "/package-path/mock/CMakeLists.txt": "project(catkin) include(broken.cmake RESULT_VARIABLE gone) catkin_package()",
-               "/package-path/mock/broken.cmake": "xxxxxx syntax error xxxxx"
+               "/package-path/catkin/CMakeLists.txt": "project(catkin) include(broken.cmake RESULT_VARIABLE gone) catkin_package()",
+               "/package-path/catkin/broken.cmake": "xxxxxx syntax error xxxxx"
             }, checks=cc.all
         )
         self.assertEqual([], result)

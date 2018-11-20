@@ -201,7 +201,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
     def test_foreach(self):
-        """Test indentation checks for foreach()/endforeach) blocks"""
+        """Test indentation check for foreach()/endforeach() blocks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,

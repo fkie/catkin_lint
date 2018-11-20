@@ -102,6 +102,19 @@ class CatkinInvokationTest(unittest.TestCase):
                 returncode = run_linter(args)
         return returncode, stdout.getvalue()
 
+    @patch("rosdistro.get_index_url", get_dummy_index_url)
+    @patch("rosdistro.get_index", get_dummy_index)
+    @patch("rosdistro.get_cached_distribution", raise_io_error)
+    def run_catkin_lint_without_rosdistro(self, *argv):
+        catkin_lint.environment._cache = None  # force cache reloads
+        parser = prepare_arguments(argparse.ArgumentParser())
+        args = parser.parse_args(argv)
+        stdout = StringIO()
+        with patch("sys.stdout", stdout):
+            with patch("sys.stderr", stdout):
+                returncode = run_linter(args)
+        return returncode, stdout.getvalue()
+
     def setUp(self):
         self.oldcwd = os.getcwd()
         self.old_environ = os.environ
@@ -202,6 +215,18 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("warnings have been ignored", stdout)
 
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("delta: notice: package 'std_msgs' should be listed in catkin_package()", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--warning", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("delta: warning: package 'std_msgs' should be listed in catkin_package()", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--error", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("delta: error: package 'std_msgs' should be listed in catkin_package()", stdout)
+
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
         self.assertEqual(exitcode, 1)
 
@@ -261,3 +286,6 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
 
+        exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "indigo")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("cannot initialize rosdistro", stdout)

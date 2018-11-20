@@ -80,10 +80,10 @@ def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_va
             if filename in cmakelist:
                  return cmakelist[filename]
             else:
-                return ""
+                raise OSError("Mock CMake file not found: %s" % filename)
         else:
             if filename == os.path.normpath(package_path + "/CMakeLists.txt"): return cmakelist
-            return ""
+            raise OSError("Mock CMake file not found: %s" % filename)
     linter._read_file = get_cmakelist
     if checks is not None: linter.require(checks)
     info = LintInfo(env)

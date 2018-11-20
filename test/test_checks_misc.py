@@ -133,11 +133,13 @@ class ChecksMiscTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
-            """
+            {"/package-path/mock/CMakeLists.txt": """
             include(FindLocal.cmake)
             include(FindOptional.cmake OPTIONAL)
             include(FindPackageHandleStandardArgs)
             """,
+            "/package-path/mock/FindLocal.cmake": "",
+            },
         checks=cc.cmake_includes)
         self.assertEqual([], result)
 

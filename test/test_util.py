@@ -1,9 +1,17 @@
 import unittest
+from .helper import patch
 
 import sys
 sys.stderr = sys.stdout
 
 import catkin_lint.util as util
+import tempfile
+import shutil
+import os
+
+def force_fail(*args, **kwargs):
+    raise OSError("Mock fail")
+
 
 class UtilTest(unittest.TestCase):
     def test_word_split(self):
@@ -34,3 +42,13 @@ class UtilTest(unittest.TestCase):
         self.assertFalse(util.is_sorted(["a","c","b","d"]))
         self.assertFalse(util.is_sorted(["a","b","d","c"]))
 
+    def test_write_atomic(self):
+        """Test write_atomic() utility function"""
+        tmpdir = tempfile.mkdtemp()
+        try:
+            with patch("os.unlink", force_fail):
+                with patch("os.rename", force_fail):
+                    self.assertRaises(OSError, util.write_atomic, os.path.join(tmpdir, "test"), "test")
+                    self.assertFalse(os.path.exists(os.path.join(tmpdir, "test")))
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
