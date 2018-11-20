@@ -49,6 +49,6 @@ class UtilTest(unittest.TestCase):
             with patch("os.unlink", force_fail):
                 with patch("os.rename", force_fail):
                     self.assertRaises(OSError, util.write_atomic, os.path.join(tmpdir, "test"), "test")
-                    self.assertFalse(os.path.exists(os.path.join(tmpdir, "test")))
+                    self.assertFalse(os.path.exists(os.path.join(tmpdir, b"test")))
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
