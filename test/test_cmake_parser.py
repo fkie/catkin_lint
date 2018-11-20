@@ -11,6 +11,9 @@ class CMakeParserTest(unittest.TestCase):
         result = []
         ctxt = cmake.ParserContext()
         for cmd, args, arg_tokens, (fname, line, column) in ctxt.parse(s, var=var, env_var=env_var):
+            if cmd == "#catkin_lint" and args and args[0] == "skip":
+                ctxt.skip_block()
+                continue
             if location is None:
                 result.append( ( cmd, args) )
             elif location == 1:
@@ -321,6 +324,115 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual(
             self.parse_all("# catkin_lint: extra space\n#catkin_lint:\n#catkin_lint:   \n#catkin_lint:   one   two   three   \n#catkin_lint :\n"),
             [ ("#catkin_lint", []), ("#catkin_lint", []), ("#catkin_lint", ["one","two","three"]) ]
+        )
+
+    def test_skip_block(self):
+        """Test CMaker parser skip block"""
+        self.assertEqual(
+            self.parse_all("""\
+            #catkin_lint: skip
+            cmd()
+            """),
+            [ ("cmd", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            if()
+            endif()
+            #catkin_lint: skip
+            cmd()
+            """),
+            [ ("if", []), ("endif", []), ("cmd", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            #catkin_lint: skip
+            if(test)
+            endif()
+            """),
+            [ ("if", ["test"]), ("endif", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            if(condition) #catkin_lint: skip
+                cmd()
+            endif()
+            """),
+            [ ("if", ["condition"]), ("endif", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            if(condition) #catkin_lint: skip
+                cmd1()
+            else()
+                cmd2()
+            endif()
+            """),
+            [ ("if", ["condition"]), ("else", []), ("cmd2", []), ("endif", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            if(condition)
+                cmd1()
+            else() #catkin_lint: skip
+                cmd2()
+            endif()
+            """),
+            [ ("if", ["condition"]), ("cmd1", []), ("else", []), ("endif", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            foreach(arg 1 2)
+                cmd(${arg})
+                #catkin_lint: skip
+                do_not_parse_this()
+            endforeach()
+            """),
+            [ ("foreach", ["arg", "1", "2"]), ("cmd", ["1"]), ("cmd", ["2"]), ("endforeach", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            macro(test)
+                cmd()
+                #catkin_lint: skip
+                do_not_parse_this()
+            endmacro()
+            test()
+            """),
+            [ ("macro", ["test"]), ("endmacro", []), ("cmd", [])]
+        )
+
+        self.assertEqual(
+            self.parse_all("""\
+            if(first) #catkin_lint: skip
+                if(second)
+                endif(second)
+                do_not_parse_this()
+            endif()
+            """),
+            [ ("if", ["first"]), ("endif", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            if(first) #catkin_lint: skip
+                foreach(second 1 2)
+                endforeach()
+                do_not_parse_this()
+            endif()
+            """),
+            [ ("if", ["first"]), ("endif", [])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            macro(test)
+                do_not_parse_this()
+            endmacro()
+            if(first) #catkin_lint: skip
+                test()
+                do_not_parse_this()
+            endif()
+            """),
+            [ ("macro", ["test"]), ("endmacro", []), ("if", ["first"]), ("endif", [])]
         )
 
     def test_comments(self):

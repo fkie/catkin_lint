@@ -217,6 +217,8 @@ class ParserContext(object):
         self.parent = parent
         self.callable = copy(parent.callable) if parent is not None else {}
         self._call_stack = set([])
+        self._skip_block = False
+        self._block_level = -1
 
     def call_depth(self):
         return len(self._call_stack)
@@ -253,7 +255,10 @@ class ParserContext(object):
     def _yield(self, cmds, var, env_var, skip_callable):
         if var is None:
             var = {}
+        self._block_level = self._block_level + 1
         while cmds:
+            if self._block_level == 0:
+                self._skip_block = False
             cmd = cmds.pop(0)
             cmdname = _resolve_vars(cmd.name, var, env_var)
             cmdname_lower = cmdname.lower()
@@ -272,56 +277,78 @@ class ParserContext(object):
                 f = _parse_block(cmd.filename, cmds, cmdname, Callable, args, True)
                 self.callable[f.name.lower()] = f
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
+            elif cmd.name.lower() == "if":
+                f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
+                if not self._skip_block:
+                    yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
+                    for cmd, args, arg_tokens, loc in self._yield(f.commands, var, env_var, skip_callable):
+                        if cmd.lower() == "else":
+                            self._skip_block = False
+                        if not self._skip_block:
+                            yield (cmd, args, arg_tokens, loc)
+                    self._skip_block = False
             elif cmd.name.lower() == "foreach":
                 if not args:
                     raise CMakeSyntaxError("%s(%d): malformed foreach() loop" % (cmd.filename, cmd.line))
                 f = _parse_block(cmd.filename, cmds, cmdname, BasicBlock)
-                yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
-                loop_var = args[0]
-                if len(args) == 1:
-                    continue
-                if args[1] == "RANGE":
-                    try:
-                        if len(args) == 3:
-                            loop_args = range(int(args[2]) + 1)
-                        elif len(args) == 4:
-                            loop_args = range(int(args[2]), int(args[3]) + 1)
-                        elif len(args) == 5:
-                            loop_args = range(int(args[2]), int(args[3]) + 1, int(args[4]))
-                        else:
-                            raise CMakeSyntaxError("%s(%d): RANGE expects one, two, or three integers" % (cmd.filename, cmd.line))
-                    except ValueError:
-                        raise CMakeSyntaxError("%s(%d): invalid RANGE parameters" % (cmd.filename, cmd.line))
-                elif args[1:3] == ["IN", "LISTS"]:
-                    loop_args = []
-                    for l in args[3:]:
-                        if l in var:
-                            loop_args += var[l].split(";")
-                elif args[1:3] == ["IN", "ITEMS"]:
-                    loop_args = args[3:]
-                else:
-                    loop_args = args[1:]
-                for loop_value in loop_args:
-                    var[loop_var] = str(loop_value)
-                    loop_cmds = copy(f.commands)
-                    for cmd, args, arg_tokens, loc in self._yield(loop_cmds, var, env_var, skip_callable):
-                        yield (cmd, args, arg_tokens, loc)
+                if not self._skip_block:
+                    yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
+                    loop_var = args[0]
+                    if len(args) == 1:
+                        continue
+                    if args[1] == "RANGE":
+                        try:
+                            if len(args) == 3:
+                                loop_args = range(int(args[2]) + 1)
+                            elif len(args) == 4:
+                                loop_args = range(int(args[2]), int(args[3]) + 1)
+                            elif len(args) == 5:
+                                loop_args = range(int(args[2]), int(args[3]) + 1, int(args[4]))
+                            else:
+                                raise CMakeSyntaxError("%s(%d): RANGE expects one, two, or three integers" % (cmd.filename, cmd.line))
+                        except ValueError:
+                            raise CMakeSyntaxError("%s(%d): invalid RANGE parameters" % (cmd.filename, cmd.line))
+                    elif args[1:3] == ["IN", "LISTS"]:
+                        loop_args = []
+                        for l in args[3:]:
+                            if l in var:
+                                loop_args += var[l].split(";")
+                    elif args[1:3] == ["IN", "ITEMS"]:
+                        loop_args = args[3:]
+                    else:
+                        loop_args = args[1:]
+                    for loop_value in loop_args:
+                        var[loop_var] = str(loop_value)
+                        loop_cmds = copy(f.commands)
+                        for cmd, args, arg_tokens, loc in self._yield(loop_cmds, var, env_var, skip_callable):
+                            yield (cmd, args, arg_tokens, loc)
+                            if self._skip_block:
+                                break
+                        self._skip_block = False
             elif cmdname_lower in self.callable:
                 f = self.callable[cmdname_lower]
                 if skip_callable or f.new_context:
                     yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
-                else:
+                elif not self._skip_block:
                     for cmd, args, arg_tokens, loc in self._call(cmdname, args, var, env_var, skip_callable):
                         yield (cmd, args, arg_tokens, loc)
+                        if self._skip_block:
+                            break
+                    self._skip_block = False
             else:
                 yield (cmdname, args, cmd.args, (cmd.filename, cmd.line, cmd.column))
+        self._block_level = self._block_level - 1
 
     def parse(self, s, var=None, env_var=None, filename=None, skip_callable=False):
         if filename is None:
             filename = "<inline>"
         cmds = _parse_commands(s, filename)
+        self._block_level = -1
         for cmd, args, arg_tokens, loc in self._yield(cmds, var, env_var, skip_callable):
             yield (cmd, args, arg_tokens, loc)
+
+    def skip_block(self):
+        self._skip_block = True
 
 
 def argparse(args, opts):

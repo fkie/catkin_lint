@@ -379,6 +379,8 @@ class CMakeLinter(object):
             info.ignore_messages -= set([a.upper() for a in args])
         if pragma == "ignore_once":
             info.ignore_messages_once |= set([a.upper() for a in args])
+        if pragma == "skip":
+            self._ctx.skip_block()
 
     def _handle_if(self, info, cmd, args, arg_tokens):
         if cmd == "if":
@@ -477,7 +479,9 @@ class CMakeLinter(object):
     def _parse_file(self, info, filename):
         save_file = info.file
         save_line = info.line
+        save_ctx = self._ctx
         try:
+            self._ctx = ParserContext()
             cur_file = os.path.relpath(filename, info.path)
             info.var["CMAKE_CURRENT_LIST_FILE"] = cur_file
             info.var["CMAKE_CURRENT_LIST_DIR"] = os.path.dirname(cur_file) or "."
@@ -544,6 +548,7 @@ class CMakeLinter(object):
             info.file = save_file
             info.line = save_line
             info.ignore_messages_once.clear()
+            self._ctx = save_ctx
 
     def lint(self, path, manifest, info=None):
         if info is None:
@@ -572,7 +577,6 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_PYTHON_DESTINATION": "%s/lib/python" % PathConstants.CATKIN_INSTALL,
             "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
         }
-        self._ctx = ParserContext()
         try:
             if os.path.basename(path) != manifest.name:
                 info.report(NOTICE, "PACKAGE_PATH_NAME", path=path)

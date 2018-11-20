@@ -34,6 +34,26 @@ class AllChecksTest(unittest.TestCase):
             """)
         self.assertEqual([], result)
 
+    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
+    def test_project_with_skip(self):
+        """Test minimal catkin project with skip directive"""
+        env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
+        pkg = create_manifest("mock", description="Cool Worf", build_depends=[ "foo", "foo_msgs" ], run_depends=[ "foo_msgs" ])
+        result = mock_lint(env, pkg,
+            """\
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS foo foo_msgs)
+            catkin_package(CATKIN_DEPENDS foo_msgs)
+            include_directories(${catkin_INCLUDE_DIRS})
+            add_executable(${PROJECT_NAME}_node src/source.cpp)
+            target_link_libraries(${PROJECT_NAME}_node ${catkin_LIBRARIES})
+            install(TARGETS ${PROJECT_NAME}_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            if(CONDITION_THAT_IS_USUALLY_FALSE) #catkin_lint: skip
+                find_package(catkin)
+            endif()
+            """)
+        self.assertEqual([], result)
+
 
 class DummyDist(object):
     def get_release_package_xml(self, name):
