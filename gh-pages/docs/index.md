@@ -101,7 +101,9 @@ are reported to the user:
 
 Normally, **catkin_lint** returns a non-zero exit code if and only
 if errors occurred. The `--strict` option causes **catkin_lint** to
-treat any reported problem as error.
+treat any reported problem as error. You can also customize the category
+for particular diagnostics with `--error ID`, `--warning ID`, or
+`--notice ID`. You can also ignore messages entirely with `--ignore ID`.
 
 ### Errors
 

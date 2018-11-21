@@ -35,6 +35,12 @@ right before the offending statement. Use this if you want to ignore a particula
 of a problem but still be notified if the same problem occurs someplace else. You may
 also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
 
+Since version 1.5.4, you may also customize the severity with the command line options
+`--error ID`, `--warning ID`, or `--notice ID`. You can also add the pragma line
+`#catkin_lint: skip` in any `if()`, `foreach()`, or `macro()` block, which will instruct
+the parser to ignore all remaining commands in the block until the `else()`, `endif()`,
+`endforeach()`, or `endmacro()` statement.
+
 """)
 
         messages = {}
@@ -45,8 +51,9 @@ also use `#catkin_lint: report ID` at any point to override a previous `ignore`.
             short_text, long_text = message_list[key]
             long_text = long_text.replace("\n", " ")
             long_text = long_text.replace("catkin_lint", "**catkin_lint**")
-            short_text = re.sub(r"%\((.*?)\)s", r"*\1*", short_text)
-            long_text = re.sub(r"%\((.*?)\)s", r"*\1*", long_text)
+            short_text = re.sub(r"%\((.*?)\)s", r"<i>\1</i>", short_text)
+            long_text = re.sub(r"%\((.*?)\)s", r"<i>\1</i>", long_text)
+            long_text = re.sub(r"([a-z_]+\(.*?\))", r"<code>\1</code>", long_text)
             long_text = re.sub(r" +", " ", long_text)
             long_text = long_text.strip()
             short_text = short_text.strip()
