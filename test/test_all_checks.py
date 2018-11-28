@@ -214,6 +214,11 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 2 packages and found 0 problems", stdout)
 
+        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "beta", "."), "-W2")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 1 packages and found 0 problems", stdout)
+
+
         os.environ["ROS_PACKAGE_PATH"] = os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir])
         exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta")
         self.assertEqual(exitcode, 0)
