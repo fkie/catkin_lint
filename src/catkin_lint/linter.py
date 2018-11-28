@@ -554,7 +554,7 @@ class CMakeLinter(object):
         if info is None:
             info = LintInfo(self.env)
         info.ignore_messages = self.ignore_messages
-        info.path = path
+        info.path = os.path.realpath(path)
         info.manifest = manifest
         info.conditionals = []
         info.var = {
@@ -578,8 +578,8 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
         }
         try:
-            if os.path.basename(path) != manifest.name:
-                info.report(NOTICE, "PACKAGE_PATH_NAME", path=path)
+            if os.path.basename(info.path) != manifest.name:
+                info.report(NOTICE, "PACKAGE_PATH_NAME", path=info.path)
             for cb in self._init_hooks:
                 cb(info)
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
