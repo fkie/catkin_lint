@@ -383,6 +383,8 @@ class CMakeLinter(object):
             self._ctx.skip_block()
 
     def _handle_if(self, info, cmd, args, arg_tokens):
+        def is_string_comparison_op(x):
+            return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
             if len(arg_tokens) == 1 and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1]):
@@ -390,14 +392,14 @@ class CMakeLinter(object):
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD":
                     continue
-                if tok[1][:3] == "STR" or tok[1][:8] == "VERSION_" or tok[1] in ["MATCHES", "IS_NEWER_THAN"]:
+                if is_string_comparison_op(tok[1]):
                     if i == 0 or i == len(arg_tokens) - 1:
-                        raise CMakeSyntaxError("%s(%d): missing argument for binary operator %s" % (info.file, info.line, tok))
-                    if arg_tokens[i - 1][0] != "STRING" or arg_tokens[i + 1][0] != "STRING":
+                        raise CMakeSyntaxError("%s(%d): missing argument for binary operator %s" % (info.file, info.line, tok[1]))
+                    if (arg_tokens[i - 1][0] != "STRING" and "${" in arg_tokens[i - 1][1]) or (arg_tokens[i + 1][0] != "STRING" and "${" in arg_tokens[i + 1][1]):
                         info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
                 if tok[1] in ["EXISTS", "IS_DIRECTORY", "IS_SYMLINK", "IS_ABSOLUTE"]:
                     if i == len(arg_tokens) - 1:
-                        raise CMakeSyntaxError("%s(%d): missing argument for unary operator %s" % (info.file, info.line, tok))
+                        raise CMakeSyntaxError("%s(%d): missing argument for unary operator %s" % (info.file, info.line, tok[1]))
                     if arg_tokens[i + 1][0] != "STRING":
                         info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
         if cmd == "else":
