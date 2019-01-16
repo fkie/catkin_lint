@@ -1,26 +1,23 @@
 language: c
-dist: trusty
-sudo: false
+dist: xenial
+sudo: true
 compiler:
   - gcc
-env:
-  - PYBUILD_DISABLE=test
 addons:
   apt:
+    sources:
+      - sourceline: 'deb http://packages.ros.org/ros/ubuntu xenial main'
+        key_url: http://packages.ros.org/ros.key
     packages:
       - dpkg-dev
-      - debhelper
-      - python-all
-      - python3-all
-      - fakeroot
-      - python-setuptools
-      - python3-setuptools
-      - dh-python
+      - devscripts
+install:
+  - mk-build-deps --install debian/control
 before_script:
   - git fetch origin master:master
   - debian/rules make-orig-tar
 script:
-  - dpkg-buildpackage -tc -uc -us -d
+  - dpkg-buildpackage -tc -uc -us
 after_success:
   - for d in ../*.deb; do dpkg-deb -I $d; dpkg-deb -c $d; done
 
