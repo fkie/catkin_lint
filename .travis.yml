@@ -9,8 +9,9 @@ addons:
       - sourceline: 'deb http://packages.ros.org/ros/ubuntu xenial main'
         key_url: http://packages.ros.org/ros.key
     packages:
-      - dpkg-dev
       - devscripts
+      - dpkg-dev
+      - equivs
 install:
   - mk-build-deps --install debian/control
 before_script:
