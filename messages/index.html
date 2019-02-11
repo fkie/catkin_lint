@@ -97,6 +97,8 @@
         
             <li><a class="toctree-l3" href="#os-error-msg">OS error: msg</a></li>
         
+            <li><a class="toctree-l3" href="#call-to-find_packagepkg-shadows-previously-selected-components">call to find_package(pkg) shadows previously selected components</a></li>
+        
             <li><a class="toctree-l3" href="#catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</a></li>
         
             <li><a class="toctree-l3" href="#catkin_package-exports-non-package-include-path">catkin_package() exports non-package include path</a></li>
@@ -410,6 +412,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: An operating system error has occured. This is not a linting problem per se but might be caused by a missing or unreadable file.</li>
 </ul>
+<h2 id="call-to-find_packagepkg-shadows-previously-selected-components">call to find_package(<i>pkg</i>) shadows previously selected components</h2>
+<ul>
+<li><strong>ID</strong>: shadowed_find</li>
+<li><strong>Severity</strong>: error</li>
+<li><strong>Explanation</strong>: You have more than one <code>find_package()</code> call for a package, and the COMPONENTS list of the later call does not include a previously chosen component.</li>
+</ul>
 <h2 id="catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</h2>
 <ul>
 <li><strong>ID</strong>: catkin_meta_vs_pkg</li>
@@ -473,8 +481,8 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="duplicate-find_packagepkg">duplicate find_package(<i>pkg</i>)</h2>
 <ul>
 <li><strong>ID</strong>: duplicate_find</li>
-<li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: The <code>find_package()</code> searches for a dependency and caches the result. A second call will be silently ignored. In particular, if you specify different arguments to the second call, those will not have any effect at all, which is most likely not what you want.</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: You called <code>find_package()</code> more than once for a particular package, which is not needed except for very specific, advanced circumstances.</li>
 </ul>
 <h2 id="duplicate-include-path-pkg_include_dirs">duplicate include path ${<i>pkg</i>_INCLUDE_DIRS}</h2>
 <ul>
@@ -659,7 +667,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="missing-components-keyword-before-pkg">missing COMPONENTS keyword before '<i>pkg</i>'</h2>
 <ul>
 <li><strong>ID</strong>: missing_components</li>
-<li><strong>Severity</strong>: error</li>
+<li><strong>Severity</strong>: notice</li>
 <li><strong>Explanation</strong>: The <code>find_package(catkin)</code> call can add other catkin packages as dependencies with the COMPONENTS keyword. The <code>find_package()</code> command lists additional packages but has no COMPONENTS keyword.</li>
 </ul>
 <h2 id="missing-find_packagepkg">missing find_package(<i>pkg</i>)</h2>
