@@ -309,8 +309,10 @@ class CMakeLinter(object):
         info.subdirs.add(subdir)
         old_subdir = info.subdir
         old_parent_var = info.parent_var
+        old_find_packages = info.find_packages
         info.parent_var = info.var
         info.var = copy(info.var)
+        info.find_packages = copy(info.find_packages)
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = posixpath.join(PathConstants.PACKAGE_SOURCE, subdir)
             info.var["CMAKE_CURRENT_BINARY_DIR"] = posixpath.join(PathConstants.PACKAGE_BINARY, subdir)
@@ -321,6 +323,7 @@ class CMakeLinter(object):
             info.var = info.parent_var
             info.parent_var = old_parent_var
             info.subdir = old_subdir
+            info.find_packages = old_find_packages
 
     def _handle_list(self, info, args):
         try:
