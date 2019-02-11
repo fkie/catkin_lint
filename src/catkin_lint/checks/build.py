@@ -169,17 +169,23 @@ def link_directories(linter):
 
 def depends(linter):
     def on_init(info):
+        info.package_components = {}
         info.required_packages = set()
         info.test_packages = set()
         info.catkin_components = set()
         info.checked_packages = set()
 
     def on_find_package(info, cmd, args):
-        opts, args = cmake_argparse(args, {"REQUIRED": "-", "COMPONENTS": "*"})
+        opts, args = cmake_argparse(args, {"REQUIRED": "-", "COMPONENTS": "*", "OPTIONAL_COMPONENTS": "*"})
+        this_components = opts["COMPONENTS"] if opts["COMPONENTS"] else args[1:]
         if "project" not in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="project")
         if args[0] in info.find_packages:
-            info.report(ERROR, "DUPLICATE_FIND", pkg=args[0])
+            previous_components = info.package_components.get(args[0], set())
+            if previous_components - set(this_components):
+                info.report(ERROR, "SHADOWED_FIND", pkg=args[0])
+            elif previous_components == set(this_components):
+                info.report(WARNING, "DUPLICATE_FIND", pkg=args[0])
         if opts["REQUIRED"]:
             info.required_packages.add(args[0])
         if info.condition_is_checked("CATKIN_ENABLE_TESTING"):
@@ -187,6 +193,9 @@ def depends(linter):
         else:
             if args[0] in info.test_dep - info.build_dep - info.buildtool_dep:
                 info.report(ERROR, "UNGUARDED_TEST_DEPEND", pkg=args[0])
+        if args[0] not in info.package_components:
+            info.package_components[args[0]] = set()
+        info.package_components[args[0]] |= set(this_components)
         if args[0] != "catkin":
             return
         if "catkin_package" in info.commands:
@@ -194,14 +203,18 @@ def depends(linter):
         if not opts["REQUIRED"]:
             info.report(WARNING, "MISSING_REQUIRED", pkg="catkin")
             info.required_packages.add("catkin")
-        if not is_sorted(opts["COMPONENTS"]):
+        if not is_sorted(this_components):
             info.report(NOTICE, "UNSORTED_LIST", name="COMPONENTS")
-        for pkg in opts["COMPONENTS"]:
+        for pkg in this_components:
             info.var["%s_INCLUDE_DIRS" % pkg] = info.find_package_path(pkg, "include")
             info.var["%s_LIBRARIES" % pkg] = posixpath.join(info.find_package_path(pkg, "lib"), "library.so")
             info.var["%s_PACKAGE_PATH" % pkg] = posixpath.normpath(info.find_package_path(pkg, ""))
             if pkg in info.find_packages:
-                info.report(ERROR, "DUPLICATE_FIND", pkg=pkg)
+                previous_components = info.package_components.get(pkg, set())
+                if previous_components:
+                    info.report(ERROR, "SHADOWED_FIND", pkg=pkg)
+                else:
+                    info.report(WARNING, "DUPLICATE_FIND", pkg=pkg)
             if not info.env.is_known_pkg(pkg):
                 if info.env.ok:
                     info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
@@ -210,10 +223,10 @@ def depends(linter):
                     info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         for pkg in args[1:]:
             if info.env.is_known_pkg(pkg):
-                info.report(ERROR, "MISSING_COMPONENTS", pkg=pkg)
-        info.find_packages |= set(opts["COMPONENTS"])
-        info.required_packages |= set(opts["COMPONENTS"])
-        info.catkin_components |= set(opts["COMPONENTS"])
+                info.report(NOTICE, "MISSING_COMPONENTS", pkg=pkg)
+        info.find_packages |= set(this_components)
+        info.required_packages |= set(this_components)
+        info.catkin_components |= set(this_components)
 
     def on_if(info, cmd, args):
         for arg in args:

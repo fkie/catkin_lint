@@ -111,7 +111,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(catkin REQUIRED other_catkin)
             """,
         checks=cc.depends)
-        self.assertEqual([ "MISSING_COMPONENTS", "UNCONFIGURED_BUILD_DEPEND" ], result)
+        self.assertEqual([ "MISSING_COMPONENTS"], result)
 
         result = mock_lint(env, pkg,
             """
@@ -274,6 +274,39 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.depends)
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
+    def test_find_packages(self):
+        """Test find_package() logic"""
+        env = create_env()
+        pkg = create_manifest("mock", build_depends=["other_catkin"])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            catkin_package()
+            """
+        )
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            """
+        )
+        self.assertEqual(["SHADOWED_FIND"], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(other_catkin REQUIRED some_component)
+            find_package(catkin REQUIRED COMPONENTS other_catkin)
+            catkin_package()
+            """
+        )
+        self.assertEqual(["SHADOWED_FIND"], result)
 
     @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
