@@ -268,7 +268,7 @@ class CatkinInvokationTest(unittest.TestCase):
 
             exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_depend")
             self.assertEqual(exitcode, 1)
-            self.assertIn("messages have been ignored", stdout)
+            self.assertIn("messages have been suppressed", stdout)
 
             del os.environ["ROS_DISTRO"]
             exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")

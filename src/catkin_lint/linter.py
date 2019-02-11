@@ -41,6 +41,7 @@ from .diagnostics import msg
 ERROR = 0
 WARNING = 1
 NOTICE = 2
+SUPPRESSED = 3
 
 
 class Message(object):
@@ -90,7 +91,7 @@ class LintInfo(object):
         self.line = 0
         self.ignore_messages = set()
         self.ignore_messages_once = set()
-        self.ignored_messages = 0
+        self.suppressed_messages = []
         self.commands = set()
         self.find_packages = set()
         self.targets = set()
@@ -104,10 +105,18 @@ class LintInfo(object):
         self.generated_files = set([""])
 
     def report(self, level, msg_id, **kwargs):
-        if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
-            self.ignored_messages += 1
-            return
         msg_id, text, description = msg(msg_id, **kwargs)
+        if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
+            self.suppressed_messages.append(Message(
+                package=self.manifest.name,
+                file_name=self.file,
+                line=self.line,
+                level=level,
+                msg_id=msg_id,
+                text=text,
+                description=description
+            ))
+            return
         self.messages.append(Message(
             package=self.manifest.name,
             file_name=self.file,
@@ -217,7 +226,7 @@ class CMakeLinter(object):
         self.env = env
         self.messages = []
         self.ignore_messages = set()
-        self.ignored_messages = 0
+        self.suppressed_messages = []
         self._cmd_hooks = {}
         self._running_hooks = set([])
         self._init_hooks = []
@@ -590,4 +599,4 @@ class CMakeLinter(object):
         except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
-        self.ignored_messages += info.ignored_messages
+        self.suppressed_messages += info.suppressed_messages

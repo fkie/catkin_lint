@@ -30,7 +30,7 @@
 
 import sys
 import textwrap
-from .linter import ERROR, WARNING, NOTICE
+from .linter import ERROR, WARNING, NOTICE, SUPPRESSED
 from . import __version__
 
 
@@ -42,14 +42,14 @@ class Color(object):
     Never = 0
     Always = 1
     Auto = 2
-    switch_on = {False: {ERROR: "", WARNING: "", NOTICE: ""},
-                 True: {ERROR: "\033[1;31m", WARNING: "\033[1;33m", NOTICE: "\033[36m"}}
+    switch_on = {False: {ERROR: "", WARNING: "", NOTICE: "", SUPPRESSED: ""},
+                 True: {ERROR: "\033[1;31m", WARNING: "\033[1;33m", NOTICE: "\033[36m", SUPPRESSED: "\033[35m"}}
     switch_off = {False: "", True: "\033[0m"}
 
 
 class TextOutput(object):
 
-    diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
+    diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice", SUPPRESSED: "suppressed"}
 
     def __init__(self, color):
         self.color = color
