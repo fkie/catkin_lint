@@ -1,3 +1,8 @@
+Version 1.5.6
+  * New option --show-suppressed to show ignored messages
+  * Improve checks regarding find_package()
+  * Improve checks regarding string comparison operators
+
 Version 1.5.5
   * Fix problem with relative path checks
   * Update documentation
