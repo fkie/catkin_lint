@@ -540,12 +540,13 @@ def scripts(linter):
     def on_final(info):
         for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
             for filename in filenames:
-                full_filename = os.path.join(dirpath, filename)
-                pkg_filename = info.source_relative_path(full_filename[len(info.path) + 1:])
-                mode = os.stat(full_filename).st_mode
-                if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
-                    info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
-            ignoredirs = [d for d in dirnames if d.startswith(".") or "test" in d or "build" in d]
+                if "test" not in filename.lower() and "example" not in filename.lower():
+                    full_filename = os.path.join(dirpath, filename)
+                    pkg_filename = info.source_relative_path(full_filename[len(info.path) + 1:])
+                    mode = os.stat(full_filename).st_mode
+                    if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
+                        info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
+            ignoredirs = [d for d in dirnames if d.startswith(".") or "test" in d or "build" in d or "example" in d]
             for d in ignoredirs:
                 dirnames.remove(d)
 
