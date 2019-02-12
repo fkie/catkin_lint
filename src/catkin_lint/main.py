@@ -33,7 +33,7 @@ import sys
 import argparse
 import importlib
 from . import __version__ as catkin_lint_version
-from .linter import CMakeLinter, ERROR, WARNING, NOTICE, SUPPRESSED
+from .linter import CMakeLinter, ERROR, WARNING, NOTICE
 from .environment import CatkinEnvironment
 from .output import Color, TextOutput, ExplainedTextOutput, XmlOutput
 
@@ -171,6 +171,9 @@ def run_linter(args):
     exit_code = 0
     diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
     output.prolog(fd=sys.stdout)
+    if args.show_suppressed:
+        linter.messages += linter.suppressed_messages
+        linter.suppressed_messages = []
     for msg in sorted(linter.messages):
         if msg.id in force_notice:
             msg.level = NOTICE
@@ -187,17 +190,13 @@ def run_linter(args):
             exit_code = 1
         output.message(msg, fd=sys.stdout)
         problems += 1
-    if args.show_suppressed:
-        for msg in sorted(linter.suppressed_messages):
-            msg.level = SUPPRESSED
-            output.message(msg, fd=sys.stdout)
     output.epilog(fd=sys.stdout)
     if not args.quiet:
         sys.stderr.write("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
         for level in [ERROR, WARNING, NOTICE]:
             if ignored[level] > 0:
                 sys.stderr.write("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (ignored[level], diagnostic_label[level], level))
-        if linter.suppressed_messages and not args.show_suppressed:
+        if linter.suppressed_messages:
             sys.stderr.write("catkin_lint: %d messages have been suppressed. Use --show-suppressed to see them\n" % len(linter.suppressed_messages))
     return exit_code
 

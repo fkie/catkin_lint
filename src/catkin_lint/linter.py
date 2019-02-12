@@ -41,7 +41,6 @@ from .diagnostics import msg
 ERROR = 0
 WARNING = 1
 NOTICE = 2
-SUPPRESSED = 3
 
 
 class Message(object):
