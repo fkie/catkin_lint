@@ -123,6 +123,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: An operating system error has occured. This is not a linting problem per se but might be caused by a missing or unreadable file.
 
+## call to find_package(<i>pkg</i>) shadows previously selected components
+
+- **ID**: shadowed_find
+- **Severity**: error
+- **Explanation**: You have more than one <code>find_package()</code> call for a package, and the COMPONENTS list of the later call does not include a previously chosen component.
+
 ## catkin_metapackage() in regular package
 
 - **ID**: catkin_meta_vs_pkg
@@ -186,8 +192,8 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## duplicate find_package(<i>pkg</i>)
 
 - **ID**: duplicate_find
-- **Severity**: error
-- **Explanation**: The <code>find_package()</code> searches for a dependency and caches the result. A second call will be silently ignored. In particular, if you specify different arguments to the second call, those will not have any effect at all, which is most likely not what you want.
+- **Severity**: warning
+- **Explanation**: You called <code>find_package()</code> more than once for a particular package, which is not needed except for very specific, advanced circumstances.
 
 ## duplicate include path ${<i>pkg</i>_INCLUDE_DIRS}
 
@@ -372,7 +378,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## missing COMPONENTS keyword before '<i>pkg</i>'
 
 - **ID**: missing_components
-- **Severity**: error
+- **Severity**: notice
 - **Explanation**: The <code>find_package(catkin)</code> call can add other catkin packages as dependencies with the COMPONENTS keyword. The <code>find_package()</code> command lists additional packages but has no COMPONENTS keyword.
 
 ## missing find_package(<i>pkg</i>)

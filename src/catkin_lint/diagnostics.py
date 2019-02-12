@@ -53,10 +53,15 @@ message_list = {
     "DUPLICATE_FIND":
     ("duplicate find_package(%(pkg)s)",
         """\
-        The find_package() searches for a dependency and caches the result.
-        A second call will be silently ignored. In particular, if you
-        specify different arguments to the second call, those will not have
-        any effect at all, which is most likely not what you want.
+        You called find_package() more than once for a particular package,
+        which is not needed except for very specific, advanced circumstances.
+        """),
+    "SHADOWED_FIND":
+    ("call to find_package(%(pkg)s) shadows previously selected components",
+        """\
+        You have more than one find_package() call for a package, and the
+        COMPONENTS list of the later call does not include a previously
+        chosen component.
         """),
     "MISSING_FIND":
     ("missing find_package(%(pkg)s)",

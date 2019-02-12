@@ -138,6 +138,24 @@ class LinterTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            if ("foo" STREQUAL ${var})
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if (var STREQUAL foo)
+            endif()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             if (EXISTS filename)
             endif()
             """, checks=cc.all)
@@ -321,7 +339,7 @@ class LinterTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
             {
-              "/package-path/mock/CMakeLists.txt" : "project(mock) add_subdirectory(src) add_executable(${PROJECT_NAME}_test2 src/source.cpp)",
+              "/package-path/mock/CMakeLists.txt" : "project(mock) add_subdirectory(src)",
               "/package-path/mock/src/CMakeLists.txt" : """
               include_directories(../include)
               find_package(catkin REQUIRED)

@@ -90,7 +90,7 @@ class LintInfo(object):
         self.line = 0
         self.ignore_messages = set()
         self.ignore_messages_once = set()
-        self.ignored_messages = 0
+        self.suppressed_messages = []
         self.commands = set()
         self.find_packages = set()
         self.targets = set()
@@ -104,10 +104,18 @@ class LintInfo(object):
         self.generated_files = set([""])
 
     def report(self, level, msg_id, **kwargs):
-        if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
-            self.ignored_messages += 1
-            return
         msg_id, text, description = msg(msg_id, **kwargs)
+        if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
+            self.suppressed_messages.append(Message(
+                package=self.manifest.name,
+                file_name=self.file,
+                line=self.line,
+                level=level,
+                msg_id=msg_id,
+                text=text,
+                description=description
+            ))
+            return
         self.messages.append(Message(
             package=self.manifest.name,
             file_name=self.file,
@@ -217,7 +225,7 @@ class CMakeLinter(object):
         self.env = env
         self.messages = []
         self.ignore_messages = set()
-        self.ignored_messages = 0
+        self.suppressed_messages = []
         self._cmd_hooks = {}
         self._running_hooks = set([])
         self._init_hooks = []
@@ -300,8 +308,10 @@ class CMakeLinter(object):
         info.subdirs.add(subdir)
         old_subdir = info.subdir
         old_parent_var = info.parent_var
+        old_find_packages = info.find_packages
         info.parent_var = info.var
         info.var = copy(info.var)
+        info.find_packages = copy(info.find_packages)
         try:
             info.var["CMAKE_CURRENT_SOURCE_DIR"] = posixpath.join(PathConstants.PACKAGE_SOURCE, subdir)
             info.var["CMAKE_CURRENT_BINARY_DIR"] = posixpath.join(PathConstants.PACKAGE_BINARY, subdir)
@@ -312,6 +322,7 @@ class CMakeLinter(object):
             info.var = info.parent_var
             info.parent_var = old_parent_var
             info.subdir = old_subdir
+            info.find_packages = old_find_packages
 
     def _handle_list(self, info, args):
         try:
@@ -383,6 +394,8 @@ class CMakeLinter(object):
             self._ctx.skip_block()
 
     def _handle_if(self, info, cmd, args, arg_tokens):
+        def is_string_comparison_op(x):
+            return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
             if len(arg_tokens) == 1 and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1]):
@@ -390,14 +403,14 @@ class CMakeLinter(object):
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD":
                     continue
-                if tok[1][:3] == "STR" or tok[1][:8] == "VERSION_" or tok[1] in ["MATCHES", "IS_NEWER_THAN"]:
+                if is_string_comparison_op(tok[1]):
                     if i == 0 or i == len(arg_tokens) - 1:
-                        raise CMakeSyntaxError("%s(%d): missing argument for binary operator %s" % (info.file, info.line, tok))
-                    if arg_tokens[i - 1][0] != "STRING" or arg_tokens[i + 1][0] != "STRING":
+                        raise CMakeSyntaxError("%s(%d): missing argument for binary operator %s" % (info.file, info.line, tok[1]))
+                    if (arg_tokens[i - 1][0] != "STRING" and "${" in arg_tokens[i - 1][1]) or (arg_tokens[i + 1][0] != "STRING" and "${" in arg_tokens[i + 1][1]):
                         info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
                 if tok[1] in ["EXISTS", "IS_DIRECTORY", "IS_SYMLINK", "IS_ABSOLUTE"]:
                     if i == len(arg_tokens) - 1:
-                        raise CMakeSyntaxError("%s(%d): missing argument for unary operator %s" % (info.file, info.line, tok))
+                        raise CMakeSyntaxError("%s(%d): missing argument for unary operator %s" % (info.file, info.line, tok[1]))
                     if arg_tokens[i + 1][0] != "STRING":
                         info.report(NOTICE, "UNQUOTED_STRING_OP", op=tok[1])
         if cmd == "else":
@@ -588,4 +601,4 @@ class CMakeLinter(object):
         except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
-        self.ignored_messages += info.ignored_messages
+        self.suppressed_messages += info.suppressed_messages

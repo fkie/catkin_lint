@@ -13,7 +13,7 @@ _catkin_lint_complete()
 	fi
 	if [ "$prev" == "--rosdistro" ]
 	then
-		COMPREPLY=( $( compgen -W "groovy hydro indigo jade" -- "$arg" ) )
+		COMPREPLY=( $( compgen -W "groovy hydro indigo jade kinetic lunar melodic" -- "$arg" ) )
 		return 0
 	fi
 	if [ "$prev" == "--ignore" -o "$prev" == "--error" -o "$prev" == "--warning" -o "$prev" == "--notice" ]
@@ -22,7 +22,7 @@ _catkin_lint_complete()
 		return 0
 	fi
 	compopt -o filenames 2>/dev/null
-	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --offline --clear-cache --pkg --skip-pkg --ignore --package-path --rosdistro --resolve-env --error --warning --notice" -- "$arg" ) )
+	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --offline --clear-cache --pkg --skip-pkg --ignore --package-path --rosdistro --resolve-env --error --warning --notice --show-suppressed" -- "$arg" ) )
 	COMPREPLY+=( $( compgen -d -- "$arg" ) )
 	return 0
 }
