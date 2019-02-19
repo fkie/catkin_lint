@@ -206,6 +206,7 @@ def depends(linter):
         if args[0] not in info.package_components:
             info.package_components[args[0]] = set()
         info.package_components[args[0]] |= set(this_components)
+        info.var["%s_EXTRAS_DIR" % args[0]] = info.find_package_path(args[0], "extras")
         if args[0] != "catkin":
             return
         if "catkin_package" in info.commands:
@@ -219,6 +220,7 @@ def depends(linter):
             info.var["%s_INCLUDE_DIRS" % pkg] = info.find_package_path(pkg, "include")
             info.var["%s_LIBRARIES" % pkg] = posixpath.join(info.find_package_path(pkg, "lib"), "library.so")
             info.var["%s_PACKAGE_PATH" % pkg] = posixpath.normpath(info.find_package_path(pkg, ""))
+            info.var["%s_EXTRAS_DIR" % pkg] = info.find_package_path(pkg, "extras")
             if pkg in info.find_packages:
                 previous_components = info.package_components.get(pkg, set())
                 if previous_components:
