@@ -139,15 +139,12 @@ class LintInfo(object):
         return new_path
 
     def report_path(self, path):
-        if path.startswith(PathConstants.PACKAGE_SOURCE):
+        new_path = path.replace(PathConstants.PACKAGE_BINARY, "${PROJECT_BUILD_DIR}")
+        new_path = new_path.replace(PathConstants.CATKIN_DEVEL, "${CATKIN_DEVEL_PREFIX}")
+        new_path = new_path.replace(PathConstants.CATKIN_INSTALL, "${CATKIN_INSTALL_PREFIX}")
+        if new_path.startswith(PathConstants.PACKAGE_SOURCE):
             return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
-        if path.startswith(PathConstants.PACKAGE_BINARY):
-            return posixpath.normpath("${PROJECT_BUILD_DIR}/" + path[len(PathConstants.PACKAGE_BINARY) + 1:])
-        if path.startswith(PathConstants.CATKIN_DEVEL):
-            return posixpath.normpath("${CATKIN_DEVEL_PREFIX}/" + path[len(PathConstants.CATKIN_DEVEL) + 1:])
-        if path.startswith(PathConstants.CATKIN_INSTALL):
-            return posixpath.normpath("${CATKIN_INSTALL_PREFIX}/" + path[len(PathConstants.CATKIN_INSTALL) + 1:])
-        return posixpath.normpath(path)
+        return posixpath.normpath(new_path)
 
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))
