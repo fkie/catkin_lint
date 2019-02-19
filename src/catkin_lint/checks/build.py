@@ -122,7 +122,17 @@ def generated_files(linter):
         for f in opts["OUTPUT"] + opts["BYPRODUCTS"]:
             info.generated_files.add(info.binary_relative_path(f))
 
+    def on_generate_export_header(info, cmd, args):
+        opts, args = cmake_argparse(args, {"BASE_NAME": "?", "EXPORT_FILE_NAME": "?"})
+        f = args[0] + "_export.h"
+        if opts["BASE_NAME"]:
+            f = opts["BASE_NAME"] + "_export.h"
+        if opts["EXPORT_FILE_NAME"]:
+            f = opts["EXPORT_FILE_NAME"]
+        info.generated_files.add(info.binary_relative_path(f))
+
     linter.add_command_hook("configure_file", on_configure_file)
+    linter.add_command_hook("generate_export_header", on_generate_export_header)
     linter.add_command_hook("add_custom_command", on_add_custom_command)
 
 

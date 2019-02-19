@@ -446,6 +446,53 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.source_files)
         self.assertEqual(["MISSING_FILE"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            include(GenerateExportHeader)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(${PROJECT_NAME})
+            install(FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_export.h DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual(["MISSING_FILE"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            include(GenerateExportHeader)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(${PROJECT_NAME})
+            generate_export_header(${PROJECT_NAME})
+            install(FILES ${PROJECT_BINARY_DIR}/${PROJECT_NAME}_export.h DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            include(GenerateExportHeader)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(${PROJECT_NAME})
+            generate_export_header(${PROJECT_NAME} BASE_NAME other_name)
+            install(FILES ${PROJECT_BINARY_DIR}/other_name_export.h DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            include(GenerateExportHeader)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(${PROJECT_NAME})
+            generate_export_header(${PROJECT_NAME} BASE_NAME other_name EXPORT_FILE_NAME subdir/my_exports.h)
+            install(FILES ${PROJECT_BINARY_DIR}/subdir/my_exports.h DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
 
     @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
