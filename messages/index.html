@@ -125,6 +125,8 @@
         
             <li><a class="toctree-l3" href="#environment-variables-should-not-be-used">environment variables should not be used</a></li>
         
+            <li><a class="toctree-l3" href="#executable-file-is-not-installed-to-bin-destination">executable file is not installed to bin destination</a></li>
+        
             <li><a class="toctree-l3" href="#exported-include-path-path-does-not-exist">exported include path 'path' does not exist</a></li>
         
             <li><a class="toctree-l3" href="#exported-library-target-cannot-have-different-output-name">exported library 'target' cannot have different output name</a></li>
@@ -155,7 +157,7 @@
         
             <li><a class="toctree-l3" href="#include-paths-path-and-parent_path-are-ambiguous">include paths 'path' and 'parent_path' are ambiguous</a></li>
         
-            <li><a class="toctree-l3" href="#installtype-dest-is-not-one-of-the-catkin__destinations">install(type ... dest) is not one of the ${CATKIN_*_DESTINATION}s</a></li>
+            <li><a class="toctree-l3" href="#installtype-dest-does-not-install-to-catkin_install_prefix">install(type ... dest) does not install to ${CATKIN_INSTALL_PREFIX}</a></li>
         
             <li><a class="toctree-l3" href="#installed-target-target-is-not-defined">installed target 'target' is not defined</a></li>
         
@@ -496,6 +498,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: The behavior of your build should not depend on any environment variables.</li>
 </ul>
+<h2 id="executable-file-is-not-installed-to-bin-destination">executable file is not installed to bin destination</h2>
+<ul>
+<li><strong>ID</strong>: wrong_bin_install_destination</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: Your package installs one or more files to an unexpected location. Executable files should end up in either ${CATKIN_GLOBAL_BIN_DESTINATION} or ${CATKIN_PACKAGE_BIN_DESTINATION}.</li>
+</ul>
 <h2 id="exported-include-path-path-does-not-exist">exported include path '<i>path</i>' does not exist</h2>
 <ul>
 <li><strong>ID</strong>: missing_export_include_path</li>
@@ -586,11 +594,11 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: You have used two include paths where one is a parent of the other. Thus the same headers can be included with two different include paths which may confuse users. It is recommended that you keep your include paths consistent.</li>
 </ul>
-<h2 id="installtype-dest-is-not-one-of-the-catkin__destinations">install(<i>type</i> ... <i>dest</i>) is not one of the ${CATKIN_*_DESTINATION}s</h2>
+<h2 id="installtype-dest-does-not-install-to-catkin_install_prefix">install(<i>type</i> ... <i>dest</i>) does not install to ${CATKIN_INSTALL_PREFIX}</h2>
 <ul>
-<li><strong>ID</strong>: install_destination</li>
+<li><strong>ID</strong>: wrong_install_destination</li>
 <li><strong>Severity</strong>: warning</li>
-<li><strong>Explanation</strong>: Catkin provides a number of standard variables to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.</li>
+<li><strong>Explanation</strong>: Your package installs one or more files to an unexpected location. Catkin provides a number of standard variables ${CATKIN_*_DESTINATION} to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.</li>
 </ul>
 <h2 id="installed-target-target-is-not-defined">installed target '<i>target</i>' is not defined</h2>
 <ul>
