@@ -409,8 +409,8 @@ def installs(linter):
                 else:
                     info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
                 info.install_programs.add(info.source_relative_path(f))
-        if not info.is_catkin_install_destination(opts["DESTINATION"]):
-            info.report(WARNING, "INSTALL_DESTINATION", type="PROGRAMS", dest="DESTINATION")
+        if not info.is_catkin_bin_install_destination(opts["DESTINATION"]):
+            info.report(WARNING, "WRONG_BIN_INSTALL_DESTINATION")
 
     def on_install(info, cmd, args):
         install_type = None
@@ -451,7 +451,7 @@ def installs(linter):
                         info.report(WARNING, "EXTERNAL_FILE", cmd=cmd, file=info.report_path(f))
                     if not info.is_existing_path(f, check=os.path.isfile):
                         info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
-            info.install_files |= set([os.path.normpath(os.path.join(opts["DESTINATION"], os.path.basename(f))) for f in opts["FILES"]])
+            info.install_files |= set([posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, opts["DESTINATION"], posixpath.basename(f))) for f in opts["FILES"]])
         if opts["TARGETS"]:
             install_type = "TARGETS"
             info.install_targets |= set(opts["TARGETS"])
@@ -461,8 +461,10 @@ def installs(linter):
             info.report(NOTICE, "UNSORTED_LIST", name=install_type)
         for dest in ["DESTINATION", "ARCHIVE DESTINATION", "LIBRARY DESTINATION", "RUNTIME DESTINATION"]:
             if opts[dest] is not None:
-                if not info.is_catkin_install_destination(opts[dest]):
-                    info.report(WARNING, "INSTALL_DESTINATION", type=install_type, dest=dest)
+                if install_type == "PROGRAMS" and not info.is_catkin_bin_install_destination(opts[dest]):
+                    info.report(WARNING, "WRONG_BIN_INSTALL_DESTINATION")
+                elif not info.is_catkin_install_destination(opts[dest]):
+                    info.report(WARNING, "WRONG_INSTALL_DESTINATION", type=install_type, dest=dest)
                 if info.is_catkin_install_destination(opts[dest], "include"):
                     info.install_includes = True
 
@@ -507,7 +509,7 @@ def plugins(linter):
                     info.report(ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
                 elif not os.path.isfile(info.real_path(plugin[10:])):
                     info.report(ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
-                elif os.path.normpath("%s/share/%s/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name, plugin[10:])) not in info.install_files:
+                elif posixpath.normpath("%s/share/%s/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name, plugin[10:])) not in info.install_files:
                     info.report(ERROR if "install" in info.commands else WARNING, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
         for dep in plugin_dep - info.exec_dep:
             info.report(WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)

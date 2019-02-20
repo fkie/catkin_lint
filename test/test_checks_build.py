@@ -572,10 +572,20 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            install(PROGRAMS bin/script DESTINATION bin)
+            install(FILES share/file DESTINATION /wrong/destination)
             """,
         checks=cc.installs)
-        self.assertEqual([ "INSTALL_DESTINATION" ], result)
+        self.assertEqual(["WRONG_INSTALL_DESTINATION"], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(PROGRAMS bin/script DESTINATION /some/where/else)
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "WRONG_BIN_INSTALL_DESTINATION" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -663,7 +673,16 @@ class ChecksBuildTest(unittest.TestCase):
             install(PROGRAMS bin/script DESTINATION "${missing_variable}")
             """,
         checks=cc.installs)
-        self.assertEqual([ "INSTALL_DESTINATION" ], result)
+        self.assertEqual([ "WRONG_BIN_INSTALL_DESTINATION" ], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            install(PROGRAMS bin/script DESTINATION wrong/destination)
+            """,
+        checks=cc.installs)
+        self.assertEqual([ "WRONG_BIN_INSTALL_DESTINATION" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -782,7 +801,7 @@ class ChecksBuildTest(unittest.TestCase):
                 catkin_install_python(PROGRAMS bin/script DESTINATION wrong/destination)
                 """,
             checks=cc.installs)
-            self.assertEqual(["INSTALL_DESTINATION"], result)
+            self.assertEqual(["WRONG_BIN_INSTALL_DESTINATION"], result)
             result = mock_lint(env, pkg,
                 """
                 project(mock)

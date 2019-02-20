@@ -201,8 +201,12 @@ class LintInfo(object):
         return tmp.startswith(PathConstants.PACKAGE_SOURCE) or tmp.startswith(PathConstants.PACKAGE_BINARY)
 
     def is_catkin_install_destination(self, path, subdir=None):
+        full_path = posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, path))
         catkin_dir = posixpath.join(PathConstants.CATKIN_INSTALL, subdir or "")
-        return posixpath.normpath(path).startswith(catkin_dir)
+        return full_path.startswith(catkin_dir)
+
+    def is_catkin_bin_install_destination(self, path):
+        return self.is_catkin_install_destination(path, "bin") or self.is_catkin_install_destination(path, "lib/%s" % self.manifest.name)
 
     def condition_is_checked(self, expr):
         for c in self.conditionals:
@@ -573,19 +577,19 @@ class CMakeLinter(object):
             "CATKIN_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
             "CMAKE_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
             "CATKIN_DEVEL_PREFIX": PathConstants.CATKIN_DEVEL,
-            "CATKIN_PACKAGE_BIN_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_ETC_DESTINATION": "%s/etc/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_INCLUDE_DESTINATION": "%s/include/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_LIB_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_PYTHON_DESTINATION": "%s/lib/python/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_SHARE_DESTINATION": "%s/share/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_GLOBAL_BIN_DESTINATION": "%s/bin" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_ETC_DESTINATION": "%s/etc" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_INCLUDE_DESTINATION": "%s/include" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_LIB_DESTINATION": "%s/lib" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "%s/lib" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_PYTHON_DESTINATION": "%s/lib/python" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_PACKAGE_BIN_DESTINATION": "lib/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_ETC_DESTINATION": "etc/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_INCLUDE_DESTINATION": "include/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_LIB_DESTINATION": "lib/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_PYTHON_DESTINATION": "lib/python/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_SHARE_DESTINATION": "share/%s" % info.manifest.name,
+            "CATKIN_GLOBAL_BIN_DESTINATION": "bin",
+            "CATKIN_GLOBAL_ETC_DESTINATION": "etc",
+            "CATKIN_GLOBAL_INCLUDE_DESTINATION": "include",
+            "CATKIN_GLOBAL_LIB_DESTINATION": "lib",
+            "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "lib",
+            "CATKIN_GLOBAL_PYTHON_DESTINATION": "lib/python",
+            "CATKIN_GLOBAL_SHARE_DESTINATION": "share",
         }
         try:
             if os.path.basename(info.path) != manifest.name:

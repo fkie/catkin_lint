@@ -250,13 +250,21 @@ message_list = {
         This catkin command processes a particular directory which is missing
         from the package source folder.
         """),
-    "INSTALL_DESTINATION":
-    ("install(%(type)s ... %(dest)s) is not one of the ${CATKIN_*_DESTINATION}s",
+    "WRONG_INSTALL_DESTINATION":
+    ("install(%(type)s ... %(dest)s) does not install to ${CATKIN_INSTALL_PREFIX}",
         """\
-        Catkin provides a number of standard variables to specify
-        installation folders. You should use those to ensure that your
+        Your package installs one or more files to an unexpected location.
+        Catkin provides a number of standard variables ${CATKIN_*_DESTINATION}
+        to specify installation folders. You should use those to ensure that your
         package will continue to work if the file system layout is
         changed in the future.
+        """),
+    "WRONG_BIN_INSTALL_DESTINATION":
+    ("executable file is not installed to bin destination",
+        """\
+        Your package installs one or more files to an unexpected location.
+        Executable files should end up in either ${CATKIN_GLOBAL_BIN_DESTINATION}
+        or ${CATKIN_PACKAGE_BIN_DESTINATION}.
         """),
     "UNUSED_DEPEND":
     ("unused %(type)s_depend on '%(pkg)s'",
