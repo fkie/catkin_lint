@@ -207,6 +207,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: warning
 - **Explanation**: The behavior of your build should not depend on any environment variables.
 
+## executable file is not installed to bin destination
+
+- **ID**: wrong_bin_install_destination
+- **Severity**: warning
+- **Explanation**: Your package installs one or more files to an unexpected location. Executable files should end up in either ${CATKIN_GLOBAL_BIN_DESTINATION} or ${CATKIN_PACKAGE_BIN_DESTINATION}.
+
 ## exported include path '<i>path</i>' does not exist
 
 - **ID**: missing_export_include_path
@@ -297,11 +303,11 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: warning
 - **Explanation**: You have used two include paths where one is a parent of the other. Thus the same headers can be included with two different include paths which may confuse users. It is recommended that you keep your include paths consistent.
 
-## install(<i>type</i> ... <i>dest</i>) is not one of the ${CATKIN_*_DESTINATION}s
+## install(<i>type</i> ... <i>dest</i>) does not install to ${CATKIN_INSTALL_PREFIX}
 
-- **ID**: install_destination
+- **ID**: wrong_install_destination
 - **Severity**: warning
-- **Explanation**: Catkin provides a number of standard variables to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.
+- **Explanation**: Your package installs one or more files to an unexpected location. Catkin provides a number of standard variables ${CATKIN_*_DESTINATION} to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.
 
 ## installed target '<i>target</i>' is not defined
 

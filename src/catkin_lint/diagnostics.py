@@ -101,12 +101,6 @@ message_list = {
         Catkin macros cannot be called before catkin has been configured with
         find_package(catkin).
         """),
-    "DEPRECATED_ROSBUILD":
-    ("%(cmd)s() is deprecated",
-        """\
-        This construct was intended to facilitate the migration from
-        Rosbuild to Catkin. It is deprecated and should not be used any more.
-        """),
     "DEPRECATED_CMD":
     ("%(old_cmd)s() is deprecated, use %(new_cmd)s() instead",
         """\
@@ -355,19 +349,6 @@ message_list = {
         You have listed an invalid include path in the INCLUDE_DIRS stanza of the
         catkin_package() command.
         """),
-    "MISSING_BUILD_INCLUDE_PATH":
-    ("build include path '%(path)s' does not exist",
-        """\
-        You have listed an invalid include path in the include_directories() command.
-        """),
-    "HARDCODED_BUILD_INCLUDE_PATH":
-    ("build include path '%(path)s' is hardcoded but not part of your package",
-        """\
-        You have listed an explicit, hardcoded include path in the include_directories() command,
-        which is not part of your package.
-        To ensure that your package will build on as many different systems as possible,
-        you should discover such paths with find_path() or find_package() instead.
-        """),
     "EXTERNAL_INCLUDE_PATH":
     ("catkin_package() exports non-package include path",
         """\
@@ -565,12 +546,6 @@ message_list = {
         The FindXXX.cmake modules are intended to be included by the find_package()
         command.
         """),
-    "REDUNDANT_TEST_DEPEND":
-    ("redundant test_depend '%(pkg)s'",
-        """\
-        Test dependencies are additional dependencies for testing, so there is no
-        need to list any build or run dependency a second time.
-        """),
     "REDUNDANT_LIB_PREFIX":
     ("library output name '%(output)s' has redundant 'lib' prefix",
         """\
@@ -584,12 +559,6 @@ message_list = {
         """\
         The specified dependency is neither a catkin package nor a known system dependency
         from the rosdep database.
-        """),
-    "UNSUPPORTED_CMD":
-    ("unsupported command '%(cmd)s'",
-        """\
-        Your package uses CMake constructs which cannot be linted properly at this time.
-        Certain errors may go unnoticed while other errors may be false positives.
         """),
     "EXTERNAL_SUBDIR":
     ("subdirectory %(subdir)s is not in package",
