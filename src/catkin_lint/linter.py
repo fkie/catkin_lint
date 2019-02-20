@@ -588,8 +588,9 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_INCLUDE_DESTINATION": "include",
             "CATKIN_GLOBAL_LIB_DESTINATION": "lib",
             "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "lib",
-            "CATKIN_GLOBAL_PYTHON_DESTINATION": "lib/python",
+            "CATKIN_GLOBAL_PYTHON_DESTINATION": "lib/python/packages",
             "CATKIN_GLOBAL_SHARE_DESTINATION": "share",
+            "PYTHON_INSTALL_DIR": "lib/python/packages",
         }
         try:
             if os.path.basename(info.path) != manifest.name:
