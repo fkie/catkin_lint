@@ -91,6 +91,7 @@ class LintInfo(object):
         self.ignore_messages = set()
         self.ignore_messages_once = set()
         self.suppressed_messages = []
+        self.command_loc = {}
         self.commands = set()
         self.find_packages = set()
         self.targets = set()
@@ -104,12 +105,17 @@ class LintInfo(object):
         self.generated_files = set([""])
 
     def report(self, level, msg_id, **kwargs):
+        file_name, line = self.file, self.line
+        loc = kwargs.get("file_location", None)
+        if loc:
+            file_name, line = loc
+            del kwargs["file_location"]
         msg_id, text, description = msg(msg_id, **kwargs)
         if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
             self.suppressed_messages.append(Message(
                 package=self.manifest.name,
-                file_name=self.file,
-                line=self.line,
+                file_name=file_name,
+                line=line,
                 level=level,
                 msg_id=msg_id,
                 text=text,
@@ -118,13 +124,19 @@ class LintInfo(object):
             return
         self.messages.append(Message(
             package=self.manifest.name,
-            file_name=self.file,
-            line=self.line,
+            file_name=file_name,
+            line=line,
             level=level,
             msg_id=msg_id,
             text=text,
             description=description
         ))
+
+    def current_location(self):
+        return (self.file, self.line) if self.file and self.line else None
+
+    def location_of(self, command):
+        return self.command_loc.get(command, None)
 
     def source_relative_path(self, path):
         new_path = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
@@ -557,6 +569,7 @@ class CMakeLinter(object):
                     return
                 self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
+                info.command_loc[cmd] = info.current_location()
                 info.ignore_messages_once.clear()
         finally:
             info.file = save_file

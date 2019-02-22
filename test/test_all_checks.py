@@ -242,15 +242,15 @@ class CatkinInvokationTest(unittest.TestCase):
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "suggest_catkin_depend")
         self.assertEqual(exitcode, 0)
-        self.assertIn("delta: notice: package 'std_msgs' should be listed in catkin_package()", stdout)
+        self.assertIn("notice: package 'std_msgs' should be listed in catkin_package()", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--warning", "suggest_catkin_depend")
         self.assertEqual(exitcode, 0)
-        self.assertIn("delta: warning: package 'std_msgs' should be listed in catkin_package()", stdout)
+        self.assertIn("warning: package 'std_msgs' should be listed in catkin_package()", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--error", "suggest_catkin_depend")
         self.assertEqual(exitcode, 1)
-        self.assertIn("delta: error: package 'std_msgs' should be listed in catkin_package()", stdout)
+        self.assertIn("error: package 'std_msgs' should be listed in catkin_package()", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
         self.assertEqual(exitcode, 1)

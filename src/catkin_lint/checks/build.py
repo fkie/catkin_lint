@@ -93,11 +93,11 @@ def targets(linter):
     def on_final(info):
         catkin_include_path = info.find_package_path("catkin", "include")
         if (info.executables or info.libraries) and info.catkin_components and catkin_include_path not in info.build_includes:
-            info.report(ERROR, "UNUSED_CATKIN_INCLUDE_DIRS")
+            info.report(ERROR, "UNUSED_CATKIN_INCLUDE_DIRS", file_location=("CMakeLists.txt", 0))
         if catkin_include_path in info.build_includes:
             for pkg in info.catkin_components:
                 if info.find_package_path(pkg, "include") in info.build_includes:
-                    info.report(WARNING, "DUPLICATE_INCLUDE_PATH", pkg=pkg)
+                    info.report(WARNING, "DUPLICATE_INCLUDE_PATH", pkg=pkg, file_location=("CMakeLists.txt", 0))
 
     linter.require(includes)
     linter.require(depends)
@@ -248,13 +248,13 @@ def depends(linter):
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep - info.test_dep:
             if info.env.is_known_pkg(pkg):
-                info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build")
+                info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build", file_location=("package.xml", 0))
         for pkg in info.find_packages - info.required_packages - info.checked_packages:
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR, "MISSING_REQUIRED", pkg=pkg)
+                info.report(ERROR, "MISSING_REQUIRED", pkg=pkg, file_location=("CMakeLists.txt", 0))
         for pkg in info.build_dep - (info.find_packages - info.test_packages):
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR if info.executables or info.libraries else WARNING, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg)
+                info.report(ERROR if info.executables or info.libraries else WARNING, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
 
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
@@ -321,20 +321,20 @@ def exports(linter):
             if info.env.is_known_pkg(pkg):
                 if pkg == "message_runtime":
                     if pkg not in info.exec_dep:
-                        info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "exec")
+                        info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "exec", file_location=("package.xml", 0))
                 else:
-                    info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
+                    info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export", file_location=("package.xml", 0))
         for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
             if re.search(r"_(msg|message)s?(_|$)", pkg) and info.env.is_catkin_pkg(pkg):
-                info.report(WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg)
+                info.report(WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg, file_location=info.location_of("catkin_package"))
         if info.export_includes and info.libraries and not info.export_libs:
-            info.report(WARNING, "MISSING_EXPORT_LIB")
+            info.report(WARNING, "MISSING_EXPORT_LIB", file_location=info.location_of("catkin_package"))
         if info.executables or info.libraries:
             for incl in info.export_includes - info.build_includes:
-                info.report(WARNING, "UNUSED_INCLUDE_PATH", path=incl)
+                info.report(WARNING, "UNUSED_INCLUDE_PATH", path=incl, file_location=info.location_of("catkin_package"))
         for incl in info.export_includes:
             if not info.is_existing_path(incl, check=os.path.isdir, require_source_folder=True):
-                info.report(ERROR, "MISSING_INCLUDE_PATH", path=incl)
+                info.report(ERROR, "MISSING_INCLUDE_PATH", path=incl, file_location=info.location_of("catkin_package"))
         includes = info.build_includes | info.export_includes
         for d1 in includes:
             if not posixpath.isabs(d1):
@@ -344,9 +344,9 @@ def exports(linter):
         for lib in info.export_libs:
             if lib in info.targets:
                 if info.target_outputs[lib] != lib:
-                    info.report(ERROR, "EXPORT_LIB_RENAMED", target=lib)
+                    info.report(ERROR, "EXPORT_LIB_RENAMED", target=lib, file_location=info.location_of("catkin_package"))
                 if lib in info.executables:
-                    info.report(ERROR, "EXPORT_LIB_NOT_LIB", target=lib)
+                    info.report(ERROR, "EXPORT_LIB_NOT_LIB", target=lib, file_location=info.location_of("catkin_package"))
 
     linter.require(manifest_depends)
     linter.require(pkg_config)
@@ -466,20 +466,20 @@ def installs(linter):
     def on_final(info):
         for lib in info.export_libs:
             if lib in info.targets and lib not in info.install_targets:
-                info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_EXPORT_LIB", target=lib)
+                info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_EXPORT_LIB", target=lib, file_location=info.location_of("catkin_package"))
         for tgt in info.executables - info.install_targets:
             if "test" not in tgt.lower() and "example" not in tgt.lower():
-                info.report(WARNING, "UNINSTALLED_TARGET", target=tgt)
+                info.report(WARNING, "UNINSTALLED_TARGET", target=tgt, file_location=("CMakeLists.txt", 0))
         if info.export_includes and not info.install_includes:
-            info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_INCLUDE_PATH")
+            info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_INCLUDE_PATH", file_location=info.location_of("catkin_package"))
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
                     if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries:
-                        info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib)
+                        info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib, file_location=info.location_of("catkin_package"))
         for target in info.install_targets:
             if target not in info.libraries and target not in info.executables:
-                info.report(ERROR, "UNDEFINED_TARGET", target=target)
+                info.report(ERROR, "UNDEFINED_TARGET", target=target, file_location=("CMakeLists.txt", 0))
 
     linter.require(targets)
     linter.require(exports)
@@ -501,13 +501,13 @@ def plugins(linter):
                 if export.tagname != info.manifest.name:
                     plugin_dep.add(export.tagname)
                 if not plugin.startswith("${prefix}/"):
-                    info.report(ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
+                    info.report(ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname, file_location=("package.xml", 0))
                 elif not os.path.isfile(info.real_path(plugin[10:])):
-                    info.report(ERROR, "MISSING_PLUGIN", export=export.tagname, file=plugin)
+                    info.report(ERROR, "MISSING_PLUGIN", export=export.tagname, file=plugin, file_location=("package.xml", 0))
                 elif posixpath.normpath("%s/share/%s/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name, plugin[10:])) not in info.install_files:
-                    info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_PLUGIN", export=export.tagname, file=plugin[10:])
+                    info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_PLUGIN", export=export.tagname, file=plugin[10:], file_location=("CMakeLists.txt", 0))
         for dep in plugin_dep - info.exec_dep:
-            info.report(WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)
+            info.report(WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep, file_location=("package.xml", 0))
 
     linter.require(manifest_depends)
     linter.require(installs)
@@ -517,6 +517,7 @@ def plugins(linter):
 def dynamic_reconfigure(linter):
     def on_init(info):
         info.dynamic_reconfigure_files = set()
+        info.dynamic_reconfigure_loc = None
 
     def on_generate_dynamic_reconfigure_options(info, cmd, args):
         for f in args:
@@ -534,7 +535,7 @@ def dynamic_reconfigure(linter):
 
     def on_final(info):
         if "generate_dynamic_reconfigure_options" in info.commands and "dynamic_reconfigure" not in info.find_packages:
-            info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg="dynamic_reconfigure")
+            info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg="dynamic_reconfigure", file_location=info.location_of("generate_dynamic_reconfigure_options"))
 
     linter.require(depends)
     linter.add_init_hook(on_init)
@@ -601,21 +602,21 @@ def message_generation(linter):
         if info.manifest.is_metapackage():
             return
         for pkg in info.msg_dep - info.find_packages:
-            info.report(ERROR, "UNCONFIGURED_MSG_DEPEND", pkg=pkg)
+            info.report(ERROR, "UNCONFIGURED_MSG_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
         for pkg in info.msg_dep - info.export_packages:
-            info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
+            info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export", file_location=info.location_of("catkin_package"))
         for pkg in info.msg_dep - info.build_dep:
-            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build")
+            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build", file_location=("package.xml", 0))
         for pkg in info.msg_dep - info.export_dep:
-            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
+            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export", file_location=("package.xml", 0))
         if info.declares_messages and "generate_messages" not in info.commands:
-            info.report(ERROR, "MISSING_GENERATE_MSG")
+            info.report(ERROR, "MISSING_GENERATE_MSG", file_location=("CMakeLists.txt", 0))
         if not info.declares_messages and "generate_messages" in info.commands:
-            info.report(WARNING, "UNUSED_GENERATE_MSG")
+            info.report(WARNING, "UNUSED_GENERATE_MSG", file_location=info.location_of("generate_messages"))
         if info.declares_messages and "message_generation" not in info.find_packages:
             info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg="message_generation")
         if info.declares_messages and "message_runtime" not in info.export_packages:
-            info.report(ERROR, "MISSING_CATKIN_DEPEND", type="run" if info.manifest.package_format < 2 else "build_export", pkg="message_runtime")
+            info.report(ERROR, "MISSING_CATKIN_DEPEND", type="run" if info.manifest.package_format < 2 else "build_export", pkg="message_runtime", file_location=info.location_of("catkin_package"))
 
     linter.require(manifest_depends)
     linter.require(depends)

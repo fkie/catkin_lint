@@ -55,11 +55,11 @@ def depends(linter):
         if info.env.ok:
             for pkg in info.buildtool_dep | info.build_dep | info.export_dep | info.exec_dep | info.test_dep:
                 if not info.env.is_known_pkg(pkg):
-                    info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+                    info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg, file_location=("package.xml", 0))
         if info.manifest.is_metapackage() and info.build_dep:
-            info.report(ERROR, "INVALID_META_DEPEND", type="build")
+            info.report(ERROR, "INVALID_META_DEPEND", type="build", file_location=("package.xml", 0))
         if info.manifest.is_metapackage() and info.test_dep:
-            info.report(ERROR, "INVALID_META_DEPEND", type="test")
+            info.report(ERROR, "INVALID_META_DEPEND", type="test", file_location=("package.xml", 0))
 
     linter.add_init_hook(on_init)
 
@@ -91,20 +91,20 @@ def catkin_build(linter):
 
     def on_final(info):
         if "catkin" in info.build_dep:
-            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="build", right_type="buildtool")
+            info.report(ERROR, "WRONG_DEPEND", pkg="catkin", wrong_type="build", right_type="buildtool", file_location=("package.xml", 0))
         if not info.uses_catkin:
             if "catkin" not in info.find_packages and "catkin" in info.buildtool_dep:
-                info.report(ERROR, "UNUSED_DEPEND", pkg="catkin", type="buildtool")
+                info.report(ERROR, "UNUSED_DEPEND", pkg="catkin", type="buildtool", file_location=("package.xml", 0))
             return
         if "catkin" not in info.find_packages and not info.is_catkin:
-            info.report(ERROR, "MISSING_FIND", pkg="catkin")
+            info.report(ERROR, "MISSING_FIND", pkg="catkin", file_location=("CMakeLists.txt", 0))
         if "catkin" not in info.buildtool_dep and not info.is_catkin:
-            info.report(ERROR, "MISSING_DEPEND", pkg="catkin", type="buildtool")
+            info.report(ERROR, "MISSING_DEPEND", pkg="catkin", type="buildtool", file_location=("package.xml", 0))
         if "catkin_package" not in info.commands and "catkin_metapackage" not in info.commands:
             if info.manifest.is_metapackage():
-                info.report(ERROR, "MISSING_CMD", cmd="catkin_metapackage")
+                info.report(ERROR, "MISSING_CMD", cmd="catkin_metapackage", file_location=("CMakeLists.txt", 0))
             else:
-                info.report(ERROR, "MISSING_CMD", cmd="catkin_package")
+                info.report(ERROR, "MISSING_CMD", cmd="catkin_package", file_location=("CMakeLists.txt", 0))
 
     linter.require(project)
     linter.require(depends)
@@ -130,7 +130,7 @@ def export_targets(linter):
 
     def on_final(info):
         for tgt in info.export_targets - info.targets:
-            info.report(ERROR, "UNDEFINED_TARGET", target=tgt)
+            info.report(ERROR, "UNDEFINED_TARGET", target=tgt, file_location=info.location_of("catkin_package"))
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("catkin_package", on_catkin_package)
@@ -234,9 +234,9 @@ def package_description(linter):
         if buzzwordiness > 1:
             s = " ".join(chatter)
             if buzzwordiness == len(words):
-                info.report(NOTICE, "DESCRIPTION_MEANINGLESS", text=s)
+                info.report(NOTICE, "DESCRIPTION_MEANINGLESS", text=s, file_location=("package.xml", 0))
             elif buzzwordiness > 1:
-                info.report(NOTICE, "DESCRIPTION_BOILERPLATE", text=s)
+                info.report(NOTICE, "DESCRIPTION_BOILERPLATE", text=s, file_location=("package.xml", 0))
 
     linter.add_init_hook(on_init)
 
