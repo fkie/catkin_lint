@@ -349,7 +349,7 @@ class ChecksBuildTest(unittest.TestCase):
             target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
-        self.assertEqual([ "MISSING_CATKIN_INCLUDE" ], result)
+        self.assertEqual([ "UNUSED_CATKIN_INCLUDE_DIRS" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -361,7 +361,7 @@ class ChecksBuildTest(unittest.TestCase):
             target_link_libraries(${PROJECT_NAME}_prog ${catkin_LIBRARIES})
             """,
         checks=cc.targets)
-        self.assertEqual([ "DUPLICATE_BUILD_INCLUDE" ], result)
+        self.assertEqual([ "DUPLICATE_INCLUDE_PATH" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -682,7 +682,7 @@ class ChecksBuildTest(unittest.TestCase):
             add_executable(${PROJECT_NAME}_prog src/source.cpp)
             """,
         checks=cc.installs)
-        self.assertEqual([ "UNINSTALLED_EXPORT_LIB", "MISSING_INSTALL_TARGET" ], result)
+        self.assertEqual([ "UNINSTALLED_EXPORT_LIB", "UNINSTALLED_TARGET" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -692,7 +692,7 @@ class ChecksBuildTest(unittest.TestCase):
             add_executable(test_${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.installs)
-        self.assertEqual([ "MISSING_BUILD_INCLUDE", "MISSING_INSTALL_INCLUDE" ], result)
+        self.assertEqual([ "UNUSED_INCLUDE_PATH", "UNINSTALLED_INCLUDE_PATH" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -726,7 +726,7 @@ class ChecksBuildTest(unittest.TestCase):
             install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             """,
         checks=cc.installs)
-        self.assertEqual([ "UNDEFINED_INSTALL_TARGET" ], result)
+        self.assertEqual([ "UNDEFINED_TARGET" ], result)
         result = mock_lint(env, pkg,
             """
             project(mock)
@@ -900,7 +900,7 @@ class ChecksBuildTest(unittest.TestCase):
             )
             """,
         checks=cc.exports)
-        self.assertEqual([ "MISSING_EXPORT_INCLUDE_PATH" ], result)
+        self.assertEqual([ "MISSING_INCLUDE_PATH" ], result)
         result = mock_lint(env, pkg,
             """
             project(mock)
@@ -1054,7 +1054,7 @@ class ChecksBuildTest(unittest.TestCase):
             add_executable(test_${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
-        self.assertEqual([ "MISSING_BUILD_INCLUDE" ], result)
+        self.assertEqual([ "UNUSED_INCLUDE_PATH" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -1065,7 +1065,7 @@ class ChecksBuildTest(unittest.TestCase):
             add_executable(test_${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.exports)
-        self.assertEqual([ "MISSING_BUILD_INCLUDE", "AMBIGUOUS_BUILD_INCLUDE" ], result)
+        self.assertEqual([ "UNUSED_INCLUDE_PATH", "AMBIGUOUS_INCLUDE_PATH" ], result)
         pkg = create_manifest("mock", build_depends=[ "first_pkg", "second_pkg" ], run_depends=[ "first_pkg", "second_pkg" ])
         result = mock_lint(env, pkg,
             """
@@ -1099,10 +1099,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg, "", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
+        self.assertEqual([ "UNINSTALLED_PLUGIN" ], result)
 
         result = mock_lint(env, pkg, "install(FILES config.xml DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_MISSING_INSTALL" ], result)
+        self.assertEqual([ "UNINSTALLED_PLUGIN" ], result)
 
         pkg = create_manifest("mock", run_depends=[ "other_catkin" ])
         plugin = Export("other_catkin")
@@ -1130,7 +1130,7 @@ class ChecksBuildTest(unittest.TestCase):
         plugin.attributes = { "plugin": "${prefix}/missing_config.xml" }
         pkg.exports += [ plugin ]
         result = mock_lint(env, pkg, "", checks=cc.plugins)
-        self.assertEqual([ "PLUGIN_MISSING_FILE" ], result)
+        self.assertEqual([ "MISSING_PLUGIN" ], result)
 
     @posix_and_nt
     @patch("os.path.isfile", lambda x: "exist" in x)
@@ -1290,7 +1290,7 @@ class ChecksBuildTest(unittest.TestCase):
             catkin_package(CATKIN_DEPENDS message_runtime)
             """,
         checks=cc.message_generation)
-        self.assertEqual([ "MISSING_MSG_CATKIN" ], result)
+        self.assertEqual([ "MISSING_CATKIN_DEPEND" ], result)
 
         result = mock_lint(env, pkg,
             """
@@ -1365,7 +1365,7 @@ class ChecksBuildTest(unittest.TestCase):
             catkin_package(CATKIN_DEPENDS message_runtime other_catkin)
             """,
         checks=cc.message_generation)
-        self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_MSG_DEPEND", "MISSING_MSG_DEPEND" ], result)
+        self.assertEqual([ "MISSING_DEPEND", "UNCONFIGURED_MSG_DEPEND", "MISSING_DEPEND", "MISSING_DEPEND" ], result)
         pkg = create_manifest("mock", build_depends=[ "message_generation", "first_pkg", "second_pkg" ], run_depends=[ "message_runtime", "first_pkg", "second_pkg" ])
         result = mock_lint(env, pkg,
             """

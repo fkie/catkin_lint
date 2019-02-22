@@ -93,11 +93,11 @@ def targets(linter):
     def on_final(info):
         catkin_include_path = info.find_package_path("catkin", "include")
         if (info.executables or info.libraries) and info.catkin_components and catkin_include_path not in info.build_includes:
-            info.report(ERROR, "MISSING_CATKIN_INCLUDE")
+            info.report(ERROR, "UNUSED_CATKIN_INCLUDE_DIRS")
         if catkin_include_path in info.build_includes:
             for pkg in info.catkin_components:
                 if info.find_package_path(pkg, "include") in info.build_includes:
-                    info.report(WARNING, "DUPLICATE_BUILD_INCLUDE", pkg=pkg)
+                    info.report(WARNING, "DUPLICATE_INCLUDE_PATH", pkg=pkg)
 
     linter.require(includes)
     linter.require(depends)
@@ -331,16 +331,16 @@ def exports(linter):
             info.report(WARNING, "MISSING_EXPORT_LIB")
         if info.executables or info.libraries:
             for incl in info.export_includes - info.build_includes:
-                info.report(WARNING, "MISSING_BUILD_INCLUDE", path=incl)
+                info.report(WARNING, "UNUSED_INCLUDE_PATH", path=incl)
         for incl in info.export_includes:
             if not info.is_existing_path(incl, check=os.path.isdir, require_source_folder=True):
-                info.report(ERROR, "MISSING_EXPORT_INCLUDE_PATH", path=incl)
+                info.report(ERROR, "MISSING_INCLUDE_PATH", path=incl)
         includes = info.build_includes | info.export_includes
         for d1 in includes:
             if not posixpath.isabs(d1):
                 for d2 in includes:
                     if d1.startswith("%s/" % d2):
-                        info.report(WARNING, "AMBIGUOUS_BUILD_INCLUDE", path=info.report_path(d1), parent_path=info.report_path(d2))
+                        info.report(WARNING, "AMBIGUOUS_INCLUDE_PATH", path=info.report_path(d1), parent_path=info.report_path(d2))
         for lib in info.export_libs:
             if lib in info.targets:
                 if info.target_outputs[lib] != lib:
@@ -469,9 +469,9 @@ def installs(linter):
                 info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_EXPORT_LIB", target=lib)
         for tgt in info.executables - info.install_targets:
             if "test" not in tgt.lower() and "example" not in tgt.lower():
-                info.report(WARNING, "MISSING_INSTALL_TARGET", target=tgt)
+                info.report(WARNING, "UNINSTALLED_TARGET", target=tgt)
         if info.export_includes and not info.install_includes:
-            info.report(ERROR if "install" in info.commands else WARNING, "MISSING_INSTALL_INCLUDE")
+            info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_INCLUDE_PATH")
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
@@ -479,7 +479,7 @@ def installs(linter):
                         info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib)
         for target in info.install_targets:
             if target not in info.libraries and target not in info.executables:
-                info.report(ERROR, "UNDEFINED_INSTALL_TARGET", target=target)
+                info.report(ERROR, "UNDEFINED_TARGET", target=target)
 
     linter.require(targets)
     linter.require(exports)
@@ -503,9 +503,9 @@ def plugins(linter):
                 if not plugin.startswith("${prefix}/"):
                     info.report(ERROR, "PLUGIN_EXPORT_PREFIX", export=export.tagname)
                 elif not os.path.isfile(info.real_path(plugin[10:])):
-                    info.report(ERROR, "PLUGIN_MISSING_FILE", export=export.tagname, file=plugin)
+                    info.report(ERROR, "MISSING_PLUGIN", export=export.tagname, file=plugin)
                 elif posixpath.normpath("%s/share/%s/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name, plugin[10:])) not in info.install_files:
-                    info.report(ERROR if "install" in info.commands else WARNING, "PLUGIN_MISSING_INSTALL", export=export.tagname, file=plugin[10:])
+                    info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_PLUGIN", export=export.tagname, file=plugin[10:])
         for dep in plugin_dep - info.exec_dep:
             info.report(WARNING, "PLUGIN_DEPEND", export=dep, type="run" if info.manifest.package_format < 2 else "exec", pkg=dep)
 
@@ -603,11 +603,11 @@ def message_generation(linter):
         for pkg in info.msg_dep - info.find_packages:
             info.report(ERROR, "UNCONFIGURED_MSG_DEPEND", pkg=pkg)
         for pkg in info.msg_dep - info.export_packages:
-            info.report(ERROR, "MISSING_MSG_CATKIN", pkg=pkg)
+            info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
         for pkg in info.msg_dep - info.build_dep:
-            info.report(ERROR, "MISSING_MSG_DEPEND", pkg=pkg, type="build")
+            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build")
         for pkg in info.msg_dep - info.export_dep:
-            info.report(ERROR, "MISSING_MSG_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
+            info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export")
         if info.declares_messages and "generate_messages" not in info.commands:
             info.report(ERROR, "MISSING_GENERATE_MSG")
         if not info.declares_messages and "generate_messages" in info.commands:

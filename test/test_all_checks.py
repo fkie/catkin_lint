@@ -266,8 +266,8 @@ class CatkinInvokationTest(unittest.TestCase):
             exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.upstream_ws_srcdir, self.ws_srcdir]), "--pkg", "gamma")
             self.assertEqual(exitcode, 1)
 
-            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_depend")
-            self.assertEqual(exitcode, 1)
+            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_package")
+            self.assertEqual(exitcode, 0)
             self.assertIn("messages have been suppressed", stdout)
 
             del os.environ["ROS_DISTRO"]
