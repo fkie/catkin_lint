@@ -399,7 +399,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([ "INVALID_META_COMMAND" ], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/some/external/file.in", "/package-path/mock/file.in"]])
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/some/external/file.in", "/package-path/mock/file.in", "/package-path/mock/generated.cpp.xacro"]])
     def test_generated_files(self):
         """Test checks for generated files"""
         env = create_env()
@@ -443,7 +443,17 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            xacro_add_xacro_file(file.in generated.cpp)
+            xacro_add_xacro_file(generated.cpp.xacro)
+            add_executable(${PROJECT_NAME} generated.cpp)
+            """,
+        checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            xacro_add_files(generated.cpp.xacro)
             add_executable(${PROJECT_NAME} generated.cpp)
             """,
         checks=cc.source_files)

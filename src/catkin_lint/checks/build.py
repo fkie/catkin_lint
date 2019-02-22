@@ -132,14 +132,33 @@ def generated_files(linter):
         info.generated_files.add(info.binary_relative_path(f))
 
     def on_xacro_add_xacro_file(info, cmd, args):
+        opts, args = cmake_argparse(args, {"INORDER": "-", "LEGACY": "-", "OUTPUT": "?", "REMAP": "*", "DEPENDS": "*"})
         if not info.is_existing_path(args[0], check=os.path.isfile):
             info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(args[0]))
+        output_var = opts["OUTPUT"] or "XACRO_OUTPUT_FILE"
+        if len(args) < 2:
+            f = info.source_relative_path(args[0])
+            if f.endswith(".xacro"):
+                f = f[:-6]
+            args.append(f)
+        info.var[output_var] = posixpath.join(PathConstants.PACKAGE_BINARY, info.binary_relative_path(args[1]))
         info.generated_files.add(info.binary_relative_path(args[1]))
+
+    def on_xacro_add_files(info, cmd, args):
+        opts, args = cmake_argparse(args, {"INORDER": "-", "LEGACY": "-", "INSTALL": "-", "OUTPUT": "?", "TARGET": "?", "DESTINATION": "?", "REMAP": "*", "DEPENDS": "*"})
+        for f in args:
+            if not info.is_existing_path(f, check=os.path.isfile):
+                info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
+            f_src = info.source_relative_path(f)
+            if f_src.endswith(".xacro"):
+                f_src = f_src[:-6]
+                info.generated_files.add(info.binary_relative_path(f_src))
 
     linter.add_command_hook("configure_file", on_configure_file)
     linter.add_command_hook("generate_export_header", on_generate_export_header)
     linter.add_command_hook("add_custom_command", on_add_custom_command)
     linter.add_command_hook("xacro_add_xacro_file", on_xacro_add_xacro_file)
+    linter.add_command_hook("xacro_add_files", on_xacro_add_files)
 
 
 def source_files(linter):
