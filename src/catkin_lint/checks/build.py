@@ -34,7 +34,7 @@ import re
 import stat
 from ..linter import ERROR, WARNING, NOTICE, PathConstants
 from ..cmake import argparse as cmake_argparse
-from ..util import word_split, iteritems, is_sorted
+from ..util import iteritems, is_sorted
 from .manifest import depends as manifest_depends
 from functools import partial
 
