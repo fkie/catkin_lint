@@ -455,16 +455,6 @@ message_list = {
         characters in its name. You probably forget to call set_target_properties(... PROPERTIES
         OUTPUT_NAME ...)
         """),
-    "TARGET_NAME_COLLISION":
-    ("target name '%(target)s' might not be sufficiently unique",
-        """\
-        The CMake build system requires all target identifiers to be globally unique.
-        For this reason, it is highly recommended that you add the package name as in
-        '${PROJECT_NAME}_target' or '${PROJECT_NAME}/target'.
-        You can use set_target_properties(... PROPERTIES OUTPUT_NAME ...)
-        to give your target a different output file name (which does not have to
-        be unique if it is installed in a package-specific location).
-        """),
     "UNINSTALLED_DEPEND":
     ("target '%(export_target)s' depends on target '%(target)s' which is not installed",
         """\

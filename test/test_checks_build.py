@@ -516,17 +516,6 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_executable(prog src/source.cpp)
-            target_link_libraries(prog ${catkin_LIBRARIES})
-            """,
-        checks=cc.name_check)
-        self.assertEqual([ "TARGET_NAME_COLLISION" ], result)
-
-        result = mock_lint(env, pkg,
-            """
-            project(mock)
-            find_package(catkin REQUIRED)
-            catkin_package()
             add_library(lib${PROJECT_NAME} src/source.cpp)
             """,
         checks=cc.name_check)

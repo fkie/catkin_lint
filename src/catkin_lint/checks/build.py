@@ -359,14 +359,9 @@ def exports(linter):
 
 def name_check(linter):
     def on_final(info):
-        name_fragments = set(word_split(info.manifest.name))
         for target, output in iteritems(info.target_outputs):
             if "/" in output or "\\" in output:
                 info.report(ERROR, "INVALID_TARGET_OUTPUT", target=target)
-            tgl = target.lower()
-            tnc = len([nf for nf in name_fragments if len(nf) > 2 and nf in tgl]) == 0
-            if tnc and target not in info.export_libs:
-                info.report(NOTICE, "TARGET_NAME_COLLISION", target=target)
             if target in info.libraries and output.startswith("lib"):
                 info.report(NOTICE, "REDUNDANT_LIB_PREFIX", output=output)
 
