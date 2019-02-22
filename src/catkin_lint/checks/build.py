@@ -131,9 +131,15 @@ def generated_files(linter):
             f = opts["EXPORT_FILE_NAME"]
         info.generated_files.add(info.binary_relative_path(f))
 
+    def on_xacro_add_xacro_file(info, cmd, args):
+        if not info.is_existing_path(args[0], check=os.path.isfile):
+            info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(args[0]))
+        info.generated_files.add(info.binary_relative_path(args[1]))
+
     linter.add_command_hook("configure_file", on_configure_file)
     linter.add_command_hook("generate_export_header", on_generate_export_header)
     linter.add_command_hook("add_custom_command", on_add_custom_command)
+    linter.add_command_hook("xacro_add_xacro_file", on_xacro_add_xacro_file)
 
 
 def source_files(linter):
