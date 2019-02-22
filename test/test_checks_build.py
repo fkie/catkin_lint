@@ -408,6 +408,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["EXTERNAL_FILE"], result)
         result = mock_lint(env, pkg, "configure_file(missing.in missing)", checks=cc.generated_files)
         self.assertEqual(["MISSING_FILE"], result)
+        result = mock_lint(env, pkg, "if(EXISTS \"missing.in\") configure_file(missing.in missing) endif()", checks=cc.generated_files)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg,
             """
             project(mock)
@@ -436,6 +438,26 @@ class ChecksBuildTest(unittest.TestCase):
             """,
         checks=cc.source_files)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            xacro_add_xacro_file(file.in generated.cpp)
+            add_executable(${PROJECT_NAME} generated.cpp)
+            """,
+        checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            xacro_add_xacro_file(missing.in generated.cpp)
+            add_executable(${PROJECT_NAME} generated.cpp)
+            """,
+        checks=cc.source_files)
+        self.assertEqual(["MISSING_FILE"], result)
         result = mock_lint(env, pkg,
             """
             project(mock)

@@ -180,7 +180,7 @@ class LintInfo(object):
         return self.path_class(path) in valid
 
     def is_existing_path(self, path, check=os.path.exists, require_source_folder=False, discovered_path_ok=True):
-        if self.condition_is_checked("EXISTS %s" % path):
+        if self.condition_is_checked("EXISTS %s" % path) or (check == os.path.isdir and self.condition_is_checked("IS_DIRECTORY %s" % path)):
             return True
         tmp = path.replace(os.path.sep, "/")
         if tmp.startswith(PathConstants.PACKAGE_SOURCE):
