@@ -473,6 +473,15 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            xacro_add_files(missing.in)
+            """,
+        checks=cc.source_files)
+        self.assertEqual(["MISSING_FILE"], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             add_custom_command(OUTPUT generated.cpp COMMAND some command line here)
             add_executable(${PROJECT_NAME} other_generated.cpp)
             """,
