@@ -18,6 +18,10 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([ "PROJECT_NAME" ], result)
         result = mock_lint(env, pkg, "project(mock) set(my_mock_var ON)", checks=cc.project)
         self.assertEqual([ "LITERAL_PROJECT_NAME" ], result)
+        result = mock_lint(env, pkg, "project(mock) add_executable(mock mock.cpp)", checks=cc.project)
+        self.assertEqual([ "LITERAL_PROJECT_NAME" ], result)
+        result = mock_lint(env, pkg, "project(mock) add_executable(${PROJECT_NAME} mock.cpp)", checks=cc.project)
+        self.assertEqual([], result)
 
     def test_special_vars(self):
         """Test checks for proper handling of special variables"""

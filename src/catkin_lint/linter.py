@@ -536,6 +536,9 @@ class CMakeLinter(object):
                         if info.var["PROJECT_NAME"] in val:
                             info.report(NOTICE, "LITERAL_PROJECT_NAME", name=info.var["PROJECT_NAME"])
                             break
+                        # We do not complain about the project name in source file names
+                        if cmd in ["add_executable", "add_library"]:
+                            break
                 depth = self._ctx.call_depth()
                 if depth > cur_depth:
                     cur_col += [[None]] * (depth - cur_depth)
