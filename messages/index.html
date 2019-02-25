@@ -137,8 +137,6 @@
         
             <li><a class="toctree-l3" href="#exported-package-include-path-but-no-exported-library">exported package include path but no exported library</a></li>
         
-            <li><a class="toctree-l3" href="#exported-target-target-is-not-defined">exported target 'target' is not defined</a></li>
-        
             <li><a class="toctree-l3" href="#extra-arguments-in-cmd">extra arguments in cmd()</a></li>
         
             <li><a class="toctree-l3" href="#file-script-is-executable-but-not-installed">file 'script' is executable but not installed</a></li>
@@ -159,8 +157,6 @@
         
             <li><a class="toctree-l3" href="#installtype-dest-does-not-install-to-catkin_install_prefix">install(type ... dest) does not install to ${CATKIN_INSTALL_PREFIX}</a></li>
         
-            <li><a class="toctree-l3" href="#installed-target-target-is-not-defined">installed target 'target' is not defined</a></li>
-        
             <li><a class="toctree-l3" href="#library-output-name-output-has-redundant-lib-prefix">library output name 'output' has redundant 'lib' prefix</a></li>
         
             <li><a class="toctree-l3" href="#line-is-not-indented-properly">line is not indented properly</a></li>
@@ -172,10 +168,6 @@
             <li><a class="toctree-l3" href="#malformed-argument-list-msg">malformed argument list: msg</a></li>
         
             <li><a class="toctree-l3" href="#meaningless-package-description-text">meaningless package description 'text'</a></li>
-        
-            <li><a class="toctree-l3" href="#message-dependency-pkg-is-not-listed-as-type_depend">message dependency 'pkg' is not listed as type_depend</a></li>
-        
-            <li><a class="toctree-l3" href="#message-dependency-pkg-is-not-listed-in-catkin_package">message dependency 'pkg' is not listed in catkin_package()</a></li>
         
             <li><a class="toctree-l3" href="#meta-packages-must-not-have-type_depends">meta packages must not have type_depends</a></li>
         
@@ -203,6 +195,8 @@
         
             <li><a class="toctree-l3" href="#project-name-name-differs-from-package-name">project name 'name' differs from package name</a></li>
         
+            <li><a class="toctree-l3" href="#referenced-target-target-is-not-defined">referenced target 'target' is not defined</a></li>
+        
             <li><a class="toctree-l3" href="#script-file-has-no-interpreter-shebang-line">script 'file' has no interpreter shebang line</a></li>
         
             <li><a class="toctree-l3" href="#script-script-must-be-executable">script 'script' must be executable</a></li>
@@ -221,15 +215,11 @@
         
             <li><a class="toctree-l3" href="#target-target-is-not-installed">target 'target' is not installed</a></li>
         
-            <li><a class="toctree-l3" href="#target-name-target-might-not-be-sufficiently-unique">target name 'target' might not be sufficiently unique</a></li>
-        
             <li><a class="toctree-l3" href="#test_depend-pkg-used-without-ifcatkin_enable_testing">test_depend 'pkg' used without if(CATKIN_ENABLE_TESTING)</a></li>
         
             <li><a class="toctree-l3" href="#unconfigured-build_depend-on-pkg">unconfigured build_depend on 'pkg'</a></li>
         
             <li><a class="toctree-l3" href="#unconfigured-message-dependency-pkg">unconfigured message dependency 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#unknown-type_depend-pkg">unknown type_depend 'pkg'</a></li>
         
             <li><a class="toctree-l3" href="#unknown-package-pkg">unknown package 'pkg'</a></li>
         
@@ -362,7 +352,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="export-plugin-file-file-is-not-installed-to-catkin_package_share_destination"><i>export</i> plugin file '<i>file</i>' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}</h2>
 <ul>
-<li><strong>ID</strong>: plugin_missing_install</li>
+<li><strong>ID</strong>: uninstalled_plugin</li>
 <li><strong>Severity</strong>: warning, error</li>
 <li><strong>Explanation</strong>: Your package can be used from the devel space but cannot be installed properly, because a plugin declaration file which is listed in your package.xml is not installed to the correct location.</li>
 </ul>
@@ -374,7 +364,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="export-plugin-refers-to-missing-file-file"><i>export</i> plugin refers to missing file '<i>file</i>'</h2>
 <ul>
-<li><strong>ID</strong>: plugin_missing_file</li>
+<li><strong>ID</strong>: missing_plugin</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: A plugin declaration file which is listed in your package.xml is missing from the package source folder.</li>
 </ul>
@@ -394,7 +384,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <ul>
 <li><strong>ID</strong>: missing_catkin_depend</li>
 <li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: You have specified a catkin run dependency but failed to list it in the CATKIN_DEPENDS stanza of the <code>catkin_package()</code> call.</li>
+<li><strong>Explanation</strong>: You have a catkin runtime dependency which is not exported in the CATKIN_DEPENDS stanza of the <code>catkin_package()</code>.</li>
 </ul>
 <h2 id="wrong_type_depend-pkg-should-be-a-right_type_depend"><i>wrong_type</i>_depend '<i>pkg</i>' should be a <i>right_type</i>_depend</h2>
 <ul>
@@ -422,7 +412,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</h2>
 <ul>
-<li><strong>ID</strong>: catkin_meta_vs_pkg</li>
+<li><strong>ID</strong>: wrong_catkin_metapackage</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: The <code>catkin_metapackage()</code> command signals your intent to declare a meta package, but the package.xml does not contain a <meta> tag.</li>
 </ul>
@@ -434,7 +424,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="catkin_package-exports-package-include-path-that-is-not-installed">catkin_package() exports package include path that is not installed</h2>
 <ul>
-<li><strong>ID</strong>: missing_install_include</li>
+<li><strong>ID</strong>: uninstalled_include_path</li>
 <li><strong>Severity</strong>: warning, error</li>
 <li><strong>Explanation</strong>: Your package can be used from the devel space but cannot be installed properly, because the header files will not be copied to the proper location.</li>
 </ul>
@@ -446,7 +436,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="catkin_package-in-meta-package">catkin_package() in meta package</h2>
 <ul>
-<li><strong>ID</strong>: catkin_pkg_vs_meta</li>
+<li><strong>ID</strong>: wrong_catkin_package</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: Meta packages use the <code>catkin_metapackage()</code> command to declare a meta package. This performs additional checks and ensures that all requirements are met.</li>
 </ul>
@@ -488,7 +478,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="duplicate-include-path-pkg_include_dirs">duplicate include path ${<i>pkg</i>_INCLUDE_DIRS}</h2>
 <ul>
-<li><strong>ID</strong>: duplicate_build_include</li>
+<li><strong>ID</strong>: duplicate_include_path</li>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: Include paths of packages listed in the <code>find_package(catkin)</code> command are added implicitly by the ${catkin_INCLUDE_DIRS} variable. There is no need to add it a second time.</li>
 </ul>
@@ -506,7 +496,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="exported-include-path-path-does-not-exist">exported include path '<i>path</i>' does not exist</h2>
 <ul>
-<li><strong>ID</strong>: missing_export_include_path</li>
+<li><strong>ID</strong>: missing_include_path</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: You have listed an invalid include path in the INCLUDE_DIRS stanza of the <code>catkin_package()</code> command.</li>
 </ul>
@@ -533,12 +523,6 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: missing_export_lib</li>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: Your package exports a package include path and builds at least one library, which suggests that you may want to export the library to other packages as well.</li>
-</ul>
-<h2 id="exported-target-target-is-not-defined">exported target '<i>target</i>' is not defined</h2>
-<ul>
-<li><strong>ID</strong>: undefined_target</li>
-<li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: Your package provides a CMake target to other packages, but the listed target is not defined at all.</li>
 </ul>
 <h2 id="extra-arguments-in-cmd">extra arguments in <i>cmd</i>()</h2>
 <ul>
@@ -584,13 +568,13 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="include-path-path-is-exported-but-not-used-for-the-build">include path '<i>path</i>' is exported but not used for the build</h2>
 <ul>
-<li><strong>ID</strong>: missing_build_include</li>
+<li><strong>ID</strong>: unused_include_path</li>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: You have listed an include path in the INCLUDE_DIRS stanza of the <code>catkin_package()</code> command, but that path is not mentioned in any <code>include_directories()</code> call.</li>
 </ul>
 <h2 id="include-paths-path-and-parent_path-are-ambiguous">include paths '<i>path</i>' and '<i>parent_path</i>' are ambiguous</h2>
 <ul>
-<li><strong>ID</strong>: ambiguous_build_include</li>
+<li><strong>ID</strong>: ambiguous_include_path</li>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: You have used two include paths where one is a parent of the other. Thus the same headers can be included with two different include paths which may confuse users. It is recommended that you keep your include paths consistent.</li>
 </ul>
@@ -599,12 +583,6 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: wrong_install_destination</li>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: Your package installs one or more files to an unexpected location. Catkin provides a number of standard variables ${CATKIN_*_DESTINATION} to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.</li>
-</ul>
-<h2 id="installed-target-target-is-not-defined">installed target '<i>target</i>' is not defined</h2>
-<ul>
-<li><strong>ID</strong>: undefined_install_target</li>
-<li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: Your package installs a CMake target which is neither a library nor an executable.</li>
 </ul>
 <h2 id="library-output-name-output-has-redundant-lib-prefix">library output name '<i>output</i>' has redundant 'lib' prefix</h2>
 <ul>
@@ -641,18 +619,6 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: description_meaningless</li>
 <li><strong>Severity</strong>: notice</li>
 <li><strong>Explanation</strong>: Your package description merely consists of typical filler words which do not actually describe the contents of your package in a meaningful way.</li>
-</ul>
-<h2 id="message-dependency-pkg-is-not-listed-as-type_depend">message dependency '<i>pkg</i>' is not listed as <i>type</i>_depend</h2>
-<ul>
-<li><strong>ID</strong>: missing_msg_depend</li>
-<li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: Your messages depend on another package which is not listed as <i>type</i>_depend in your package.xml</li>
-</ul>
-<h2 id="message-dependency-pkg-is-not-listed-in-catkin_package">message dependency '<i>pkg</i>' is not listed in catkin_package()</h2>
-<ul>
-<li><strong>ID</strong>: missing_msg_catkin</li>
-<li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: Your messages depend on another package which is not in the CATKIN_DEPENDS stanza of your <code>catkin_package()</code> call.</li>
 </ul>
 <h2 id="meta-packages-must-not-have-type_depends">meta packages must not have <i>type</i>_depends</h2>
 <ul>
@@ -692,7 +658,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="missing-include_directoriescatkin_include_dirs">missing include_directories(${catkin_INCLUDE_DIRS})</h2>
 <ul>
-<li><strong>ID</strong>: missing_catkin_include</li>
+<li><strong>ID</strong>: unused_catkin_include_dirs</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: You must add the catkin include paths to your include search list, or you might experience build failures.</li>
 </ul>
@@ -731,6 +697,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: project_name</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: The CMake project name must be identical to the package name. For backwards compatibility reasons, both names should also be identical to the name of the source folder that contains the package.</li>
+</ul>
+<h2 id="referenced-target-target-is-not-defined">referenced target '<i>target</i>' is not defined</h2>
+<ul>
+<li><strong>ID</strong>: undefined_target</li>
+<li><strong>Severity</strong>: error</li>
+<li><strong>Explanation</strong>: Your package installs or exports a CMake target which is not defined at all. This could be a typo, or the target is implicitly defined by a macro that is unknown to <strong>catkin_lint</strong>.</li>
 </ul>
 <h2 id="script-file-has-no-interpreter-shebang-line">script '<i>file</i>' has no <i>interpreter</i> shebang line</h2>
 <ul>
@@ -782,15 +754,9 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
 <h2 id="target-target-is-not-installed">target '<i>target</i>' is not installed</h2>
 <ul>
-<li><strong>ID</strong>: missing_install_target</li>
+<li><strong>ID</strong>: uninstalled_target</li>
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: Your package can be used from the devel space but cannot be installed properly, because the build target will not be copied to the proper location.</li>
-</ul>
-<h2 id="target-name-target-might-not-be-sufficiently-unique">target name '<i>target</i>' might not be sufficiently unique</h2>
-<ul>
-<li><strong>ID</strong>: target_name_collision</li>
-<li><strong>Severity</strong>: notice</li>
-<li><strong>Explanation</strong>: The CMake build system requires all target identifiers to be globally unique. For this reason, it is highly recommended that you add the package name as in '${PROJECT_NAME}_target' or '${PROJECT_NAME}/target'. You can use <code>set_target_properties(... PROPERTIES OUTPUT_NAME ...)</code> to give your target a different output file name (which does not have to be unique if it is installed in a package-specific location).</li>
 </ul>
 <h2 id="test_depend-pkg-used-without-ifcatkin_enable_testing">test_depend '<i>pkg</i>' used without if(CATKIN_ENABLE_TESTING)</h2>
 <ul>
@@ -810,17 +776,11 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: Your messages depend on another package which is neither <code>find_package()</code>'d nor listed as a component in the <code>find_package(catkin)</code> call.</li>
 </ul>
-<h2 id="unknown-type_depend-pkg">unknown <i>type</i>_depend '<i>pkg</i>'</h2>
-<ul>
-<li><strong>ID</strong>: unknown_depend</li>
-<li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: The specified dependency is neither a catkin package nor a known system dependency from the rosdep database.</li>
-</ul>
 <h2 id="unknown-package-pkg">unknown package '<i>pkg</i>'</h2>
 <ul>
 <li><strong>ID</strong>: unknown_package</li>
 <li><strong>Severity</strong>: error</li>
-<li><strong>Explanation</strong>: You have listed a package which is neither a catkin package nor a known system dependency.</li>
+<li><strong>Explanation</strong>: You are referring to a package which seems to be neither a catkin package nor a known system dependency. You may have misspelled the name, or your rosdep database needs to be refreshed with "rosdep update".</li>
 </ul>
 <h2 id="unused-type_depend-on-pkg">unused <i>type</i>_depend on '<i>pkg</i>'</h2>
 <ul>

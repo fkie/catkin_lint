@@ -123,15 +123,27 @@ and <code>CMakeLists.txt</code> files in your package, and it will detect and re
 number of common problems.</p>
 <h2 id="installation">Installation</h2>
 <h3 id="install-ubuntu-packages">Install Ubuntu packages</h3>
-<p>Prebuilt packages are available from the <a href="http://packages.ros.org/">ROS repository</a>.
+<p>Prebuilt packages are available from the official Ubuntu archive and the
+<a href="http://packages.ros.org/">ROS repository</a>.
 If you have installed ROS already, downloading <strong>catkin_lint</strong> is as simple as:</p>
-<pre><code class="sh">$ sudo apt-get install python-catkin-lint
+<pre><code class="sh">$ sudo apt install python-catkin-lint
 </code></pre>
 
-<p>Alternatively, you can use <a href="https://launchpad.net/~roehling/+archive/latest">Timo's PPA</a> on Launchpad:</p>
+<p>Alternatively, you can use <a href="https://launchpad.net/~roehling/+archive/latest">Timo's PPA</a> on Launchpad,
+which will always ship the latest release:</p>
 <pre><code class="sh">$ sudo add-apt-repository ppa:roehling/latest
-$ sudo apt-get update
-$ sudo apt-get install python-catkin-lint
+$ sudo apt update
+$ sudo apt install python-catkin-lint
+</code></pre>
+
+<h3 id="install-debian-packages">Install Debian packages</h3>
+<p>Prebuilt packages are available from the official Debian archive. Install with</p>
+<pre><code class="sh">$ sudo apt install python-catkin-lint
+</code></pre>
+
+<h3 id="install-fedora-packages">Install Fedora packages</h3>
+<p>Prebuilt packages have been made available by <a href="https://fedoraproject.org/wiki/User:Ankursinha">Ankur Sinha</a>. Install with</p>
+<pre><code class="sh">$ sudo dnf install python-catkin_lint
 </code></pre>
 
 <h3 id="download-from-pypi">Download from PyPI</h3>
@@ -147,20 +159,6 @@ $ cd catkin_lint
 $ sudo python setup.py install
 </code></pre>
 
-<p><a href="https://travis-ci.org/fkie/catkin_lint"><img alt="Build Status" src="https://travis-ci.org/fkie/catkin_lint.svg?branch=master" /></a>
-<a href="https://codecov.io/github/fkie/catkin_lint?branch=master"><img alt="Test Coverage" src="https://codecov.io/github/fkie/catkin_lint/coverage.svg?branch=master" /></a></p>
-<h3 id="build-your-own-debian-packages">Build your own Debian packages</h3>
-<p>If your distribution is not supported, you can build yor own packages:</p>
-<pre><code class="sh">$ sudo apt-get install dpkg-dev
-$ git clone https://github.com/fkie/catkin_lint
-$ cd catkin_lint
-$ git checkout debian
-$ ./debian/rules make-orig-tar
-$ dpkg-buildpackage -tc -uc -us
-$ sudo dpkg -i ../python-catkin-lint_*_all.deb
-</code></pre>
-
-<p><a href="https://travis-ci.org/fkie/catkin_lint"><img alt="Build Status" src="https://travis-ci.org/fkie/catkin_lint.svg?branch=debian" /></a></p>
 <h2 id="running">Running</h2>
 <p>If <strong>catkin_lint</strong> is invoked with one or more paths as parameters, it
 searches for packages recursively and checks all of them. Alternatively, the
@@ -259,5 +257,5 @@ catkin manual.</p>
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2019-02-20 13:27:45
+Build Date UTC : 2019-02-25 10:03:37
 -->
