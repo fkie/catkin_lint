@@ -12,17 +12,33 @@ number of common problems.
 
 ### Install Ubuntu packages
 
-Prebuilt packages are available from the [ROS repository](http://packages.ros.org/).
+Prebuilt packages are available from the official Ubuntu archive and the
+[ROS repository](http://packages.ros.org/).
 If you have installed ROS already, downloading **catkin_lint** is as simple as:
 ```sh
-$ sudo apt-get install python-catkin-lint
+$ sudo apt install python-catkin-lint
 ```
 
-Alternatively, you can use [Timo's PPA](https://launchpad.net/~roehling/+archive/latest) on Launchpad:
+Alternatively, you can use [Timo's PPA](https://launchpad.net/~roehling/+archive/latest) on Launchpad,
+which will always ship the latest release:
 ```sh
 $ sudo add-apt-repository ppa:roehling/latest
-$ sudo apt-get update
-$ sudo apt-get install python-catkin-lint
+$ sudo apt update
+$ sudo apt install python-catkin-lint
+```
+
+### Install Debian packages
+
+Prebuilt packages are available from the official Debian archive. Install with
+```sh
+$ sudo apt install python-catkin-lint
+```
+
+### Install Fedora packages
+
+Prebuilt packages have been made available by [Ankur Sinha](https://fedoraproject.org/wiki/User:Ankursinha). Install with
+```sh
+$ sudo dnf install python-catkin_lint
 ```
 
 ### Download from PyPI
@@ -41,24 +57,6 @@ $ git clone https://github.com/fkie/catkin_lint
 $ cd catkin_lint
 $ sudo python setup.py install
 ```
-
-[![Build Status](https://travis-ci.org/fkie/catkin_lint.svg?branch=master)](https://travis-ci.org/fkie/catkin_lint)
-[![Test Coverage](https://codecov.io/github/fkie/catkin_lint/coverage.svg?branch=master)](https://codecov.io/github/fkie/catkin_lint?branch=master)
-
-### Build your own Debian packages
-
-If your distribution is not supported, you can build yor own packages:
-```sh
-$ sudo apt-get install dpkg-dev
-$ git clone https://github.com/fkie/catkin_lint
-$ cd catkin_lint
-$ git checkout debian
-$ ./debian/rules make-orig-tar
-$ dpkg-buildpackage -tc -uc -us
-$ sudo dpkg -i ../python-catkin-lint_*_all.deb
-```
-
-[![Build Status](https://travis-ci.org/fkie/catkin_lint.svg?branch=debian)](https://travis-ci.org/fkie/catkin_lint)
 
 ## Running
 

@@ -6,14 +6,18 @@ catkin_lint
 **catkin_lint** checks package configurations for the
 `catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_.
 
-You can find the documentation with installation instructions at
-`http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
+I generally recommend that you install **catkin_lint** from my Ubuntu PPA or use the pre-built packages for your Linux distribution. Use the PyPI version if your distribution does not ship **catkin_lint** or you absolutely need the latest release. The version in the ROS Package Archives is updated only once in a while.
 
-You can get **catkin_lint** from:
-
-* `Ubuntu PPA <https://launchpad.net/~roehling/+archive/latest>`_
+* `Debian packages <https://packages.debian.org/catkin-lint>`_
+* `Fedora packages <https://apps.fedoraproject.org/packages/python-catkin_lint>`_
+* `Ubuntu packages <https://packages.ubuntu.com/catkin-lint>`_
+* `ROS Package Archive <http://packages.ros.org/ros/ubuntu/pool/main/c/catkin-lint/>`_
+* `Timo's Ubuntu PPA <https://launchpad.net/~roehling/+archive/latest>`_
 * `PyPI <https://pypi.org/project/catkin_lint>`_
 * `Github <https://github.com/fkie/catkin_lint>`_
+
+You can find the documentation with detailed installation instructions at
+`http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
 
 .. |travis_master| image:: https://img.shields.io/travis/fkie/catkin_lint/master.png
    :target: https://travis-ci.org/fkie/catkin_lint

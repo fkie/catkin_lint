@@ -101,12 +101,6 @@ message_list = {
         Catkin macros cannot be called before catkin has been configured with
         find_package(catkin).
         """),
-    "DEPRECATED_ROSBUILD":
-    ("%(cmd)s() is deprecated",
-        """\
-        This construct was intended to facilitate the migration from
-        Rosbuild to Catkin. It is deprecated and should not be used any more.
-        """),
     "DEPRECATED_CMD":
     ("%(old_cmd)s() is deprecated, use %(new_cmd)s() instead",
         """\
@@ -152,14 +146,15 @@ message_list = {
     "UNKNOWN_PACKAGE":
     ("unknown package '%(pkg)s'",
         """\
-        You have listed a package which is neither a catkin package nor a known system
-        dependency.
+        You are referring to a package which seems to be neither a catkin package
+        nor a known system dependency. You may have misspelled the name, or your
+        rosdep database needs to be refreshed with "rosdep update".
         """),
     "MISSING_CATKIN_DEPEND":
     ("%(type)s_depend '%(pkg)s' is not listed in catkin_package()",
         """\
-        You have specified a catkin run dependency but failed to list
-        it in the CATKIN_DEPENDS stanza of the catkin_package() call.
+        You have a catkin runtime dependency which is not exported in the
+        CATKIN_DEPENDS stanza of the catkin_package().
         """),
     "INVALID_META_COMMAND":
     ("%(cmd)s() is not allowed in meta packages",
@@ -174,14 +169,14 @@ message_list = {
         As meta packages do neither build nor test anything, the only valid
         dependency type is the run_depend.
         """),
-    "CATKIN_PKG_VS_META":
+    "WRONG_CATKIN_PACKAGE":
     ("catkin_package() in meta package",
         """\
         Meta packages use the catkin_metapackage() command to declare a
         meta package. This performs additional checks and ensures that all
         requirements are met.
         """),
-    "CATKIN_META_VS_PKG":
+    "WRONG_CATKIN_METAPACKAGE":
     ("catkin_metapackage() in regular package",
         """\
         The catkin_metapackage() command signals your intent to declare
@@ -250,13 +245,21 @@ message_list = {
         This catkin command processes a particular directory which is missing
         from the package source folder.
         """),
-    "INSTALL_DESTINATION":
-    ("install(%(type)s ... %(dest)s) is not one of the ${CATKIN_*_DESTINATION}s",
+    "WRONG_INSTALL_DESTINATION":
+    ("install(%(type)s ... %(dest)s) does not install to ${CATKIN_INSTALL_PREFIX}",
         """\
-        Catkin provides a number of standard variables to specify
-        installation folders. You should use those to ensure that your
+        Your package installs one or more files to an unexpected location.
+        Catkin provides a number of standard variables ${CATKIN_*_DESTINATION}
+        to specify installation folders. You should use those to ensure that your
         package will continue to work if the file system layout is
         changed in the future.
+        """),
+    "WRONG_BIN_INSTALL_DESTINATION":
+    ("executable file is not installed to bin destination",
+        """\
+        Your package installs one or more files to an unexpected location.
+        Executable files should end up in either ${CATKIN_GLOBAL_BIN_DESTINATION}
+        or ${CATKIN_PACKAGE_BIN_DESTINATION}.
         """),
     "UNUSED_DEPEND":
     ("unused %(type)s_depend on '%(pkg)s'",
@@ -321,44 +324,31 @@ message_list = {
         call find_package(%(pkg)s) first or initialize the %(pkg)s_INCLUDE_DIRS and
         %(pkg)s_LIBRARIES variables manually.
         """),
-    "MISSING_BUILD_INCLUDE":
+    "UNUSED_INCLUDE_PATH":
     ("include path '%(path)s' is exported but not used for the build",
         """\
         You have listed an include path in the INCLUDE_DIRS stanza of the
         catkin_package() command, but that path is not mentioned in any
         include_directories() call.
         """),
-    "DUPLICATE_BUILD_INCLUDE":
+    "DUPLICATE_INCLUDE_PATH":
     ("duplicate include path ${%(pkg)s_INCLUDE_DIRS}",
         """\
         Include paths of packages listed in the find_package(catkin) command are added implicitly
         by the ${catkin_INCLUDE_DIRS} variable. There is no need to add it a second time.
         """),
-    "AMBIGUOUS_BUILD_INCLUDE":
+    "AMBIGUOUS_INCLUDE_PATH":
     ("include paths '%(path)s' and '%(parent_path)s' are ambiguous",
         """\
         You have used two include paths where one is a parent of
         the other. Thus the same headers can be included with two different include paths
         which may confuse users. It is recommended that you keep your include paths consistent.
         """),
-    "MISSING_EXPORT_INCLUDE_PATH":
+    "MISSING_INCLUDE_PATH":
     ("exported include path '%(path)s' does not exist",
         """\
         You have listed an invalid include path in the INCLUDE_DIRS stanza of the
         catkin_package() command.
-        """),
-    "MISSING_BUILD_INCLUDE_PATH":
-    ("build include path '%(path)s' does not exist",
-        """\
-        You have listed an invalid include path in the include_directories() command.
-        """),
-    "HARDCODED_BUILD_INCLUDE_PATH":
-    ("build include path '%(path)s' is hardcoded but not part of your package",
-        """\
-        You have listed an explicit, hardcoded include path in the include_directories() command,
-        which is not part of your package.
-        To ensure that your package will build on as many different systems as possible,
-        you should discover such paths with find_path() or find_package() instead.
         """),
     "EXTERNAL_INCLUDE_PATH":
     ("catkin_package() exports non-package include path",
@@ -369,19 +359,19 @@ message_list = {
         find_path(), and/or find_library() and add the dependency to the
         DEPENDS stanza.
         """),
-    "MISSING_CATKIN_INCLUDE":
+    "UNUSED_CATKIN_INCLUDE_DIRS":
     ("missing include_directories(${catkin_INCLUDE_DIRS})",
         """\
         You must add the catkin include paths to your include search list, or
         you might experience build failures.
         """),
-    "MISSING_INSTALL_INCLUDE":
+    "UNINSTALLED_INCLUDE_PATH":
     ("catkin_package() exports package include path that is not installed",
         """\
         Your package can be used from the devel space but cannot be installed
         properly, because the header files will not be copied to the proper location.
         """),
-    "MISSING_INSTALL_TARGET":
+    "UNINSTALLED_TARGET":
     ("target '%(target)s' is not installed",
         """\
         Your package can be used from the devel space but cannot be installed
@@ -406,18 +396,6 @@ message_list = {
         """\
         Your messages depend on another package which is neither find_package()'d
         nor listed as a component in the find_package(catkin) call.
-        """),
-    "MISSING_MSG_DEPEND":
-    ("message dependency '%(pkg)s' is not listed as %(type)s_depend",
-        """\
-        Your messages depend on another package which is not listed as %(type)s_depend in
-        your package.xml
-        """),
-    "MISSING_MSG_CATKIN":
-    ("message dependency '%(pkg)s' is not listed in catkin_package()",
-        """\
-        Your messages depend on another package which is not in the CATKIN_DEPENDS
-        stanza of your catkin_package() call.
         """),
     "UNINSTALLED_EXPORT_LIB":
     ("exported library '%(target)s' is not installed",
@@ -448,16 +426,11 @@ message_list = {
         CATKIN_DEPENDS stanza of your catkin_package()
         """),
     "UNDEFINED_TARGET":
-    ("exported target '%(target)s' is not defined",
+    ("referenced target '%(target)s' is not defined",
         """\
-        Your package provides a CMake target to other packages, but the listed
-        target is not defined at all.
-        """),
-    "UNDEFINED_INSTALL_TARGET":
-    ("installed target '%(target)s' is not defined",
-        """\
-        Your package installs a CMake target which is neither a library nor an
-        executable.
+        Your package installs or exports a CMake target which is not defined at all.
+        This could be a typo, or the target is implicitly defined by a macro that
+        is unknown to catkin_lint.
         """),
     "INVALID_TARGET_OUTPUT":
     ("target '%(target)s' has invalid characters in its output file name",
@@ -465,16 +438,6 @@ message_list = {
         The output file that your target is supposed to generate contains invalid
         characters in its name. You probably forget to call set_target_properties(... PROPERTIES
         OUTPUT_NAME ...)
-        """),
-    "TARGET_NAME_COLLISION":
-    ("target name '%(target)s' might not be sufficiently unique",
-        """\
-        The CMake build system requires all target identifiers to be globally unique.
-        For this reason, it is highly recommended that you add the package name as in
-        '${PROJECT_NAME}_target' or '${PROJECT_NAME}/target'.
-        You can use set_target_properties(... PROPERTIES OUTPUT_NAME ...)
-        to give your target a different output file name (which does not have to
-        be unique if it is installed in a package-specific location).
         """),
     "UNINSTALLED_DEPEND":
     ("target '%(export_target)s' depends on target '%(target)s' which is not installed",
@@ -518,13 +481,13 @@ message_list = {
         The ${prefix} variable is carefully overloaded to work with both
         devel space and install space and must be used in all <export plugin='...'> tags.
         """),
-    "PLUGIN_MISSING_FILE":
+    "MISSING_PLUGIN":
     ("%(export)s plugin refers to missing file '%(file)s'",
         """\
         A plugin declaration file which is listed in your package.xml is missing from
         the package source folder.
         """),
-    "PLUGIN_MISSING_INSTALL":
+    "UNINSTALLED_PLUGIN":
     ("%(export)s plugin file '%(file)s' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}",
         """\
         Your package can be used from the devel space but cannot be installed
@@ -557,12 +520,6 @@ message_list = {
         The FindXXX.cmake modules are intended to be included by the find_package()
         command.
         """),
-    "REDUNDANT_TEST_DEPEND":
-    ("redundant test_depend '%(pkg)s'",
-        """\
-        Test dependencies are additional dependencies for testing, so there is no
-        need to list any build or run dependency a second time.
-        """),
     "REDUNDANT_LIB_PREFIX":
     ("library output name '%(output)s' has redundant 'lib' prefix",
         """\
@@ -570,18 +527,6 @@ message_list = {
         with a file name like 'lib%(output)s.so'. You can use
         set_target_properties(... PROPERTIES OUTPUT_NAME ...) to give your library a
         different file name without changing the target name.
-        """),
-    "UNKNOWN_DEPEND":
-    ("unknown %(type)s_depend '%(pkg)s'",
-        """\
-        The specified dependency is neither a catkin package nor a known system dependency
-        from the rosdep database.
-        """),
-    "UNSUPPORTED_CMD":
-    ("unsupported command '%(cmd)s'",
-        """\
-        Your package uses CMake constructs which cannot be linted properly at this time.
-        Certain errors may go unnoticed while other errors may be false positives.
         """),
     "EXTERNAL_SUBDIR":
     ("subdirectory %(subdir)s is not in package",

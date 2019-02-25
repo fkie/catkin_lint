@@ -91,6 +91,7 @@ class LintInfo(object):
         self.ignore_messages = set()
         self.ignore_messages_once = set()
         self.suppressed_messages = []
+        self.command_loc = {}
         self.commands = set()
         self.find_packages = set()
         self.targets = set()
@@ -104,12 +105,17 @@ class LintInfo(object):
         self.generated_files = set([""])
 
     def report(self, level, msg_id, **kwargs):
+        file_name, line = self.file, self.line
+        loc = kwargs.get("file_location", None)
+        if loc:
+            file_name, line = loc
+            del kwargs["file_location"]
         msg_id, text, description = msg(msg_id, **kwargs)
         if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
             self.suppressed_messages.append(Message(
                 package=self.manifest.name,
-                file_name=self.file,
-                line=self.line,
+                file_name=file_name,
+                line=line,
                 level=level,
                 msg_id=msg_id,
                 text=text,
@@ -118,13 +124,19 @@ class LintInfo(object):
             return
         self.messages.append(Message(
             package=self.manifest.name,
-            file_name=self.file,
-            line=self.line,
+            file_name=file_name,
+            line=line,
             level=level,
             msg_id=msg_id,
             text=text,
             description=description
         ))
+
+    def current_location(self):
+        return (self.file, self.line) if self.file and self.line else None
+
+    def location_of(self, command):
+        return self.command_loc.get(command, None)
 
     def source_relative_path(self, path):
         new_path = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
@@ -139,15 +151,12 @@ class LintInfo(object):
         return new_path
 
     def report_path(self, path):
-        if path.startswith(PathConstants.PACKAGE_SOURCE):
+        new_path = path.replace(PathConstants.PACKAGE_BINARY, "${PROJECT_BUILD_DIR}")
+        new_path = new_path.replace(PathConstants.CATKIN_DEVEL, "${CATKIN_DEVEL_PREFIX}")
+        new_path = new_path.replace(PathConstants.CATKIN_INSTALL, "${CATKIN_INSTALL_PREFIX}")
+        if new_path.startswith(PathConstants.PACKAGE_SOURCE):
             return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
-        if path.startswith(PathConstants.PACKAGE_BINARY):
-            return posixpath.normpath("${PROJECT_BUILD_DIR}/" + path[len(PathConstants.PACKAGE_BINARY) + 1:])
-        if path.startswith(PathConstants.CATKIN_DEVEL):
-            return posixpath.normpath("${CATKIN_DEVEL_PREFIX}/" + path[len(PathConstants.CATKIN_DEVEL) + 1:])
-        if path.startswith(PathConstants.CATKIN_INSTALL):
-            return posixpath.normpath("${CATKIN_INSTALL_PREFIX}/" + path[len(PathConstants.CATKIN_INSTALL) + 1:])
-        return posixpath.normpath(path)
+        return posixpath.normpath(new_path)
 
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))
@@ -171,6 +180,8 @@ class LintInfo(object):
         return self.path_class(path) in valid
 
     def is_existing_path(self, path, check=os.path.exists, require_source_folder=False, discovered_path_ok=True):
+        if self.condition_is_checked("EXISTS %s" % path) or (check == os.path.isdir and self.condition_is_checked("IS_DIRECTORY %s" % path)):
+            return True
         tmp = path.replace(os.path.sep, "/")
         if tmp.startswith(PathConstants.PACKAGE_SOURCE):
             tmp = path[len(PathConstants.PACKAGE_SOURCE) + 1:]
@@ -204,8 +215,12 @@ class LintInfo(object):
         return tmp.startswith(PathConstants.PACKAGE_SOURCE) or tmp.startswith(PathConstants.PACKAGE_BINARY)
 
     def is_catkin_install_destination(self, path, subdir=None):
+        full_path = posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, path))
         catkin_dir = posixpath.join(PathConstants.CATKIN_INSTALL, subdir or "")
-        return posixpath.normpath(path).startswith(catkin_dir)
+        return full_path.startswith(catkin_dir)
+
+    def is_catkin_bin_install_destination(self, path):
+        return self.is_catkin_install_destination(path, "bin") or self.is_catkin_install_destination(path, "lib/%s" % self.manifest.name)
 
     def condition_is_checked(self, expr):
         for c in self.conditionals:
@@ -521,6 +536,9 @@ class CMakeLinter(object):
                         if info.var["PROJECT_NAME"] in val:
                             info.report(NOTICE, "LITERAL_PROJECT_NAME", name=info.var["PROJECT_NAME"])
                             break
+                        # We do not complain about the project name in source file names
+                        if cmd in ["add_executable", "add_library"]:
+                            break
                 depth = self._ctx.call_depth()
                 if depth > cur_depth:
                     cur_col += [[None]] * (depth - cur_depth)
@@ -556,6 +574,7 @@ class CMakeLinter(object):
                     return
                 self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
+                info.command_loc[cmd] = info.current_location()
                 info.ignore_messages_once.clear()
         finally:
             info.file = save_file
@@ -566,29 +585,33 @@ class CMakeLinter(object):
     def lint(self, path, manifest, info=None):
         if info is None:
             info = LintInfo(self.env)
-        info.ignore_messages = self.ignore_messages
+        info.ignore_messages = copy(self.ignore_messages)
         info.path = os.path.realpath(path)
         info.manifest = manifest
         info.conditionals = []
         info.var = {
             "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
             "CMAKE_CURRENT_BINARY_DIR": PathConstants.PACKAGE_BINARY,
+            "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "%s/lib" % PathConstants.CATKIN_DEVEL,
+            "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "%s/lib" % PathConstants.CATKIN_DEVEL,
+            "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "%s/lib/%s" % (PathConstants.CATKIN_DEVEL, info.manifest.name),
             "CATKIN_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
             "CMAKE_INSTALL_PREFIX": PathConstants.CATKIN_INSTALL,
             "CATKIN_DEVEL_PREFIX": PathConstants.CATKIN_DEVEL,
-            "CATKIN_PACKAGE_BIN_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_ETC_DESTINATION": "%s/etc/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_INCLUDE_DESTINATION": "%s/include/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_LIB_DESTINATION": "%s/lib/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_PYTHON_DESTINATION": "%s/lib/python/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_PACKAGE_SHARE_DESTINATION": "%s/share/%s" % (PathConstants.CATKIN_INSTALL, info.manifest.name),
-            "CATKIN_GLOBAL_BIN_DESTINATION": "%s/bin" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_ETC_DESTINATION": "%s/etc" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_INCLUDE_DESTINATION": "%s/include" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_LIB_DESTINATION": "%s/lib" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "%s/lib" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_PYTHON_DESTINATION": "%s/lib/python" % PathConstants.CATKIN_INSTALL,
-            "CATKIN_GLOBAL_SHARE_DESTINATION": "%s/share" % PathConstants.CATKIN_INSTALL,
+            "CATKIN_PACKAGE_BIN_DESTINATION": "lib/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_ETC_DESTINATION": "etc/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_INCLUDE_DESTINATION": "include/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_LIB_DESTINATION": "lib",
+            "CATKIN_PACKAGE_PYTHON_DESTINATION": "lib/python/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_SHARE_DESTINATION": "share/%s" % info.manifest.name,
+            "CATKIN_GLOBAL_BIN_DESTINATION": "bin",
+            "CATKIN_GLOBAL_ETC_DESTINATION": "etc",
+            "CATKIN_GLOBAL_INCLUDE_DESTINATION": "include",
+            "CATKIN_GLOBAL_LIB_DESTINATION": "lib",
+            "CATKIN_GLOBAL_LIBEXEC_DESTINATION": "lib",
+            "CATKIN_GLOBAL_PYTHON_DESTINATION": "lib/python/packages",
+            "CATKIN_GLOBAL_SHARE_DESTINATION": "share",
+            "PYTHON_INSTALL_DIR": "lib/python/packages",
         }
         try:
             if os.path.basename(info.path) != manifest.name:

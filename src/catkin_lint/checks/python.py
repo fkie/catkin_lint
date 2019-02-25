@@ -44,7 +44,7 @@ def setup(linter):
 
     def on_final(info):
         if "catkin_python_setup" not in info.commands and info.is_existing_path("setup.py", check=os.path.isfile, require_source_folder=True):
-            info.report(ERROR, "MISSING_PYTHON_SETUP")
+            info.report(ERROR, "MISSING_PYTHON_SETUP", file_location=("CMakeLists.txt", 0))
 
     linter.require(project)
     linter.add_command_hook("catkin_python_setup", on_catkin_python_setup)

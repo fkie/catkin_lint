@@ -18,31 +18,31 @@ class ChecksManifestTest(unittest.TestCase):
 
         pkg = create_manifest("mock", buildtool_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest("mock", build_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest("mock", run_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest("mock", test_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest2("mock", build_export_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest2("mock", buildtool_export_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest2("mock", exec_depends=[ "invalid" ])
         result = mock_lint(env, pkg, "", checks=cc.depends)
-        self.assertEqual([ "UNKNOWN_DEPEND" ], result)
+        self.assertEqual([ "UNKNOWN_PACKAGE" ], result)
 
         pkg = create_manifest("mock", run_depends=[ "other_catkin" ], meta=True)
         result = mock_lint(env, pkg, "", checks=cc.depends)
@@ -79,11 +79,11 @@ class ChecksManifestTest(unittest.TestCase):
 
         pkg = create_manifest("mock", meta=True)
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.catkin_build)
-        self.assertEqual([ "CATKIN_PKG_VS_META" ], result)
+        self.assertEqual([ "WRONG_CATKIN_PACKAGE" ], result)
 
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_metapackage()", checks=cc.catkin_build)
-        self.assertEqual([ "CATKIN_META_VS_PKG" ], result)
+        self.assertEqual([ "WRONG_CATKIN_METAPACKAGE" ], result)
 
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "project(mock) catkin_package()", checks=cc.catkin_build)
