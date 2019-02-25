@@ -1,3 +1,11 @@
+Version 1.6.0
+  * Consolidated diagnostic messages and removed obsolete ones
+  * Improve support for files generated at build time
+  * Improve support for predefined variables (CMake or catkin)
+  * Show offending location for more diagnostic messages
+  * A few minor bugfixes
+  * Update documentation
+
 Version 1.5.6
   * New option --show-suppressed to show ignored messages
   * Improve checks regarding find_package()
