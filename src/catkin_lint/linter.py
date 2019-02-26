@@ -586,7 +586,7 @@ class CMakeLinter(object):
         if info is None:
             info = LintInfo(self.env)
         info.ignore_messages = copy(self.ignore_messages)
-        info.path = os.path.realpath(path)
+        info.path = os.path.abspath(path)
         info.manifest = manifest
         info.conditionals = []
         info.var = {
