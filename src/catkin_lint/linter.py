@@ -346,6 +346,8 @@ class CMakeLinter(object):
             items = info.var[name].split(';') if name in info.var and info.var[name] != "" else []
             if op == "APPEND":
                 items += args
+            elif op == "PREPEND":
+                items = args + items
             elif op == "INSERT":
                 pos = int(args.pop(0))
                 items[pos:pos] = args
@@ -353,6 +355,16 @@ class CMakeLinter(object):
                 items.reverse()
             elif op == "SORT":
                 items.sort()
+            elif op == "POP_FRONT":
+                for a in args:
+                    info.var[a] = items.pop(0)
+                if not args:
+                    items.pop(0)
+            elif op == "POP_BACK":
+                for a in args:
+                    info.var[a] = items.pop(-1)
+                if not args:
+                    items.pop(-1)
             elif op == "REMOVE_ITEM":
                 for a in args:
                     while a in items:
@@ -390,6 +402,19 @@ class CMakeLinter(object):
                 output = args.pop(-1)
                 a = args.pop(0)
                 info.var[output] = str(items.index(a)) if a in items else "-1"
+                return
+            elif op == "JOIN":
+                glue, output = args
+                info.var[output] = glue.join(items)
+                return
+            elif op == "SUBLIST":
+                first, length, output = int(args[0]), int(args[1]), args[2]
+                if first < 0:
+                    first = max(0, len(items) + first)
+                if length == -1 or first + length > len(items):
+                    length = len(items) - first
+                print(first,length)
+                info.var[output] = ";".join(items[first:first + length])
                 return
             else:
                 return
