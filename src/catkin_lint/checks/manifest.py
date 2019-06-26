@@ -177,6 +177,8 @@ def package_description(linter):
         r"java",
         r"librar(y|ies)",
         r"meaningless",
+        r"metapackages?",
+        r"meta",
         r"miscellaneous",
         r"multiple",
         r"nodes?",
@@ -215,6 +217,7 @@ def package_description(linter):
         r"versions?",
         r"which",
         r"with",
+        r"wrapper",
         r"work",
         r"yet",
     ]
