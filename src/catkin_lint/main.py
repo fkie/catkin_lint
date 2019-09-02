@@ -61,7 +61,7 @@ def prepare_arguments(parser):
     parser.add_argument("--warning", action="append", metavar="ID", default=[], help="treat diagnostic message ID as warning")
     parser.add_argument("--notice", action="append", metavar="ID", default=[], help="treat diagnostic message ID as notice")
     parser.add_argument("--strict", action="store_true", help="treat everything reported as error")
-    parser.add_argument("--show-suppressed", action="store_true", help="show suppressed diagnostics")
+    parser.add_argument("--show-ignored", action="store_true", help="show messages even if they have been ignored explicitly")
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
@@ -148,7 +148,7 @@ def run_linter(args):
         output = TextOutput(use_color[args.color])
     linter = CMakeLinter(env)
     for a in args.ignore:
-        linter.ignore_messages |= set(a.upper().split(","))
+        linter.ignore_message_ids |= set(a.upper().split(","))
     for check in args.check:
         try:
             add_linter_check(linter, check)
@@ -166,14 +166,14 @@ def run_linter(args):
             sys.stderr.write("catkin_lint: cannot lint %s: %s\n" % (manifest.name, str(err)))
             if args.debug:
                 raise
-    ignored = {ERROR: 0, WARNING: 0, NOTICE: 0}
+    extras = {ERROR: 0, WARNING: 0, NOTICE: 0}
     problems = 0
     exit_code = 0
     diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
     output.prolog(fd=sys.stdout)
-    if args.show_suppressed:
-        linter.messages += linter.suppressed_messages
-        linter.suppressed_messages = []
+    if args.show_ignored:
+        linter.messages += linter.ignored_messages
+        linter.ignored_messages = []
     for msg in sorted(linter.messages):
         if msg.id in force_notice:
             msg.level = NOTICE
@@ -182,7 +182,7 @@ def run_linter(args):
         if msg.id in force_error:
             msg.level = ERROR
         if args.W < msg.level:
-            ignored[msg.level] += 1
+            extras[msg.level] += 1
             continue
         if args.strict:
             msg.level = ERROR
@@ -194,10 +194,10 @@ def run_linter(args):
     if not args.quiet:
         sys.stderr.write("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
         for level in [ERROR, WARNING, NOTICE]:
-            if ignored[level] > 0:
-                sys.stderr.write("catkin_lint: %d %ss have been ignored. Use -W%d to see them\n" % (ignored[level], diagnostic_label[level], level))
-        if linter.suppressed_messages:
-            sys.stderr.write("catkin_lint: %d messages have been suppressed. Use --show-suppressed to see them\n" % len(linter.suppressed_messages))
+            if extras[level] > 0:
+                sys.stderr.write("catkin_lint: option -W%d will show %d additional %ss\n" % (level, extras[level], diagnostic_label[level]))
+        if linter.ignored_messages:
+            sys.stderr.write("catkin_lint: %d messages have been ignored. Use --show-ignored to see them\n" % len(linter.ignored_messages))
     return exit_code
 
 

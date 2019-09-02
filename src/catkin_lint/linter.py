@@ -88,9 +88,9 @@ class LintInfo(object):
         self.manifest = None
         self.file = ""
         self.line = 0
-        self.ignore_messages = set()
-        self.ignore_messages_once = set()
-        self.suppressed_messages = []
+        self.ignore_message_ids = set()
+        self.ignore_message_ids_once = set()
+        self.ignored_messages = []
         self.command_loc = {}
         self.commands = set()
         self.find_packages = set()
@@ -111,8 +111,8 @@ class LintInfo(object):
             file_name, line = loc
             del kwargs["file_location"]
         msg_id, text, description = msg(msg_id, **kwargs)
-        if msg_id in self.ignore_messages or msg_id in self.ignore_messages_once:
-            self.suppressed_messages.append(Message(
+        if msg_id in self.ignore_message_ids or msg_id in self.ignore_message_ids_once:
+            self.ignored_messages.append(Message(
                 package=self.manifest.name,
                 file_name=file_name,
                 line=line,
@@ -239,8 +239,8 @@ class CMakeLinter(object):
     def __init__(self, env):
         self.env = env
         self.messages = []
-        self.ignore_messages = set()
-        self.suppressed_messages = []
+        self.ignore_message_ids = set()
+        self.ignored_messages = []
         self._cmd_hooks = {}
         self._running_hooks = set([])
         self._init_hooks = []
@@ -425,11 +425,11 @@ class CMakeLinter(object):
     def _handle_pragma(self, info, args):
         pragma = args.pop(0)
         if pragma == "ignore":
-            info.ignore_messages |= set([a.upper() for a in args])
+            info.ignore_message_ids |= set([a.upper() for a in args])
         if pragma == "report":
-            info.ignore_messages -= set([a.upper() for a in args])
+            info.ignore_message_ids -= set([a.upper() for a in args])
         if pragma == "ignore_once":
-            info.ignore_messages_once |= set([a.upper() for a in args])
+            info.ignore_message_ids_once |= set([a.upper() for a in args])
         if pragma == "skip":
             self._ctx.skip_block()
 
@@ -470,7 +470,7 @@ class CMakeLinter(object):
                     version = opts["VERSION"] or ""
                     version_parts = version.split(".")
                     while len(version_parts) < 4:
-                        version_parts.append("")
+                        version_parts.append("0")
                     info.var["PROJECT_NAME"] = args[0]
                     info.var["PROJECT_VERSION"] = info.var["%s_VERSION" % args[0]] = version
                     info.var["PROJECT_VERSION_MAJOR"] = info.var["%s_VERSION_MAJOR" % args[0]] = version_parts[0]
@@ -600,17 +600,17 @@ class CMakeLinter(object):
                 self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
                 info.command_loc[cmd] = info.current_location()
-                info.ignore_messages_once.clear()
+                info.ignore_message_ids_once.clear()
         finally:
             info.file = save_file
             info.line = save_line
-            info.ignore_messages_once.clear()
+            info.ignore_message_ids_once.clear()
             self._ctx = save_ctx
 
     def lint(self, path, manifest, info=None):
         if info is None:
             info = LintInfo(self.env)
-        info.ignore_messages = copy(self.ignore_messages)
+        info.ignore_message_ids = copy(self.ignore_message_ids)
         info.path = os.path.abspath(path)
         info.manifest = manifest
         info.conditionals = []
@@ -649,4 +649,4 @@ class CMakeLinter(object):
         except IOError as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
-        self.suppressed_messages += info.suppressed_messages
+        self.ignored_messages += info.ignored_messages

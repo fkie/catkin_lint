@@ -218,7 +218,6 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 1 packages and found 0 problems", stdout)
 
-
         os.environ["ROS_PACKAGE_PATH"] = os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir])
         exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta")
         self.assertEqual(exitcode, 0)
@@ -238,7 +237,7 @@ class CatkinInvokationTest(unittest.TestCase):
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
         self.assertEqual(exitcode, 0)
-        self.assertIn("warnings have been ignored", stdout)
+        self.assertIn("additional warning", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "suggest_catkin_depend")
         self.assertEqual(exitcode, 0)
@@ -268,7 +267,7 @@ class CatkinInvokationTest(unittest.TestCase):
 
             exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_package")
             self.assertEqual(exitcode, 0)
-            self.assertIn("messages have been suppressed", stdout)
+            self.assertIn("messages have been ignored", stdout)
 
             del os.environ["ROS_DISTRO"]
             exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
