@@ -232,6 +232,11 @@ def depends(linter):
             info.package_components[args[0]] = set()
         info.package_components[args[0]] |= set(this_components)
         info.var["%s_EXTRAS_DIR" % args[0]] = info.find_package_path(args[0], "extras")
+        if args[0] == "Qt5":
+            for pkg in this_components:
+                info.var["Qt5%s_INCLUDE_DIRS" % pkg] = info.find_package_path("Qt5%s" % pkg, "include")
+                info.var["Qt5%s_LIBRARIES" % pkg] = posixpath.join(info.find_package_path("Qt5%s" % pkg, "lib"), "library.so")
+                info.find_packages.add("Qt5%s" % pkg)
         if args[0] != "catkin":
             return
         if "catkin_package" in info.commands:

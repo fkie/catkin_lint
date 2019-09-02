@@ -2,6 +2,7 @@
 /.pydevproject
 /.settings
 /.coverage
+/.vscode
 /build
 /dist
 /MANIFEST

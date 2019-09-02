@@ -1125,6 +1125,19 @@ class ChecksBuildTest(unittest.TestCase):
         checks=cc.exports)
         self.assertEqual([ "UNSORTED_LIST" ], result)
 
+    def test_qt5(self):
+        """Test Qt5 modules included through COMPONENTS directives"""
+        env = create_env()
+        pkg = create_manifest("mock", build_depends=[], run_depends=[])
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            find_package(Qt5 REQUIRED COMPONENTS Widgets)
+            catkin_package(DEPENDS Qt5Widgets)
+            """,
+        checks=cc.exports)
+        self.assertEqual([], result)
 
     @posix_and_nt
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/config.xml"))

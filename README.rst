@@ -19,13 +19,13 @@ I generally recommend that you install **catkin_lint** from my Ubuntu PPA or use
 You can find the documentation with detailed installation instructions at
 `http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
 
-.. |travis_master| image:: https://img.shields.io/travis/fkie/catkin_lint/master.png
+.. |travis_master| image:: https://img.shields.io/travis/fkie/catkin_lint/master.svg
    :target: https://travis-ci.org/fkie/catkin_lint
-.. |codecov_master| image:: https://img.shields.io/codecov/c/github/fkie/catkin_lint/master.png
+.. |codecov_master| image:: https://img.shields.io/codecov/c/github/fkie/catkin_lint/master.svg
    :target: https://codecov.io/github/fkie/catkin_lint?branch=master
-.. |pypi_badge| image:: https://img.shields.io/pypi/v/catkin_lint.png
+.. |pypi_badge| image:: https://img.shields.io/pypi/v/catkin_lint.svg
    :target: https://pypi.org/project/catkin_lint
-.. |github_release| image:: https://img.shields.io/github/release/fkie/catkin_lint.png
+.. |github_release| image:: https://img.shields.io/github/release/fkie/catkin_lint.svg
    :target: https://github.com/fkie/catkin_lint/releases
 .. |debian_badge| image:: https://img.shields.io/badge/dynamic/json.svg?label=Debian&url=https%3A%2F%2Fsources.debian.org%2Fapi%2Fsrc%2Fros-catkin-lint&query=%24.versions%5B0%5D.version&colorB=blue
    :target: https://packages.debian.org/source/sid/ros-catkin-lint
