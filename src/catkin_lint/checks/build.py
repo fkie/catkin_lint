@@ -284,7 +284,10 @@ def depends(linter):
                 info.report(ERROR, "MISSING_REQUIRED", pkg=pkg, file_location=("CMakeLists.txt", 0))
         for pkg in info.build_dep - (info.find_packages - info.test_packages):
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR if info.executables or info.libraries else WARNING, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
+                # Ignore pure Python packages (or at least packages that look like it), following the
+                # Jack O'Quin heuristic from issue fkie/catkin_lint#22
+                if info.executables or info.libraries or "catkin_python_setup" not in info.commands:
+                    info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
 
     linter.require(manifest_depends)
     linter.add_init_hook(on_init)
