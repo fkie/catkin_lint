@@ -345,6 +345,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: Meta packages do not contain code or data and are merely dependency lists. As meta packages do neither build nor test anything, the only valid dependency type is the run_depend.
 
+## misconfigured catkin package '<i>pkg</i>'
+
+- **ID**: misconfigured_catkin_package
+- **Severity**: error
+- **Explanation**: You use an unsupported way to include a catkin package in your build. Even though this might work in your particular case, you should use the proper <code>find_package()</code> mechanism to make sure that all relevant CMake macros will be run.
+
 ## missing <i>cmd</i>()
 
 - **ID**: missing_cmd
@@ -486,7 +492,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## unconfigured build_depend on '<i>pkg</i>'
 
 - **ID**: unconfigured_build_depend
-- **Severity**: warning, error
+- **Severity**: error
 - **Explanation**: You declare a build dependency on another package but neither call <code>find_package()</code> nor have it listed as catkin component in the <code>find_package(catkin)</code> call.
 
 ## unconfigured message dependency '<i>pkg</i>'
