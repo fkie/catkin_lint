@@ -286,10 +286,11 @@ def depends(linter):
             if info.env.is_catkin_pkg(pkg):
                 # Ignore pure Python packages (or at least packages that look like it), following the
                 # Jack O'Quin heuristic from issue fkie/catkin_lint#22
-                if info.executables or info.libraries or "catkin_python_setup" not in info.commands:
+                if pkg not in info.pkg_modules and (info.executables or info.libraries or "catkin_python_setup" not in info.commands):
                     info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
 
     linter.require(manifest_depends)
+    linter.require(pkg_config)
     linter.add_init_hook(on_init)
     linter.add_command_hook("find_package", on_find_package)
     linter.add_command_hook("if", on_if)
@@ -336,7 +337,7 @@ def exports(linter):
             if info.env.is_catkin_pkg(pkg):
                 if info.env.ok:
                     info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
-            elif pkg in info.pkg_modules:
+            elif pkg in info.pkg_modules_prefix:
                 info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif pkg not in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
                 info.report(ERROR, "UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg)
@@ -406,9 +407,17 @@ def name_check(linter):
 def pkg_config(linter):
     def on_init(info):
         info.pkg_modules = set()
+        info.pkg_modules_prefix = set()
 
     def on_pkg_check_modules(info, cmd, args):
-        info.pkg_modules.add(args[0])
+        opts, args = cmake_argparse(args, {"REQUIRED": "-", "QUIET": "-", "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "IMPORTED_TARGET": "-"})
+        info.pkg_modules_prefix.add(args[0])
+        for pkg in args[1:]:
+            if "=" in pkg:
+                pkg = pkg.split("=")[0].rstrip("<>=")
+            info.pkg_modules.add(pkg)
+            if info.env.is_catkin_pkg(pkg):
+                info.report(ERROR, "MISCONFIGURED_CATKIN_PACKAGE", pkg=pkg)
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("pkg_check_modules", on_pkg_check_modules)

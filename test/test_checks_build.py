@@ -170,6 +170,16 @@ class ChecksBuildTest(unittest.TestCase):
             """
             project(mock)
             find_package(catkin REQUIRED)
+            find_package(PkgConfig REQUIRED)
+            pkg_check_modules(other_catkin REQUIRED other_catkin>=0.0.0)
+            """,
+        checks=cc.depends)
+        self.assertEqual([ "MISCONFIGURED_CATKIN_PACKAGE" ], result)
+
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
             find_package(other_catkin)
             """,
         checks=cc.depends)
