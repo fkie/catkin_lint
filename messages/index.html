@@ -171,6 +171,8 @@
         
             <li><a class="toctree-l3" href="#meta-packages-must-not-have-type_depends">meta packages must not have type_depends</a></li>
         
+            <li><a class="toctree-l3" href="#misconfigured-catkin-package-pkg">misconfigured catkin package 'pkg'</a></li>
+        
             <li><a class="toctree-l3" href="#missing-cmd">missing cmd()</a></li>
         
             <li><a class="toctree-l3" href="#missing-type_depend-on-pkg">missing type_depend on 'pkg'</a></li>
@@ -626,6 +628,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: Meta packages do not contain code or data and are merely dependency lists. As meta packages do neither build nor test anything, the only valid dependency type is the run_depend.</li>
 </ul>
+<h2 id="misconfigured-catkin-package-pkg">misconfigured catkin package '<i>pkg</i>'</h2>
+<ul>
+<li><strong>ID</strong>: misconfigured_catkin_package</li>
+<li><strong>Severity</strong>: error</li>
+<li><strong>Explanation</strong>: You use an unsupported way to include a catkin package in your build. Even though this might work in your particular case, you should use the proper <code>find_package()</code> mechanism to make sure that all relevant CMake macros will be run.</li>
+</ul>
 <h2 id="missing-cmd">missing <i>cmd</i>()</h2>
 <ul>
 <li><strong>ID</strong>: missing_cmd</li>
@@ -767,7 +775,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="unconfigured-build_depend-on-pkg">unconfigured build_depend on '<i>pkg</i>'</h2>
 <ul>
 <li><strong>ID</strong>: unconfigured_build_depend</li>
-<li><strong>Severity</strong>: warning, error</li>
+<li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: You declare a build dependency on another package but neither call <code>find_package()</code> nor have it listed as catkin component in the <code>find_package(catkin)</code> call.</li>
 </ul>
 <h2 id="unconfigured-message-dependency-pkg">unconfigured message dependency '<i>pkg</i>'</h2>
