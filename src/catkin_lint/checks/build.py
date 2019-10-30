@@ -163,7 +163,7 @@ def generated_files(linter):
 
 def source_files(linter):
     def on_add_executable(info, cmd, args):
-        if "IMPORTED" in args:
+        if "IMPORTED" in args or "ALIAS" in args:
             return
         _, args = cmake_argparse(args, {"WIN32": "-", "MACOSX_BUNDLE": "-", "EXCLUDE_FROM_ALL": "-"})
         if not is_sorted(args[1:]):
@@ -175,9 +175,9 @@ def source_files(linter):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     def on_add_library(info, cmd, args):
-        if "IMPORTED" in args:
+        if "IMPORTED" in args or "ALIAS" in args or "INTERFACE" in args:
             return
-        _, args = cmake_argparse(args, {"STATIC": "-", "SHARED": "-", "MODULE": "-", "EXCLUDE_FROM_ALL": "-"})
+        _, args = cmake_argparse(args, {"GLOBAL": "-", "STATIC": "-", "SHARED": "-", "MODULE": "-", "OBJECT": "-", "UNKNOWN": "-", "EXCLUDE_FROM_ALL": "-"})
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
@@ -284,9 +284,13 @@ def depends(linter):
                 info.report(ERROR, "MISSING_REQUIRED", pkg=pkg, file_location=("CMakeLists.txt", 0))
         for pkg in info.build_dep - (info.find_packages - info.test_packages):
             if info.env.is_catkin_pkg(pkg):
-                info.report(ERROR if info.executables or info.libraries else WARNING, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
+                # Ignore pure Python packages (or at least packages that look like it), following the
+                # Jack O'Quin heuristic from issue fkie/catkin_lint#22
+                if pkg not in info.pkg_modules and (info.executables or info.libraries or "catkin_python_setup" not in info.commands):
+                    info.report(ERROR, "UNCONFIGURED_BUILD_DEPEND", pkg=pkg, file_location=("CMakeLists.txt", 0))
 
     linter.require(manifest_depends)
+    linter.require(pkg_config)
     linter.add_init_hook(on_init)
     linter.add_command_hook("find_package", on_find_package)
     linter.add_command_hook("if", on_if)
@@ -333,7 +337,7 @@ def exports(linter):
             if info.env.is_catkin_pkg(pkg):
                 if info.env.ok:
                     info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
-            elif pkg in info.pkg_modules:
+            elif pkg in info.pkg_modules_prefix:
                 info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif pkg not in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
                 info.report(ERROR, "UNCONFIGURED_SYSTEM_DEPEND", pkg=pkg)
@@ -403,9 +407,17 @@ def name_check(linter):
 def pkg_config(linter):
     def on_init(info):
         info.pkg_modules = set()
+        info.pkg_modules_prefix = set()
 
     def on_pkg_check_modules(info, cmd, args):
-        info.pkg_modules.add(args[0])
+        opts, args = cmake_argparse(args, {"REQUIRED": "-", "QUIET": "-", "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "IMPORTED_TARGET": "-"})
+        info.pkg_modules_prefix.add(args[0])
+        for pkg in args[1:]:
+            if "=" in pkg:
+                pkg = pkg.split("=")[0].rstrip("<>=")
+            info.pkg_modules.add(pkg)
+            if info.env.is_catkin_pkg(pkg):
+                info.report(ERROR, "MISCONFIGURED_CATKIN_PACKAGE", pkg=pkg)
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("pkg_check_modules", on_pkg_check_modules)
@@ -505,10 +517,10 @@ def installs(linter):
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
-                    if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries:
+                    if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries and lib not in info.interface_libraries:
                         info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib, file_location=info.location_of("catkin_package"))
         for target in info.install_targets:
-            if target not in info.libraries and target not in info.executables:
+            if target not in info.targets:
                 info.report(ERROR, "UNDEFINED_TARGET", target=target, file_location=("CMakeLists.txt", 0))
 
     linter.require(targets)

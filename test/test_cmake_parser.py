@@ -29,6 +29,13 @@ class CMakeParserTest(unittest.TestCase):
             []
         )
 
+    def test_generator_expressions(self):
+        """Test CMake parser generator expressions"""
+        self.assertEqual(
+            self.parse_all("command($<0:ignore_me>)"),
+            [("command", [])]
+        )
+
     def test_command(self):
         """Test CMake parser command parsing"""
         self.assertEqual(

@@ -280,6 +280,13 @@ message_list = {
         call find_package() nor have it listed as catkin component in
         the find_package(catkin) call.
         """),
+    "MISCONFIGURED_CATKIN_PACKAGE":
+    ("misconfigured catkin package '%(pkg)s'",
+        """\
+        You use an unsupported way to include a catkin package in your build. Even though this
+        might work in your particular case, you should use the proper
+        find_package() mechanism to make sure that all relevant CMake macros will be run.
+        """),
     "WRONG_DEPEND":
     ("%(wrong_type)s_depend '%(pkg)s' should be a %(right_type)s_depend",
         """\
