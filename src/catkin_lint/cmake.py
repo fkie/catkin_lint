@@ -67,6 +67,19 @@ def _resolve_vars(s, var, env_var):
     return s
 
 
+_find_genexp = re.compile(r'(?<!\\)\$<([a-z_0-9]+)(?::([^<>]+))>', re.IGNORECASE).search
+
+
+# TODO We just replace all generator expressions by empty strings.
+#      This may or may not be a smart thing to do in this context
+def _resolve_generator_expressions(s):
+    mo = _find_genexp(s)
+    while mo is not None:
+        s = s[:mo.start(0)] + s[mo.end(0):]
+        mo = _find_genexp(s)
+    return s
+
+
 _token_spec = [
     ('NL', r'\r\n|\r|\n'),
     ('SKIP', r'[ \t]+'),
@@ -160,6 +173,7 @@ def _parse_commands(s, filename):
     commands = []
     state = 0
     line = 0
+    s = _resolve_generator_expressions(s)
     for typ, val, line, col in _lexer(s):
         if typ == "COMMENT":
             continue
