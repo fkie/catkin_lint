@@ -1,3 +1,9 @@
+Version 1.6.2
+  * Ignore missing depends if nothing is built
+  * Complain about improper inclusion of catkin packages
+  * Add support for interface libraries
+  * A few minor bugfixes
+
 Version 1.6.1
   * Symlinks in package paths will no longer be resolved
   * Update list of useless buzzwords
