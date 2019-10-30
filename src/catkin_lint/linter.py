@@ -413,7 +413,6 @@ class CMakeLinter(object):
                     first = max(0, len(items) + first)
                 if length == -1 or first + length > len(items):
                     length = len(items) - first
-                print(first,length)
                 info.var[output] = ";".join(items[first:first + length])
                 return
             else:
