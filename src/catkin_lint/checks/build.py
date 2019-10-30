@@ -163,7 +163,7 @@ def generated_files(linter):
 
 def source_files(linter):
     def on_add_executable(info, cmd, args):
-        if "IMPORTED" in args:
+        if "IMPORTED" in args or "ALIAS" in args:
             return
         _, args = cmake_argparse(args, {"WIN32": "-", "MACOSX_BUNDLE": "-", "EXCLUDE_FROM_ALL": "-"})
         if not is_sorted(args[1:]):
@@ -175,9 +175,9 @@ def source_files(linter):
                 info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(source_file))
 
     def on_add_library(info, cmd, args):
-        if "IMPORTED" in args:
+        if "IMPORTED" in args or "ALIAS" in args or "INTERFACE" in args:
             return
-        _, args = cmake_argparse(args, {"STATIC": "-", "SHARED": "-", "MODULE": "-", "EXCLUDE_FROM_ALL": "-"})
+        _, args = cmake_argparse(args, {"GLOBAL": "-", "STATIC": "-", "SHARED": "-", "MODULE": "-", "OBJECT": "-", "UNKNOWN": "-", "EXCLUDE_FROM_ALL": "-"})
         if not is_sorted(args[1:]):
             info.report(NOTICE, "UNSORTED_LIST", name="of source files")
         for source_file in args[1:]:
@@ -517,10 +517,10 @@ def installs(linter):
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
-                    if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries:
+                    if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries and lib not in info.interface_libraries:
                         info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib, file_location=info.location_of("catkin_package"))
         for target in info.install_targets:
-            if target not in info.libraries and target not in info.executables:
+            if target not in info.targets:
                 info.report(ERROR, "UNDEFINED_TARGET", target=target, file_location=("CMakeLists.txt", 0))
 
     linter.require(targets)

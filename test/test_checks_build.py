@@ -762,9 +762,21 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
-            add_library(${PROJECT_NAME}_lib STATIC src/source.cpp)
+            add_library(${PROJECT_NAME}_interface INTERFACE)
             add_executable(${PROJECT_NAME} src/source.cpp)
-            target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_lib)
+            target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_interface)
+            install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+            """,
+        checks=cc.installs)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+            """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            add_library(${PROJECT_NAME}_static STATIC src/source.cpp)
+            add_executable(${PROJECT_NAME} src/source.cpp)
+            target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_static)
             install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
             """,
         checks=cc.installs)
