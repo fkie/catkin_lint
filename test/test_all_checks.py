@@ -14,6 +14,8 @@ except ImportError:
     from io import StringIO
 from catkin_lint.main import prepare_arguments, run_linter
 import catkin_lint.environment
+import catkin_lint.ros
+
 
 class AllChecksTest(unittest.TestCase):
 
@@ -78,6 +80,10 @@ def get_dummy_index(url):
 def get_dummy_cached_distribution(index, dist_name, cache=None, allow_lazy_load=False):
     return DummyDist()
 
+def raise_io_error(*args):
+    raise IOError("mock exception")
+
+
 class CatkinInvokationTest(unittest.TestCase):
 
     def fake_package(self, name, depends, wsdir):
@@ -106,14 +112,12 @@ class CatkinInvokationTest(unittest.TestCase):
             f.write("Random executable file")
         os.chmod(os.path.join(pkgdir, ".git", "script"), 0o755)
 
-    def raise_io_error(self, *args):
-        raise IOError("mock exception")
-
     @patch("rosdistro.get_index_url", get_dummy_index_url)
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
         catkin_lint.environment._cache = None  # force cache reloads
+        catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
         args = parser.parse_args(argv)
         stdout = StringIO()
@@ -127,6 +131,7 @@ class CatkinInvokationTest(unittest.TestCase):
     @patch("rosdistro.get_cached_distribution", raise_io_error)
     def run_catkin_lint_without_rosdistro(self, *argv):
         catkin_lint.environment._cache = None  # force cache reloads
+        catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
         args = parser.parse_args(argv)
         stdout = StringIO()
@@ -159,7 +164,7 @@ class CatkinInvokationTest(unittest.TestCase):
         os.makedirs(catkin_lint.environment._cache_dir)
         os.environ = {
             "PATH": "/usr/bin:/bin",
-            "ROS_DISTRO": "kinetic",
+            "ROS_DISTRO": "melodic",
             "HOME": self.homedir,
             "ROS_PACKAGE_PATH": self.upstream_ws_srcdir,
         }
@@ -183,7 +188,7 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 1 packages and found 0 problems", stdout)
-        with patch("catkin_lint.linter.CMakeLinter._read_file", self.raise_io_error):
+        with patch("catkin_lint.linter.CMakeLinter._read_file", raise_io_error):
             exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 1)
         self.assertIn("OS error: mock exception", stdout)
@@ -256,8 +261,9 @@ class CatkinInvokationTest(unittest.TestCase):
 
         try:
             # The following tests will not produce meaningful results
-            # if rosdep2 is unavailable
+            # if rosdep2 or rosdistro is unavailable
             import rosdep2
+            import rosdistro
 
             exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
             self.assertEqual(exitcode, 0)
@@ -273,7 +279,7 @@ class CatkinInvokationTest(unittest.TestCase):
             exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
             self.assertEqual(exitcode, 0)
 
-            exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "kinetic")
+            exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "melodic")
             self.assertEqual(exitcode, 1)
 
             del os.environ["ROS_DISTRO"]
@@ -281,11 +287,11 @@ class CatkinInvokationTest(unittest.TestCase):
             self.assertEqual(exitcode, 0)
             self.assertNotIn("error: unknown package", stdout)
 
-            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--rosdistro", "kinetic")
+            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--rosdistro", "melodic")
             self.assertEqual(exitcode, 1)
             self.assertIn("error: unknown package", stdout)
 
-            exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "indigo")
+            exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "melodic")
             self.assertEqual(exitcode, 0)
             self.assertIn("cannot initialize rosdistro", stdout)
 
@@ -310,6 +316,6 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertIn("Cached local paths: 0\n", stdout)
 
         del os.environ["ROS_DISTRO"]
-        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--rosdistro", "kinetic")
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--rosdistro", "melodic")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
