@@ -256,8 +256,9 @@ class CatkinInvokationTest(unittest.TestCase):
 
         try:
             # The following tests will not produce meaningful results
-            # if rosdep2 is unavailable
+            # if rosdep2 or rosdistro is unavailable
             import rosdep2
+            import rosdistro
 
             exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
             self.assertEqual(exitcode, 0)
