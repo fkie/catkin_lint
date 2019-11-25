@@ -1,3 +1,7 @@
+Version 1.6.3
+  * Update sources.cache for unit tests
+  * Gracefully handle missing rosdistro package
+
 Version 1.6.2
   * Ignore missing depends if nothing is built
   * Complain about improper inclusion of catkin packages
