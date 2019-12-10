@@ -197,6 +197,10 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
 
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--json")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 3 packages and found 0 problems", stdout)
+
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--disable-cache", "--xml")
         self.assertEqual(exitcode, 0)
         self.assertIn("</catkin_lint>", stdout)
