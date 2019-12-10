@@ -1,5 +1,6 @@
 import unittest
 
+import re
 import sys
 sys.stderr = sys.stdout
 
@@ -52,6 +53,22 @@ class OutputTest(unittest.TestCase):
           "mock: mock.cmake(3): notice: short text\n"
           "mock: error: short text\n"
           "mock: mock.cmake: error: short text\n"
+        )
+
+    def test_json(self):
+        """Test output format for catkin_lint JSON output"""
+        result = self._do_output(o.JsonOutput(), self._demo_msgs)
+        result = re.sub(r"\s+", " ", result)
+        self.assertEqual(result,
+          '{ "errors": [ '
+          '{ "id": "MOCK_MSG", "location": { "file": "mock.cmake", "line": 1, "package": "mock" }, "text": "short text" }, '
+          '{ "id": "MOCK_MSG", "location": { "package": "mock" }, "text": "short text" }, '
+          '{ "id": "MOCK_MSG", "location": { "file": "mock.cmake", "package": "mock" }, "text": "short text" } '
+          '], "notices": [ '
+          '{ "id": "MOCK_MSG", "location": { "file": "mock.cmake", "line": 3, "package": "mock" }, "text": "short text" } '
+          '], "warnings": [ '
+          '{ "id": "MOCK_MSG", "location": { "file": "mock.cmake", "line": 2, "package": "mock" }, "text": "short text" } '
+          '] } '
         )
 
     def test_xml(self):
