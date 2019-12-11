@@ -1,13 +1,10 @@
 import unittest
-from .helper import create_env, create_manifest, mock_lint, patch
-
-import sys
-sys.stderr = sys.stdout
-import os
-
-from tempfile import mkdtemp
 import shutil
 import argparse
+import os
+import sys
+from .helper import create_env, create_manifest, mock_lint, patch
+from tempfile import mkdtemp
 try:
     from StringIO import StringIO
 except ImportError:
@@ -22,10 +19,10 @@ class AllChecksTest(unittest.TestCase):
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
     def test_project(self):
         """Test minimal catkin project for compliance"""
-        env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
-        pkg = create_manifest("mock", description="Cool Worf", build_depends=[ "foo", "foo_msgs" ], run_depends=[ "foo_msgs" ])
+        env = create_env(catkin_pkgs=["catkin", "foo", "foo_msgs"])
+        pkg = create_manifest("mock", description="Cool Worf", build_depends=["foo", "foo_msgs"], run_depends=["foo_msgs"])
         result = mock_lint(env, pkg,
-            """\
+                           """\
             project(mock)
             find_package(catkin REQUIRED COMPONENTS foo foo_msgs)
             catkin_package(CATKIN_DEPENDS foo_msgs)
@@ -39,10 +36,10 @@ class AllChecksTest(unittest.TestCase):
     @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
     def test_project_with_skip(self):
         """Test minimal catkin project with skip directive"""
-        env = create_env(catkin_pkgs=[ "catkin", "foo", "foo_msgs" ])
-        pkg = create_manifest("mock", description="Cool Worf", build_depends=[ "foo", "foo_msgs" ], run_depends=[ "foo_msgs" ])
+        env = create_env(catkin_pkgs=["catkin", "foo", "foo_msgs"])
+        pkg = create_manifest("mock", description="Cool Worf", build_depends=["foo", "foo_msgs"], run_depends=["foo_msgs"])
         result = mock_lint(env, pkg,
-            """\
+                           """\
             project(mock)
             find_package(catkin REQUIRED COMPONENTS foo foo_msgs)
             catkin_package(CATKIN_DEPENDS foo_msgs)
@@ -71,14 +68,18 @@ class DummyDist(object):
             </package>'''
         return None
 
+
 def get_dummy_index_url():
     return "http://127.0.0.1:9"
+
 
 def get_dummy_index(url):
     return None
 
+
 def get_dummy_cached_distribution(index, dist_name, cache=None, allow_lazy_load=False):
     return DummyDist()
+
 
 def raise_io_error(*args):
     raise IOError("mock exception")

@@ -1,9 +1,7 @@
 import unittest
 from .helper import create_env, create_manifest, mock_lint
-
-import sys
-sys.stderr = sys.stdout
 import os
+
 
 class IndentationTest(unittest.TestCase):
 
@@ -12,21 +10,21 @@ class IndentationTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
-            """
+                           """
                 cmd1()
                 cmd2()
                 cmd3()
             """, checks=None, indentation=True)
         self.assertEqual([], result)
         result = mock_lint(env, pkg,
-            """
+                           """
                 cmd1()
                   cmd2()
                 cmd3()
             """, checks=None, indentation=True)
         self.assertEqual(["INDENTATION"], result)
         result = mock_lint(env, pkg,
-            """
+                           """
                 cmd1() cmd2()
             """, checks=None, indentation=True)
         self.assertEqual(["INDENTATION"], result)
@@ -36,7 +34,7 @@ class IndentationTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
-            """
+                           """
                 macro(test)
                            cmd2()
                 endmacro()
@@ -47,7 +45,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 macro(test)
                            if()
                         cmd()
@@ -60,7 +58,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 macro(test2)
                     cmd()
                 endmacro()
@@ -77,7 +75,7 @@ class IndentationTest(unittest.TestCase):
             """, checks=None, indentation=True)
         self.assertEqual([], result)
         result = mock_lint(env, pkg,
-            """
+                           """
                 macro(test4)
                     cmd()
                     if()
@@ -119,7 +117,7 @@ class IndentationTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
-            """
+                           """
                 cmd()
                 if()
                     cmd()
@@ -133,7 +131,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
                 else()
                 endif()
@@ -141,7 +139,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
                     if()
                     endif()
@@ -153,7 +151,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
                 cmd()
                 cmd()
@@ -162,7 +160,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
                     cmd()
                     cmd()
@@ -171,7 +169,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
                     cmd()
                     else()
@@ -181,7 +179,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
                     cmd()
                   else()
@@ -191,7 +189,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 if()
             cmd()
                 else()
@@ -205,7 +203,7 @@ class IndentationTest(unittest.TestCase):
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
-            """
+                           """
                 cmd()
                 foreach(a 1)
                     cmd()
@@ -215,7 +213,7 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 foreach(a 1)
                     cmd()
                 cmd()
@@ -224,17 +222,16 @@ class IndentationTest(unittest.TestCase):
         self.assertEqual(["INDENTATION"], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 foreach(a 1)
                 endforeach()
             """, checks=None, indentation=True)
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg,
-            """
+                           """
                 foreach(a 1)
                 cmd()
                 endforeach()
             """, checks=None, indentation=True)
         self.assertEqual(["INDENTATION"], result)
-

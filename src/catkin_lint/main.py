@@ -144,7 +144,7 @@ def run_linter(args):
     if args.xml:
         output = XmlOutput()  # this is never colored
     elif args.json:
-        output = JsonOutput() # also never colored
+        output = JsonOutput()  # also never colored
     elif args.explain:
         output = ExplainedTextOutput(use_color[args.color])
     else:
