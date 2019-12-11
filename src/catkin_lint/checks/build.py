@@ -598,9 +598,7 @@ def scripts(linter):
                     mode = os.stat(full_filename).st_mode
                     if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                         info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
-            ignoredirs = [d for d in dirnames if d.startswith(".") or "test" in d or "build" in d or "example" in d]
-            for d in ignoredirs:
-                dirnames.remove(d)
+            dirnames[:] = [d for d in dirnames if not d.startswith(".") and "test" not in d and "build" not in d and "example" not in d]
 
     linter.require(installs)
     linter.require(dynamic_reconfigure)
