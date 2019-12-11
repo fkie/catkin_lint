@@ -157,6 +157,8 @@
         
             <li><a class="toctree-l3" href="#installtype-dest-does-not-install-to-catkin_install_prefix">install(type ... dest) does not install to ${CATKIN_INSTALL_PREFIX}</a></li>
         
+            <li><a class="toctree-l3" href="#launch-configuration-needs-type_depend-on-pkg">launch configuration needs type_depend on 'pkg'</a></li>
+        
             <li><a class="toctree-l3" href="#library-output-name-output-has-redundant-lib-prefix">library output name 'output' has redundant 'lib' prefix</a></li>
         
             <li><a class="toctree-l3" href="#line-is-not-indented-properly">line is not indented properly</a></li>
@@ -194,6 +196,8 @@
             <li><a class="toctree-l3" href="#package-exports-export-plugin-but-does-not-type_depend-on-pkg">package exports export plugin but does not type_depend on 'pkg'</a></li>
         
             <li><a class="toctree-l3" href="#package-path-name-path-differs-from-package-name">package path name 'path' differs from package name</a></li>
+        
+            <li><a class="toctree-l3" href="#parse-error-msg">parse error: msg</a></li>
         
             <li><a class="toctree-l3" href="#project-name-name-differs-from-package-name">project name 'name' differs from package name</a></li>
         
@@ -586,6 +590,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: warning</li>
 <li><strong>Explanation</strong>: Your package installs one or more files to an unexpected location. Catkin provides a number of standard variables ${CATKIN_*_DESTINATION} to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.</li>
 </ul>
+<h2 id="launch-configuration-needs-type_depend-on-pkg">launch configuration needs <i>type</i>_depend on '<i>pkg</i>'</h2>
+<ul>
+<li><strong>ID</strong>: launch_depend</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: Your package refers to another package in one of its launch files, but you do not have this dependency in your package.xml</li>
+</ul>
 <h2 id="library-output-name-output-has-redundant-lib-prefix">library output name '<i>output</i>' has redundant 'lib' prefix</h2>
 <ul>
 <li><strong>ID</strong>: redundant_lib_prefix</li>
@@ -699,6 +709,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: package_path_name</li>
 <li><strong>Severity</strong>: notice</li>
 <li><strong>Explanation</strong>: Your package resides in a folder that has a different name than the package itself. This is confusing and might break the assumptions of some tools.</li>
+</ul>
+<h2 id="parse-error-msg">parse error: <i>msg</i></h2>
+<ul>
+<li><strong>ID</strong>: parse_error</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: Your package has a malformed file that could not be processed for linting.</li>
 </ul>
 <h2 id="project-name-name-differs-from-package-name">project name '<i>name</i>' differs from package name</h2>
 <ul>
