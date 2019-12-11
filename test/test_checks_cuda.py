@@ -2,8 +2,6 @@ import unittest
 import catkin_lint.checks.cuda as cc
 from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 
-import sys
-sys.stderr = sys.stdout
 import os
 
 
@@ -20,10 +18,10 @@ class ChecksCudaTest(unittest.TestCase):
         result = mock_lint(env, pkg, "cuda_add_executable(target ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp) cuda_add_library(target_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/a.cpp)", checks=cc.targets)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "cuda_add_executable(target} src/missing.cpp)", checks=cc.targets)
-        self.assertEqual([ "MISSING_FILE" ], result)
+        self.assertEqual(["MISSING_FILE"], result)
         result = mock_lint(env, pkg, "cuda_add_library(target src/missing.cpp)", checks=cc.targets)
-        self.assertEqual([ "MISSING_FILE" ], result)
+        self.assertEqual(["MISSING_FILE"], result)
         result = mock_lint(env, pkg, "cuda_add_executable(target src/b.cpp src/a.cpp)", checks=cc.targets)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
+        self.assertEqual(["UNSORTED_LIST"], result)
         result = mock_lint(env, pkg, "cuda_add_library(target} src/b.cpp src/a.cpp)", checks=cc.targets)
-        self.assertEqual([ "UNSORTED_LIST" ], result)
+        self.assertEqual(["UNSORTED_LIST"], result)

@@ -1,10 +1,7 @@
 import unittest
+import os
 import catkin_lint.checks.python as cc
 from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
-
-import sys
-sys.stderr = sys.stdout
-import os
 
 
 class ChecksPythonTest(unittest.TestCase):
@@ -19,7 +16,7 @@ class ChecksPythonTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_python_setup()", checks=cc.setup)
-        self.assertEqual([ "MISSING_FILE" ], result)
+        self.assertEqual(["MISSING_FILE"], result)
 
     @posix_and_nt
     @patch("os.path.isfile", lambda x: x in [os.path.normpath("/package-path/mock/setup.py"), os.path.normpath("/package-path/catkin/setup.py")])
@@ -32,13 +29,13 @@ class ChecksPythonTest(unittest.TestCase):
         self.assertEqual([], result)
 
         result = mock_lint(env, pkg, "project(mock) catkin_python_setup()", checks=cc.setup)
-        self.assertEqual([ "CATKIN_ORDER_VIOLATION" ], result)
+        self.assertEqual(["CATKIN_ORDER_VIOLATION"], result)
 
         result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) generate_messages() catkin_python_setup()", checks=cc.setup)
-        self.assertEqual([ "ORDER_VIOLATION" ], result)
+        self.assertEqual(["ORDER_VIOLATION"], result)
 
         result = mock_lint(env, pkg, "project(mock)", checks=cc.setup)
-        self.assertEqual([ "MISSING_PYTHON_SETUP" ], result)
+        self.assertEqual(["MISSING_PYTHON_SETUP"], result)
 
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg, "project(catkin) catkin_python_setup()", checks=cc.setup)

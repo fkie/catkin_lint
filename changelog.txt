@@ -1,3 +1,8 @@
+Version 1.6.4
+  * Scan launch files for package dependencies
+  * New JSON output format
+  * PEP8 style fixes in the source code
+
 Version 1.6.3
   * Update sources.cache for unit tests
   * Gracefully handle missing rosdistro package

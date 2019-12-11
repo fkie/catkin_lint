@@ -22,7 +22,7 @@ _catkin_lint_complete()
 		return 0
 	fi
 	compopt -o filenames 2>/dev/null
-	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --quiet --offline --clear-cache --pkg --skip-pkg --ignore --package-path --rosdistro --resolve-env --error --warning --notice --show-ignored" -- "$arg" ) )
+	COMPREPLY=( $( compgen -W "-h -q --help --version -W0 -W1 -W2 --strict --text --explain --xml --json --quiet --offline --clear-cache --pkg --skip-pkg --ignore --package-path --rosdistro --resolve-env --error --warning --notice --show-ignored" -- "$arg" ) )
 	COMPREPLY+=( $( compgen -d -- "$arg" ) )
 	return 0
 }

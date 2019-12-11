@@ -30,6 +30,7 @@
 
 import sys
 import textwrap
+import json
 from .linter import ERROR, WARNING, NOTICE
 from . import __version__
 
@@ -107,3 +108,30 @@ class XmlOutput(object):
 
     def epilog(self, fd=sys.stdout):
         fd.write('</catkin_lint>\n')
+
+
+class JsonOutput(object):
+
+    def __init__(self):
+        self._json = {"errors": [], "warnings": [], "notices": [], "version": __version__}
+
+    def prolog(self, fd=sys.stdout):
+        pass
+
+    def message(self, msg, fd=sys.stdout):
+        location = {"package": msg.package}
+        if msg.file:
+            location["file"] = msg.file
+            if msg.line:
+                location["line"] = msg.line
+        entry = {"id": msg.id, "text": msg.text, "location": location}
+        if msg.level == ERROR:
+            self._json["errors"].append(entry)
+        elif msg.level == WARNING:
+            self._json["warnings"].append(entry)
+        elif msg.level == NOTICE:
+            self._json["notices"].append(entry)
+
+    def epilog(self, fd=sys.stdout):
+        json.dump(self._json, fd, ensure_ascii=False, indent=None, sort_keys=True)
+        fd.write("\n")
