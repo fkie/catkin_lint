@@ -273,6 +273,13 @@ message_list = {
         Your package uses features of another package but you
         failed to list this dependency in your package.xml
         """),
+    "LAUNCH_DEPEND":
+    ("launch configuration needs %(type)s_depend on '%(pkg)s'",
+        """\
+        Your package refers to another package in one of its
+        launch files, but you do not have this dependency in your
+        package.xml
+        """),
     "UNCONFIGURED_BUILD_DEPEND":
     ("unconfigured build_depend on '%(pkg)s'",
         """\
@@ -586,6 +593,11 @@ message_list = {
         """\
         An operating system error has occured. This is not a linting problem per se but
         might be caused by a missing or unreadable file.
+        """),
+    "PARSE_ERROR":
+    ("parse error: %(msg)s",
+        """\
+        Your package has a malformed file that could not be processed for linting.
         """),
     "ENDBLOCK_ARGS":
     ("extra arguments in %(cmd)s()",

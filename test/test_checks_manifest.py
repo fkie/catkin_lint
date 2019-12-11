@@ -1,6 +1,8 @@
 import unittest
+import os
+import sys
 import catkin_lint.checks.manifest as cc
-from .helper import create_env, create_manifest, create_manifest2, mock_lint
+from .helper import create_env, create_manifest, create_manifest2, mock_lint, mock_open, patch, posix_and_nt
 
 
 class ChecksManifestTest(unittest.TestCase):
@@ -104,6 +106,32 @@ class ChecksManifestTest(unittest.TestCase):
         pkg = create_manifest("catkin")
         result = mock_lint(env, pkg, "project(catkin) catkin_package()")
         self.assertEqual([], result)
+
+    @posix_and_nt
+    @patch("os.walk", lambda x, topdown: iter([(os.path.normpath("/package-path/mock"), [], ["mock.launch"])]))
+    def test_launch_depends(self):
+        """Test check for dependent packages which are used in launch files"""
+        env = create_env()
+        open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
+        pkg = create_manifest("mock")
+        with patch(open_func, mock_open(read_data='<launch></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data='<launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["PARSE_ERROR"], result)
+        with patch(open_func, mock_open(read_data='<launch><node pkg="$(arg weird)"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data='<launch><node pkg="other_system"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data='<launch><node pkg="other_catkin"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["LAUNCH_DEPEND"], result)
+        with patch(open_func, mock_open(read_data='<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["LAUNCH_DEPEND"], result)
 
     def test_export_targets(self):
         """Test check for valid exported targets"""

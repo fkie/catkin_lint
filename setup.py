@@ -27,7 +27,7 @@ setup(
     data_files=[("share/bash-completion/completions", ["bash/catkin_lint"])],
     scripts=["bin/catkin_lint"],
     version=catkin_lint_version,
-    install_requires=["catkin_pkg"],
+    install_requires=["catkin_pkg", "lxml"],
     test_suite="nose.collector",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
