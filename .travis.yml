@@ -4,7 +4,7 @@ python:
   - "2.7"
   - "3.5"
 install:
-  - pip install codecov coverage catkin_pkg rosdep
+  - pip install codecov coverage catkin_pkg lxml rosdep
 script:
 - nosetests --verbose --with-coverage --cover-erase --cover-package=catkin_lint test
 after_success:
