@@ -110,7 +110,7 @@ class ChecksManifestTest(unittest.TestCase):
     @posix_and_nt
     @patch("os.walk", lambda x, topdown: iter([(os.path.normpath("/package-path/mock"), [], ["mock.launch"])]))
     def test_launch_depends(self):
-        """Test check for dependent packages which are used in launch files"""
+        """Test check for package dependencies which are used in launch files"""
         env = create_env()
         open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
         pkg = create_manifest("mock")
