@@ -113,7 +113,7 @@ class XmlOutput(object):
 class JsonOutput(object):
 
     def __init__(self):
-        self._json = {"errors": [], "warnings": [], "notices": []}
+        self._json = {"errors": [], "warnings": [], "notices": [], "version": __version__}
 
     def prolog(self, fd=sys.stdout):
         pass
@@ -133,5 +133,5 @@ class JsonOutput(object):
             self._json["notices"].append(entry)
 
     def epilog(self, fd=sys.stdout):
-        json.dump(self._json, fd, ensure_ascii=False, indent=4, sort_keys=True)
+        json.dump(self._json, fd, ensure_ascii=False, indent=None, sort_keys=True)
         fd.write("\n")
