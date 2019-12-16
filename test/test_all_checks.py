@@ -117,6 +117,7 @@ class CatkinInvokationTest(unittest.TestCase):
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
+        print("RUN:" + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
         catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -125,12 +126,14 @@ class CatkinInvokationTest(unittest.TestCase):
         with patch("sys.stdout", stdout):
             with patch("sys.stderr", stdout):
                 returncode = run_linter(args)
+        print(stdout.getvalue())
         return returncode, stdout.getvalue()
 
     @patch("rosdistro.get_index_url", get_dummy_index_url)
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", raise_io_error)
     def run_catkin_lint_without_rosdistro(self, *argv):
+        print("RUN:" + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
         catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -139,6 +142,7 @@ class CatkinInvokationTest(unittest.TestCase):
         with patch("sys.stdout", stdout):
             with patch("sys.stderr", stdout):
                 returncode = run_linter(args)
+        print(stdout.getvalue())
         return returncode, stdout.getvalue()
 
     def setUp(self):
