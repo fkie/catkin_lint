@@ -2,7 +2,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2018 Fraunhofer FKIE
+# Copyright (c) 2013-2019 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -28,9 +28,24 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+import sys
+import os
 
-from catkin_lint.main import main
+# Determine the real location of this script, resolving all symlinks
+bindir = os.path.dirname(os.path.realpath(__file__))
+
+# If catkin_lint uses private modules, they are in the same folder as
+# the script. The script will be symlinked from e.g. /usr/bin
+if os.path.isfile(os.path.join(bindir, "catkin_lint", "__init__.py")):
+    sys.path.insert(0, bindir)
+
+# If catkin_lint is called from the source tree, we use that module
+if os.path.isfile(os.path.join(bindir, os.path.pardir, "src", "catkin_lint", "__init__.py")):
+    sys.path.insert(0, os.path.normpath(os.path.join(bindir, os.path.pardir, "src")))
+
+del bindir
+del os
 
 if __name__ == "__main__":
+    from catkin_lint.main import main
     main()
-
