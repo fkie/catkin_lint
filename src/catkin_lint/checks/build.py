@@ -308,6 +308,7 @@ def tests(linter):
 
     linter.require(manifest_depends)
     linter.add_command_hook("catkin_download_test_data", on_test_cmd)
+    linter.add_command_hook("catkin_add_gtest", on_test_cmd)
     linter.add_command_hook("catkin_add_nosetests", on_test_cmd)
     linter.add_command_hook("add_rostest", partial(on_test_cmd, dep="rostest"))
     linter.add_command_hook("add_rostest_gtest", partial(on_test_cmd, dep="rostest"))
