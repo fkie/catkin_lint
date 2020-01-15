@@ -1,7 +1,7 @@
 catkin_lint
 ############
 
-|github_release| |pypi_badge| |debian_badge| |travis_master| |codecov_master|
+|github_release| |pypi_badge| |debian_badge| |ci_badge| |codecov_master|
 
 **catkin_lint** checks package configurations for the
 `catkin <https://github.com/ros/catkin>`_ build system of `ROS <http://www.ros.org>`_.
@@ -19,8 +19,7 @@ I generally recommend that you install **catkin_lint** from my Ubuntu PPA or use
 You can find the documentation with detailed installation instructions at
 `http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
 
-.. |travis_master| image:: https://img.shields.io/travis/fkie/catkin_lint/master.svg
-   :target: https://travis-ci.org/fkie/catkin_lint
+.. |ci_badge| image:: https://github.com/fkie/catkin_lint/workflows/CI/badge.svg
 .. |codecov_master| image:: https://img.shields.io/codecov/c/github/fkie/catkin_lint/master.svg
    :target: https://codecov.io/github/fkie/catkin_lint?branch=master
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/catkin_lint.svg

@@ -1,0 +1,29 @@
+name: CI
+on: [push]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        strategy:
+            max-parallel: 2
+            matrix:
+                python-version: [2.7, 3.5]
+        steps:
+            - uses: actions/checkout@v1
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v1
+              with:
+                  python-version: $${ matrix.python-version }}
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+            - name: Run tests
+              run: |
+                  pip install coverage
+                  nosetests --verbose --with-coverage --cover-erase --cover-xml --cover-package=catkin_lint
+            - name: Upload code coverage
+              uses: codecov/codecov-action@v1
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+
