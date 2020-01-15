@@ -6,6 +6,7 @@ jobs:
         runs-on: ubuntu-latest
         strategy:
             max-parallel: 2
+            fail-fast: false
             matrix:
                 python-version: [2.7, 3.5]
         steps:
@@ -16,13 +17,15 @@ jobs:
                   python-version: ${{ matrix.python-version }}
             - name: Install dependencies
               run: |
-                  python -m pip install --upgrade pip coverage nose
+                  python -m pip install --upgrade pip
+                  pip install nose coverage codecov
                   pip install -r requirements.txt
             - name: Run tests
               run: |
                   nosetests --verbose --with-coverage --cover-erase --cover-xml --cover-package=catkin_lint
             - name: Upload code coverage
-              uses: codecov/codecov-action@v1
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
+              env:
+                  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+              run: |
+                  codecov || true
 
