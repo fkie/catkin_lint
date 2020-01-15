@@ -68,7 +68,7 @@ def find_packages(basepath, use_cache=True):
     global _cache
     if use_cache:
         _load_cache()
-        distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
+        distro_id = os.environ.get("ROS_DISTRO", None)
     packages = {}
     package_paths = find_package_paths(basepath)
     cache_updated = False
@@ -175,7 +175,7 @@ class CatkinEnvironment(object):
         global _cache
         if self.use_cache:
             cache_updated = False
-            distro_id = os.environ["ROS_DISTRO"] if "ROS_DISTRO" in os.environ else None
+            distro_id = os.environ.get("ROS_DISTRO", None)
             _load_cache()
             if distro_id not in _cache.packages:
                 _cache.packages[distro_id] = {}
