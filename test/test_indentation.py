@@ -1,6 +1,5 @@
 import unittest
 from .helper import create_env, create_manifest, mock_lint
-import os
 
 
 class IndentationTest(unittest.TestCase):

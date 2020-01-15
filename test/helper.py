@@ -7,9 +7,9 @@ from functools import wraps
 
 import os
 try:
-    from mock import patch, mock_open
+    from mock import patch, mock_open  # noqa
 except ImportError:
-    from unittest.mock import patch, mock_open
+    from unittest.mock import patch, mock_open  # noqa
 
 import posixpath
 import ntpath

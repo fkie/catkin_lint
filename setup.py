@@ -4,13 +4,18 @@
 from setuptools import setup
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
-from catkin_lint import __version__ as catkin_lint_version
+
+
+def catkin_lint_version():
+    from catkin_lint import __version__
+    return __version__
 
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 setup(
     name="catkin_lint",
@@ -26,7 +31,7 @@ setup(
     package_dir={"": "src"},
     data_files=[("share/bash-completion/completions", ["bash/catkin_lint"])],
     scripts=["bin/catkin_lint"],
-    version=catkin_lint_version,
+    version=catkin_lint_version(),
     install_requires=["catkin_pkg", "lxml"],
     test_suite="nose.collector",
     classifiers=[

@@ -475,7 +475,7 @@ def installs(linter):
                                 for dirpath, _, filenames in os.walk(real_d, topdown=True):
                                     for filename in filenames:
                                         real_filename = os.path.join(dirpath, filename)
-                                        pkg_filename = info.source_relative_path(real_filename[len(info.path)+1:])
+                                        pkg_filename = info.source_relative_path(real_filename[len(info.path) + 1:])
                                         mode = os.stat(real_filename).st_mode
                                         if mode & stat.S_IXUSR:
                                             info.install_programs.add(pkg_filename)
