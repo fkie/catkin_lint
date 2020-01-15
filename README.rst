@@ -20,6 +20,7 @@ You can find the documentation with detailed installation instructions at
 `http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
 
 .. |ci_badge| image:: https://github.com/fkie/catkin_lint/workflows/CI/badge.svg
+   :target: https://github.com/fkie/catkin_lint/actions
 .. |codecov_master| image:: https://img.shields.io/codecov/c/github/fkie/catkin_lint/master.svg
    :target: https://codecov.io/github/fkie/catkin_lint?branch=master
 .. |pypi_badge| image:: https://img.shields.io/pypi/v/catkin_lint.svg
