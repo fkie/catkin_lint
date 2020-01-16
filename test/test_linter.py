@@ -1,5 +1,5 @@
 import unittest
-import sys
+import sys  # noqa
 import os
 from catkin_lint.linter import CMakeLinter, LintInfo, PathConstants
 from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt

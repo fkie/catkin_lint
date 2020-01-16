@@ -1,3 +1,9 @@
+Version 1.6.5
+  * Remove unneeded "rosunit" dependency suggestion
+  * Add support for installation with private modules
+  * Add new option --skip-path to exclude paths
+  * More PEP8 style fixes in the source code
+
 Version 1.6.4
   * Scan launch files for package dependencies
   * New JSON output format

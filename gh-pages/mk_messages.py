@@ -7,9 +7,8 @@ import re
 srcpath = os.path.normpath(os.path.join(os.path.dirname(__file__), os.pardir, "src"))
 sys.path.insert(0, srcpath)
 
-from catkin_lint.diagnostics import message_list
-
 if __name__ == "__main__":
+    from catkin_lint.diagnostics import message_list
     severity = {}
     for curdir, _, files in os.walk(os.path.join(srcpath, "catkin_lint")):
         for fn in files:
@@ -46,7 +45,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
         messages = {}
         for key in sorted(message_list.keys()):
             if key not in severity:
-                print "Warning: unused message '%s'" % key
+                print("Warning: unused message '%s'" % key)
                 continue
             short_text, long_text = message_list[key]
             long_text = long_text.replace("\n", " ")
@@ -59,7 +58,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
             short_text = short_text.strip()
             messages[(short_text, key.lower())] = (long_text, ", ".join(list(severity[key])))
         for msg, key in sorted(messages.keys()):
-            long_text, severities = messages[(msg,key)]
+            long_text, severities = messages[(msg, key)]
             f.write("## %s\n\n" % msg)
             f.write("- **ID**: %s\n" % key)
             f.write("- **Severity**: %s\n" % severities)

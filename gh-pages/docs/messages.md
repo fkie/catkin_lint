@@ -303,6 +303,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: warning
 - **Explanation**: Your package installs one or more files to an unexpected location. Catkin provides a number of standard variables ${CATKIN_*_DESTINATION} to specify installation folders. You should use those to ensure that your package will continue to work if the file system layout is changed in the future.
 
+## launch configuration needs <i>type</i>_depend on '<i>pkg</i>'
+
+- **ID**: launch_depend
+- **Severity**: warning
+- **Explanation**: Your package refers to another package in one of its launch files, but you do not have this dependency in your package.xml
+
 ## library output name '<i>output</i>' has redundant 'lib' prefix
 
 - **ID**: redundant_lib_prefix
@@ -416,6 +422,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **ID**: package_path_name
 - **Severity**: notice
 - **Explanation**: Your package resides in a folder that has a different name than the package itself. This is confusing and might break the assumptions of some tools.
+
+## parse error: <i>msg</i>
+
+- **ID**: parse_error
+- **Severity**: warning
+- **Explanation**: Your package has a malformed file that could not be processed for linting.
 
 ## project name '<i>name</i>' differs from package name
 

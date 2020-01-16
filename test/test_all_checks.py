@@ -2,7 +2,6 @@ import unittest
 import shutil
 import argparse
 import os
-import sys
 from .helper import create_env, create_manifest, mock_lint, patch
 from tempfile import mkdtemp
 try:
@@ -117,6 +116,7 @@ class CatkinInvokationTest(unittest.TestCase):
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
+        print("RUN:" + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
         catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -125,12 +125,14 @@ class CatkinInvokationTest(unittest.TestCase):
         with patch("sys.stdout", stdout):
             with patch("sys.stderr", stdout):
                 returncode = run_linter(args)
+        print(stdout.getvalue())
         return returncode, stdout.getvalue()
 
     @patch("rosdistro.get_index_url", get_dummy_index_url)
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", raise_io_error)
     def run_catkin_lint_without_rosdistro(self, *argv):
+        print("RUN:" + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
         catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -139,6 +141,7 @@ class CatkinInvokationTest(unittest.TestCase):
         with patch("sys.stdout", stdout):
             with patch("sys.stderr", stdout):
                 returncode = run_linter(args)
+        print(stdout.getvalue())
         return returncode, stdout.getvalue()
 
     def setUp(self):
@@ -232,7 +235,7 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 2 packages and found 0 problems", stdout)
-        os.environ["ROS_PACKAGE_PATH"] = self.upstream_ws
+        os.environ["ROS_PACKAGE_PATH"] = self.upstream_ws_srcdir
 
         bad_path = os.path.join(self.ws_srcdir, "does_not_exist")
         exitcode, stdout = self.run_catkin_lint(bad_path)
@@ -245,9 +248,21 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("no packages to check", stdout)
 
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--skip-path", "alpha")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 2 packages and found 0 problems", stdout)
+
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
         self.assertEqual(exitcode, 0)
         self.assertIn("additional warning", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "suggest_catkin_depend")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("messages have been ignored", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "suggest_catkin_depend", "--show-ignored")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("package 'std_msgs' should be listed in catkin_package()", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "suggest_catkin_depend")
         self.assertEqual(exitcode, 0)
@@ -267,8 +282,8 @@ class CatkinInvokationTest(unittest.TestCase):
         try:
             # The following tests will not produce meaningful results
             # if rosdep2 or rosdistro is unavailable
-            import rosdep2
-            import rosdistro
+            import rosdep2  # noqa
+            import rosdistro  # noqa
 
             exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
             self.assertEqual(exitcode, 0)
