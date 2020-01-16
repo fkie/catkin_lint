@@ -52,7 +52,7 @@ def add_linter_check(linter, check):
 
 def prepare_arguments(parser):
     parser.add_argument("--version", action="version", version=catkin_lint_version)
-    parser.add_argument("path", nargs="*", default=[], help="path to catkin packages")
+    parser.add_argument("path", metavar="PATH", nargs="*", default=[], help="path to catkin packages")
     parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
     parser.add_argument("-W", metavar="LEVEL", type=int, default=1, help="set warning level (0-2)")
     parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[], help=argparse.SUPPRESS)
@@ -64,6 +64,7 @@ def prepare_arguments(parser):
     parser.add_argument("--show-ignored", action="store_true", help="show messages even if they have been ignored explicitly")
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
+    parser.add_argument("--skip-path", metavar="PATH", action="append", default=[], help="skip testing any package in a path that contains PATH (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
     parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
     parser.add_argument("--resolve-env", action="store_true", help="resolve $ENV{} references from environment variables")
@@ -131,7 +132,7 @@ def run_linter(args):
         except KeyError:
             sys.stderr.write("catkin_lint: no such package: %s\n" % name)
             nothing_to_do = 1
-    pkgs_to_check = [(p, m) for p, m in pkgs_to_check if m.name not in args.skip_pkg]
+    pkgs_to_check = [(p, m) for p, m in pkgs_to_check if m.name not in args.skip_pkg and all((sp not in p) for sp in args.skip_path)]
     if not pkgs_to_check:
         sys.stderr.write("catkin_lint: no packages to check\n")
         return nothing_to_do

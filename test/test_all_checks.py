@@ -235,7 +235,7 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 2 packages and found 0 problems", stdout)
-        os.environ["ROS_PACKAGE_PATH"] = self.upstream_ws
+        os.environ["ROS_PACKAGE_PATH"] = self.upstream_ws_srcdir
 
         bad_path = os.path.join(self.ws_srcdir, "does_not_exist")
         exitcode, stdout = self.run_catkin_lint(bad_path)
@@ -247,6 +247,10 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint(empty_path)
         self.assertEqual(exitcode, 0)
         self.assertIn("no packages to check", stdout)
+
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--skip-path", "alpha")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 2 packages and found 0 problems", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
         self.assertEqual(exitcode, 0)
