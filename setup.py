@@ -25,7 +25,7 @@ setup(
     author_email="timo.roehling@fkie.fraunhofer.de",
     license="BSD",
     url="https://github.com/fkie/catkin_lint",
-    download_url="https://github.com/fkie/catkin_lint/tarball/%s" % catkin_lint_version,
+    download_url="https://github.com/fkie/catkin_lint/tarball/%s" % catkin_lint_version(),
     keywords=["catkin", "ROS"],
     packages=["catkin_lint", "catkin_lint.checks"],
     package_dir={"": "src"},
