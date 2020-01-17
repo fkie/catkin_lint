@@ -10,7 +10,7 @@
 
 include /usr/share/dpkg/pkg-info.mk
 
-actual_version:=$(shell PYTHONPATH=src python -c "from catkin_lint import __version__; print __version__")
+actual_version:=$(shell PYTHONPATH=src python3 -c "from catkin_lint import __version__; print(__version__)")
 debianized_version:=$(subst a,~a,$(subst b,~b,$(actual_version)))
 
 ifneq ($(DEB_VERSION_UPSTREAM),$(debianized_version))
@@ -18,16 +18,15 @@ $(error Package version $(DEB_VERSION_UPSTREAM) does not match actual version $(
 endif
 
 export PYBUILD_NAME=catkin-lint
-export PYBUILD_DISABLE_python3=test
 
 %:
-	dh $@ --with python2,python3 --buildsystem=pybuild
+	dh $@ --with python3 --buildsystem=pybuild
 
 override_dh_installman: debian/catkin_lint.1
 	dh_installman -O--buildsystem=pybuild
 
 debian/catkin_lint.1: src/catkin_lint/__init__.py
-	PYTHONPATH=src python -m catkin_lint --help | help2man -N -n "check catkin packages for common errors" --version-string="$(actual_version)" -h- cat | sed -e 's/\<cat\>\|\<__main__\.py\>/catkin_lint/g' > $@
+	PYTHONPATH=src python3 -m catkin_lint --help | help2man -N -n "check catkin packages for common errors" --version-string="$(actual_version)" -h- cat | sed -e 's/\<cat\>\|\<__main__\.py\>/catkin_lint/g' > $@
 
 # The following targets are for the maintainer's convenience:
 

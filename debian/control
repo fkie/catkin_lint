@@ -2,29 +2,15 @@ Source: catkin-lint
 Section: python
 Priority: optional
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
-Build-Depends: debhelper (>= 9), dh-python, help2man,
-               python-all, python3-all,
-               python-nose, python-mock, python3-nose, python3-mock,
-               python-setuptools, python3-setuptools,
-               python-catkin-pkg, python-rosdistro,
-               python-rosdep, python-lxml, python3-lxml
+Build-Depends: debhelper-compat (= 12), dh-python, help2man,
+               python3-all,
+               python3-nose, python3-mock,
+               python3-setuptools,
+               python3-catkin-pkg, python3-rosdistro,
+               python3-rosdep, python3-lxml
 Homepage: https://github.com/fkie/catkin_lint
 Testsuite: autopkgtest-pkg-python
-Standards-Version: 4.2.0
-
-Package: python-catkin-lint
-Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}
-Provides: ${python:Provides}
-Recommends: python-rospkg, python-rosdep, python-rosdistro
-Conflicts: python3-catkin-lint
-Description: Check Robot OS catkin packages for common errors
- This package is part of Robot OS (ROS). catkin_lint checks package
- configurations for the catkin build system of ROS. It runs a static analysis
- of the package.xml and CMakeLists.txt files in your package, and it will
- detect and report a number of common problems.
- .
- This package provides the Python 2 version of catkin_lint.
+Standards-Version: 4.4.1
 
 Package: python3-catkin-lint
 Architecture: all
