@@ -30,7 +30,7 @@ jobs:
               run: |
                   nosetests --verbose --with-coverage --cover-erase --cover-xml --cover-package=catkin_lint
             - name: Upload code coverage
-              if: github.event_name == "push"
+              if: github.event_name == 'push'
               env:
                   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
               run: |
