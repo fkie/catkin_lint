@@ -68,6 +68,8 @@
         
             <li><a class="toctree-l3" href="#require">require()</a></li>
         
+            <li><a class="toctree-l3" href="#register_message">register_message()</a></li>
+        
             <li><a class="toctree-l3" href="#add_init_hook">add_init_hook()</a></li>
         
             <li><a class="toctree-l3" href="#add_command_hook">add_command_hook()</a></li>
@@ -170,6 +172,20 @@ The <code>require</code> method ensures that <code>check_name</code>
 is called exactly once. Circular dependencies of the
 form <code>A-&gt;B-&gt;C-&gt;A</code> will be detected and cause an
 exception. In particular, tests must not require themselves.</p>
+<h2 id="register_message">register_message()</h2>
+<pre><code class="python">linter.register_message(msg_id, text, description=None)
+</code></pre>
+
+<p>Adds a custom message that can be issued with <a href="#report"><code>report()</code></a>.
+Message IDs must be unique. Valid characters are upper-case letters,
+digits, and underscores only. Custom message IDs are also
+required to start with <code>X_</code>, to avoid conflicts with built-in
+IDs.</p>
+<p>The text should be a short one-liner that concisely
+describes the problem. The description can be a paragraph
+or two for a more in-depth explanation. The description will reformat
+line breaks automatically to adjust for different terminal widths.
+Also, you can have placeholders of the form <code>${keyword}s</code>.</p>
 <h2 id="add_init_hook">add_init_hook()</h2>
 <pre><code class="python">def callback(info):
     ...
