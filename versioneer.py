@@ -282,7 +282,6 @@ try:
 except ImportError:
     import ConfigParser as configparser
 import errno
-import json
 import os
 import re
 import subprocess
@@ -1198,14 +1197,10 @@ def versions_from_file(filename):
             contents = f.read()
     except EnvironmentError:
         raise NotThisMethod("unable to read _version.py")
-    mo = re.search(r"version_json = '''\n(.*)'''  # END VERSION_JSON",
-                   contents, re.M | re.S)
+    mo = re.search(r"def get_versions():\s+return (.*)", contents)
     if not mo:
-        mo = re.search(r"version_json = '''\r\n(.*)'''  # END VERSION_JSON",
-                       contents, re.M | re.S)
-    if not mo:
-        raise NotThisMethod("no version_json in _version.py")
-    return json.loads(mo.group(1))
+        raise NotThisMethod("no get_versions() in _version.py")
+    return eval(mo.group(1), dict())
 
 
 def write_to_version_file(filename, versions):
