@@ -21,6 +21,22 @@ is called exactly once. Circular dependencies of the
 form `A->B->C->A` will be detected and cause an
 exception. In particular, tests must not require themselves.
 
+## register_message()
+
+```python
+linter.register_message(msg_id, text, description=None)
+```
+Adds a custom message that can be issued with [`report()`](#report).
+Message IDs must be unique. Valid characters are upper-case letters,
+digits, and underscores only. Custom message IDs are also
+required to start with `X_`, to avoid conflicts with built-in
+IDs.
+
+The text should be a short one-liner that concisely
+describes the problem. The description can be a paragraph
+or two for a more in-depth explanation. The description will reformat
+line breaks automatically to adjust for different terminal widths.
+Also, you can have placeholders of the form `${keyword}s`.
 
 ## add_init_hook()
 
