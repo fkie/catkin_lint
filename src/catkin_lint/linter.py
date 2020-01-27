@@ -266,7 +266,7 @@ class CMakeLinter(object):
             raise ValueError("custom message IDs must start with X_ and only use the characters [A-Z0-9_]")
         if not text:
             raise ValueError("message text for %s must not be empty" % msg_id)
-        if re.search("r[\r\n\t]", text):
+        if re.search(r"[\r\n\t]", text):
             raise ValueError("message text for %s must not contain TAB or newline characters" % msg_id)
         add_user_defined_msg(msg_id, text, description or "This message has been defined by a third-party plugin and has no description")
 
