@@ -186,6 +186,7 @@ describes the problem. The description can be a paragraph
 or two for a more in-depth explanation. The description will reformat
 line breaks automatically to adjust for different terminal widths.
 Also, you can have placeholders of the form <code>${keyword}s</code>.</p>
+<p>This method was added in version 1.6.6</p>
 <h2 id="add_init_hook">add_init_hook()</h2>
 <pre><code class="python">def callback(info):
     ...
@@ -261,8 +262,7 @@ uses unique variable names that do not conflict with other checks.</p>
     A set of all libraries that have been defined up to this point.</li>
 <li><code>var</code>:
     A dictionary of all known CMake variables. Note that many variables
-    have mocked values. In particular, the package source and build folder
-    are <code>/pkg-source</code> and <code>pkg-build</code> respectively.</li>
+    have mocked values.</li>
 </ul>
 <h2 id="report">report()</h2>
 <pre><code class="python">info.report(level, msg_id, **kwargs)
