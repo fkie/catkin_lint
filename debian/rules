@@ -27,7 +27,7 @@ override_dh_installman: debian/catkin_lint.1
 	dh_installman -O--buildsystem=pybuild
 
 debian/catkin_lint.1: src/catkin_lint/__init__.py
-	PYTHONPATH=src python -m catkin_lint --help | help2man -N -n "check catkin packages for common errors" --version-string="$(actual_version)" -h- cat | sed -e 's/\<cat\>\|\<__main__\.py\>/catkin_lint/g' > $@
+	PYTHONPATH=src python -m catkin_lint --help | help2man -N -n "check catkin packages for common errors" --version-string="$(actual_version)" -h- cat | sed -e 's/\<cat\>\|\<__main__\.py\>/catkin_lint/g' -e 's/\<CAT\>/CATKIN_LINT/g' > $@
 
 # The following targets are for the maintainer's convenience:
 
