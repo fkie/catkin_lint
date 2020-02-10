@@ -656,3 +656,9 @@ def msg(msg_id, **kwargs):
     text, explanation = message_list[msg_id]
     explanation = re.sub(r"\s+", " ", explanation).strip()
     return (msg_id, text % kwargs, explanation % kwargs)
+
+
+def add_user_defined_msg(msg_id, text, explanation):
+    if msg_id in message_list:
+        raise ValueError("duplicate message ID: %s" % msg_id)
+    message_list[msg_id] = (text, explanation)

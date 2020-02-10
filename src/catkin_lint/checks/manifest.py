@@ -144,7 +144,6 @@ def catkin_build(linter):
 
     linter.require(project)
     linter.require(depends)
-    linter.require(launch_depends)
     linter.add_init_hook(on_init)
     linter.add_command_hook("add_message_files", any_catkin_cmd)
     linter.add_command_hook("add_action_files", any_catkin_cmd)
@@ -283,6 +282,7 @@ def package_description(linter):
 
 def all(linter):
     linter.require(depends)
+    linter.require(launch_depends)
     linter.require(catkin_build)
     linter.require(export_targets)
     linter.require(package_description)
