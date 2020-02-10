@@ -10,10 +10,11 @@ Build-Depends: debhelper-compat (= 12), dh-python, help2man,
                python3-rosdep, python3-lxml
 Homepage: https://github.com/fkie/catkin_lint
 Testsuite: autopkgtest-pkg-python
-Standards-Version: 4.4.1
+Standards-Version: 4.5.0
 
 Package: catkin-lint
 Architecture: all
+Multi-Arch: foreign
 Depends: ${python3:Depends}, ${misc:Depends}
 Recommends: python3-rospkg, python3-rosdep, python3-rosdistro
 Breaks: python3-catkin-lint (<< 1.6.5)
@@ -28,6 +29,7 @@ Description: Check Robot OS catkin packages for common errors
 
 Package: python3-catkin-lint
 Architecture: all
+Multi-Arch: foreign
 Section: oldlibs
 Depends: catkin-lint, ${misc:Depends}
 Description: Check Robot OS catkin packages for common errors (transitional package)
