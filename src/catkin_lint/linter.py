@@ -36,7 +36,7 @@ import string
 from fnmatch import fnmatch
 from copy import copy
 from .cmake import ParserContext, argparse as cmake_argparse, CMakeSyntaxError
-from .diagnostics import msg
+from .diagnostics import msg, add_user_defined_msg
 
 ERROR = 0
 WARNING = 1
@@ -260,6 +260,15 @@ class CMakeLinter(object):
         self._catch_circular_deps.add(check)
         check(self)
         self._catch_circular_deps.remove(check)
+
+    def register_message(self, msg_id, text, description=None):
+        if not re.match(r"X_[A-Z0-9_]+$", msg_id):
+            raise ValueError("custom message IDs must start with X_ and only use the characters [A-Z0-9_]")
+        if not text:
+            raise ValueError("message text for %s must not be empty" % msg_id)
+        if re.search(r"[\r\n\t]", text):
+            raise ValueError("message text for %s must not contain TAB or newline characters" % msg_id)
+        add_user_defined_msg(msg_id, text, description or "This message has been defined by a third-party plugin and has no description")
 
     def add_init_hook(self, cb):
         self._init_hooks.append(cb)

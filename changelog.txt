@@ -1,3 +1,8 @@
+Version 1.6.6
+  * Add API call to register custom messages for plugins
+  * Use versioneer for version number management
+  * A few minor bugfixes
+
 Version 1.6.5
   * Remove unneeded "rosunit" dependency suggestion
   * Add support for installation with private modules
