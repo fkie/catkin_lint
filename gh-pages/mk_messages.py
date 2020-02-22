@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import os
@@ -12,15 +12,16 @@ if __name__ == "__main__":
     severity = {}
     for curdir, _, files in os.walk(os.path.join(srcpath, "catkin_lint")):
         for fn in files:
-            with open(os.path.join(curdir, fn), "r") as f:
-                for line in f.readlines():
-                    m = re.search(r'info.report\((.*?), "(.*?)"', line)
-                    if m:
-                        if m.group(2) not in severity:
-                            severity[m.group(2)] = set()
-                        for s in ["ERROR", "WARNING", "NOTICE"]:
-                            if s in m.group(1):
-                                severity[m.group(2)].add(s.lower())
+            if fn.endswith(".py"):
+                with open(os.path.join(curdir, fn), "r") as f:
+                    for line in f.readlines():
+                        m = re.search(r'info.report\((.*?), "(.*?)"', line)
+                        if m:
+                            if m.group(2) not in severity:
+                                severity[m.group(2)] = set()
+                            for s in ["ERROR", "WARNING", "NOTICE"]:
+                                if s in m.group(1):
+                                    severity[m.group(2)].add(s.lower())
     with open(os.path.join(os.path.dirname(__file__), "docs", "messages.md"), "w") as f:
         f.write("""\
 # catkin_lint diagnostic messages
