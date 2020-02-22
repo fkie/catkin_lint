@@ -122,39 +122,43 @@
 and <code>CMakeLists.txt</code> files in your package, and it will detect and report a
 number of common problems.</p>
 <h2 id="installation">Installation</h2>
-<h3 id="install-ubuntu-packages">Install Ubuntu packages</h3>
+<h3 id="ubuntu">Ubuntu</h3>
 <p>Prebuilt packages are available from the official Ubuntu archive and the
 <a href="http://packages.ros.org/">ROS repository</a>.
-If you have installed ROS already, downloading <strong>catkin_lint</strong> is as simple as:</p>
-<pre><code class="sh">$ sudo apt install python-catkin-lint
+If you are using ROS Noetic on Ubuntu 20.04 or later, install <strong>catkin_lint</strong> with</p>
+<pre><code class="sh">$ sudo apt install catkin-lint
 </code></pre>
 
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Starting with Ubuntu 20.04, the package has been renamed. If you are using an older
+release, please run <code>sudo apt install python-catkin-lint</code> instead.</p>
+</div>
 <p>Alternatively, you can use <a href="https://launchpad.net/~roehling/+archive/latest">Timo's PPA</a> on Launchpad,
 which will always ship the latest release:</p>
 <pre><code class="sh">$ sudo add-apt-repository ppa:roehling/latest
 $ sudo apt update
-$ sudo apt install python-catkin-lint
+$ sudo apt install catkin-lint
 </code></pre>
 
-<h3 id="install-debian-packages">Install Debian packages</h3>
+<h3 id="debian">Debian</h3>
 <p>Prebuilt packages are available from the official Debian archive. Install with</p>
-<pre><code class="sh">$ sudo apt install python-catkin-lint
+<pre><code class="sh">$ sudo apt install catkin-lint
 </code></pre>
 
-<h3 id="install-fedora-packages">Install Fedora packages</h3>
-<p>Prebuilt packages have been made available by <a href="https://fedoraproject.org/wiki/User:Ankursinha">Ankur Sinha</a>. Install with</p>
-<pre><code class="sh">$ sudo dnf install python-catkin_lint
-</code></pre>
-
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For Debian Buster, the package is named <code>python-catkin-lint</code>.</p>
+</div>
 <h3 id="download-from-pypi">Download from PyPI</h3>
 <p>You can download and install <strong>catkin_lint</strong> from the <a href="https://pypi.python.org/pypi/catkin_lint">Python Package Index</a>
 with:</p>
-<pre><code class="sh">$ sudo pip install catkin_lint
+<pre><code class="sh">$ sudo pip install catkin-lint
 </code></pre>
 
 <h3 id="install-from-source">Install from Source</h3>
 <p>You can clone <strong>catkin_lint</strong> from <a href="https://github.com/fkie/catkin_lint">GitHub</a>:</p>
-<pre><code class="sh">$ git clone https://github.com/fkie/catkin_lint
+<pre><code class="sh">$ git clone https://github.com/fkie/catkin_lint.git
 $ cd catkin_lint
 $ sudo python setup.py install
 </code></pre>
@@ -257,5 +261,5 @@ catkin manual.</p>
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2020-01-27 10:47:20
+Build Date UTC : 2020-02-22 12:52:28
 -->
