@@ -469,6 +469,14 @@ class CMakeLinter(object):
             if len(info.conditionals) > 0:
                 info.conditionals.pop()
 
+    def _handle_find_package(self, module, info):
+        SPECIAL_CASES = {"yaml-cpp": "YAML_CPP"}
+        name = SPECIAL_CASES.get(module, module)
+        info.var["%s_INCLUDE_DIRS" % name] = info.find_package_path(module, "include")
+        info.var["%s_INCLUDE_DIRS" % name.upper()] = info.find_package_path(module, "include")
+        info.var["%s_LIBRARIES" % name] = posixpath.join(info.find_package_path(module, "lib"), "library.so")
+        info.var["%s_LIBRARIES" % name.upper()] = posixpath.join(info.find_package_path(module, "lib"), "library.so")
+
     def execute_hook(self, info, other_cmd, args):
         cmd = other_cmd.lower()
         if cmd not in self._running_hooks:
@@ -510,10 +518,7 @@ class CMakeLinter(object):
                     self._subdirectory(info, args)
                     self._running_hooks = saved_hooks
                 if cmd == "find_package":
-                    info.var["%s_INCLUDE_DIRS" % args[0]] = info.find_package_path(args[0], "include")
-                    info.var["%s_INCLUDE_DIRS" % args[0].upper()] = info.find_package_path(args[0], "include")
-                    info.var["%s_LIBRARIES" % args[0]] = posixpath.join(info.find_package_path(args[0], "lib"), "library.so")
-                    info.var["%s_LIBRARIES" % args[0].upper()] = posixpath.join(info.find_package_path(args[0], "lib"), "library.so")
+                    self._handle_find_package(args[0], info)
                     info.find_packages.add(args[0])
                 if cmd == "add_executable":
                     info.targets.add(args[0])
