@@ -57,7 +57,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
             long_text = re.sub(r" +", " ", long_text)
             long_text = long_text.strip()
             short_text = short_text.strip()
-            messages[(short_text, key.lower())] = (long_text, ", ".join(list(severity[key])))
+            messages[(short_text, key.lower())] = (long_text, ", ".join(sorted(severity[key], key=lambda x: {"error": 0, "warning": 1, "notice": 2}.get(x))))
         for msg, key in sorted(messages.keys()):
             long_text, severities = messages[(msg, key)]
             f.write("## %s\n\n" % msg)

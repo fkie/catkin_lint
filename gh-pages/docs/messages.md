@@ -66,13 +66,13 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## <i>cmd</i>() uses file '<i>file</i>' which is not in package
 
 - **ID**: external_file
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: This catkin command uses a file which lies outside of the package source folder. While this may work in your particular setup, you cannot assume file locations in general. Use <code>find_file()</code> to detect external locations insteed.
 
 ## <i>export</i> plugin file '<i>file</i>' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}
 
 - **ID**: uninstalled_plugin
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: Your package can be used from the devel space but cannot be installed properly, because a plugin declaration file which is listed in your package.xml is not installed to the correct location.
 
 ## <i>export</i> plugin file reference must start with '${prefix}/'
@@ -156,7 +156,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## catkin_package() exports package include path that is not installed
 
 - **ID**: uninstalled_include_path
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: Your package can be used from the devel space but cannot be installed properly, because the header files will not be copied to the proper location.
 
 ## catkin_package() exports pkg-config module '<i>pkg</i>'
@@ -228,7 +228,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## exported library '<i>target</i>' is not installed
 
 - **ID**: uninstalled_export_lib
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: Your package can be used from the devel space but cannot be installed properly, because a library that is exported via <code>catkin_package()</code> will not be copied to the proper location.
 
 ## exported package include path but no exported library
@@ -264,7 +264,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## find_package(<i>pkg</i>) has no REQUIRED option
 
 - **ID**: missing_required
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: The package cannot build without this dependency, so it should be marked as REQUIRED accordingly. Use <code>if(<i>pkg</i>_FOUND)</code> clauses to use optional packages.
 
 ## generate_messages() called but no message declared
