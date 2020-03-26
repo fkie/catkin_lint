@@ -1064,7 +1064,7 @@ class ChecksBuildTest(unittest.TestCase):
             catkin_package()
             """,
                            checks=cc.exports)
-        self.assertEqual(["SUGGEST_CATKIN_DEPEND"], result)
+        self.assertEqual(["MISSING_CATKIN_DEPEND"], result)
 
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,

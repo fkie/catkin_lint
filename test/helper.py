@@ -32,6 +32,13 @@ def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "
     env = CatkinEnvironment(use_rosdep=False, use_cache=False)
     env.known_catkin_pkgs = set(catkin_pkgs)
     env.known_other_pkgs = set(system_pkgs)
+
+    def mock_get_manifest(name):
+        if name in catkin_pkgs:
+            return create_manifest(name, description="mocked %s" % name, buildtool_depends=["catkin"] if name != "catkin" else [], run_depends=["message_runtime"] if name.endswith("_msgs") or name == "dynamic_reconfigure" else [])
+        return None
+
+    env.get_manifest = mock_get_manifest
     return env
 
 

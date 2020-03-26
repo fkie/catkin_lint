@@ -360,8 +360,15 @@ def exports(linter):
                 else:
                     info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export", file_location=("package.xml", 0))
         for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
-            if re.search(r"_(msg|message)s?(_|$)", pkg) and info.env.is_catkin_pkg(pkg):
-                info.report(WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg, file_location=info.location_of("catkin_package"))
+            if info.env.is_catkin_pkg(pkg) and info.env.ok:
+                try:
+                    pkg_manifest = info.env.get_manifest(pkg)
+                    for dep in pkg_manifest.exec_depends:
+                        if dep.name == "message_runtime":
+                            info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg=pkg, file_location=info.location_of("catkin_package"))
+                            break
+                except KeyError:
+                    pass
         if info.export_includes and info.libraries and not info.export_libs:
             info.report(WARNING, "MISSING_EXPORT_LIB", file_location=info.location_of("catkin_package"))
         if info.executables or info.libraries:
