@@ -351,13 +351,13 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="cmd-uses-file-file-which-is-not-in-package"><i>cmd</i>() uses file '<i>file</i>' which is not in package</h2>
 <ul>
 <li><strong>ID</strong>: external_file</li>
-<li><strong>Severity</strong>: warning, error</li>
+<li><strong>Severity</strong>: error, warning</li>
 <li><strong>Explanation</strong>: This catkin command uses a file which lies outside of the package source folder. While this may work in your particular setup, you cannot assume file locations in general. Use <code>find_file()</code> to detect external locations insteed.</li>
 </ul>
 <h2 id="export-plugin-file-file-is-not-installed-to-catkin_package_share_destination"><i>export</i> plugin file '<i>file</i>' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}</h2>
 <ul>
 <li><strong>ID</strong>: uninstalled_plugin</li>
-<li><strong>Severity</strong>: warning, error</li>
+<li><strong>Severity</strong>: error, warning</li>
 <li><strong>Explanation</strong>: Your package can be used from the devel space but cannot be installed properly, because a plugin declaration file which is listed in your package.xml is not installed to the correct location.</li>
 </ul>
 <h2 id="export-plugin-file-reference-must-start-with-prefix"><i>export</i> plugin file reference must start with '${prefix}/'</h2>
@@ -441,7 +441,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="catkin_package-exports-package-include-path-that-is-not-installed">catkin_package() exports package include path that is not installed</h2>
 <ul>
 <li><strong>ID</strong>: uninstalled_include_path</li>
-<li><strong>Severity</strong>: warning, error</li>
+<li><strong>Severity</strong>: error, warning</li>
 <li><strong>Explanation</strong>: Your package can be used from the devel space but cannot be installed properly, because the header files will not be copied to the proper location.</li>
 </ul>
 <h2 id="catkin_package-exports-pkg-config-module-pkg">catkin_package() exports pkg-config module '<i>pkg</i>'</h2>
@@ -513,7 +513,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="exported-library-target-is-not-installed">exported library '<i>target</i>' is not installed</h2>
 <ul>
 <li><strong>ID</strong>: uninstalled_export_lib</li>
-<li><strong>Severity</strong>: warning, error</li>
+<li><strong>Severity</strong>: error, warning</li>
 <li><strong>Explanation</strong>: Your package can be used from the devel space but cannot be installed properly, because a library that is exported via <code>catkin_package()</code> will not be copied to the proper location.</li>
 </ul>
 <h2 id="exported-package-include-path-but-no-exported-library">exported package include path but no exported library</h2>
@@ -549,7 +549,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <h2 id="find_packagepkg-has-no-required-option">find_package(<i>pkg</i>) has no REQUIRED option</h2>
 <ul>
 <li><strong>ID</strong>: missing_required</li>
-<li><strong>Severity</strong>: warning, error</li>
+<li><strong>Severity</strong>: error, warning</li>
 <li><strong>Explanation</strong>: The package cannot build without this dependency, so it should be marked as REQUIRED accordingly. Use <code>if(<i>pkg</i>_FOUND)</code> clauses to use optional packages.</li>
 </ul>
 <h2 id="generate_messages-called-but-no-message-declared">generate_messages() called but no message declared</h2>
