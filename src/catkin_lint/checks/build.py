@@ -30,9 +30,8 @@
 
 import os
 import posixpath
-import re
 import stat
-from ..linter import ERROR, WARNING, NOTICE, PathConstants
+from ..linter import ERROR, WARNING, NOTICE, PathConstants, PathClass
 from ..cmake import argparse as cmake_argparse
 from ..util import iteritems, is_sorted
 from .manifest import depends as manifest_depends
@@ -53,8 +52,21 @@ def includes(linter):
         includes = set([info.source_relative_path(d) for d in args])
         info.build_includes |= includes
 
+    def on_target_include_directories(info, cmd, args):
+        opts, args = cmake_argparse(args, {"BEFORE": "-", "SYSTEM": "-", "PRIVATE": "*", "PUBLIC": "*", "INTERFACE": "*"})
+        for scope in ["PUBLIC", "PRIVATE", "INTERFACE"]:
+            for incl in opts[scope]:
+                if not info.is_valid_path(incl):
+                    info.report(WARNING, "EXTERNAL_DIRECTORY", cmd=cmd, directory=info.report_path(incl))
+                elif scope != "PRIVATE" and not info.is_valid_path(incl, valid=[PathClass.SOURCE]):
+                    info.report(WARNING, "BAD_INTERFACE_DIRECTORY", cmd=cmd, scope=scope, directory=info.report_path(incl))
+                if not info.is_existing_path(incl, check=os.path.isdir):
+                    info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(incl))
+                info.build_includes.add(info.source_relative_path(incl))
+
     linter.add_init_hook(on_init)
     linter.add_command_hook("include_directories", on_include_directories)
+    linter.add_command_hook("target_include_directories", on_target_include_directories)
 
 
 def targets(linter):
@@ -85,8 +97,10 @@ def targets(linter):
             info.target_links[args[0]] = set()
 
     def on_target_link_libraries(info, cmd, args):
+        opts, args = cmake_argparse(args, {"PUBLIC": "*", "PRIVATE": "*", "INTERFACE": "*"})
+        deps = opts["PUBLIC"] + opts["PRIVATE"] + opts["INTERFACE"] or args[1:]
         if args[0] in info.target_links:
-            info.target_links[args[0]] |= set([d for d in args[1:] if not os.path.isabs(d)])
+            info.target_links[args[0]] |= set([d for d in deps if not os.path.isabs(d)])
         else:
             info.target_order_violation.add(args[0])
 
@@ -277,7 +291,7 @@ def depends(linter):
 
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep - info.test_dep:
-            if info.env.is_known_pkg(pkg):
+            if info.env.is_known_pkg(pkg) and pkg != "catkin":
                 info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build", file_location=("package.xml", 0))
         for pkg in info.find_packages - info.required_packages - info.checked_packages:
             if info.env.is_catkin_pkg(pkg):
@@ -360,8 +374,15 @@ def exports(linter):
                 else:
                     info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export", file_location=("package.xml", 0))
         for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
-            if re.search(r"_(msg|message)s?(_|$)", pkg) and info.env.is_catkin_pkg(pkg):
-                info.report(WARNING, "SUGGEST_CATKIN_DEPEND", pkg=pkg, file_location=info.location_of("catkin_package"))
+            if info.env.is_catkin_pkg(pkg) and info.env.ok:
+                try:
+                    pkg_manifest = info.env.get_manifest(pkg)
+                    for dep in pkg_manifest.exec_depends:
+                        if dep.name == "message_runtime":
+                            info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg=pkg, file_location=info.location_of("catkin_package"))
+                            break
+                except KeyError:
+                    pass
         if info.export_includes and info.libraries and not info.export_libs:
             info.report(WARNING, "MISSING_EXPORT_LIB", file_location=info.location_of("catkin_package"))
         if info.executables or info.libraries:
@@ -452,7 +473,7 @@ def installs(linter):
 
     def on_install(info, cmd, args):
         install_type = None
-        opts, args = cmake_argparse(args, {"PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "USE_SOURCE_PERMISSIONS": "-"})
+        opts, args = cmake_argparse(args, {"EXPORT": "?", "PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "PATTERN": "?", "EXCLUDE": "-", "USE_SOURCE_PERMISSIONS": "-", "REGEX": "-"})
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:

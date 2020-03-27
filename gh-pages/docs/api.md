@@ -23,6 +23,9 @@ exception. In particular, tests must not require themselves.
 
 ## register_message()
 
+!!! note
+    This method was added in version 1.6.6
+
 ```python
 linter.register_message(msg_id, text, description=None)
 ```
@@ -37,8 +40,6 @@ describes the problem. The description can be a paragraph
 or two for a more in-depth explanation. The description will reformat
 line breaks automatically to adjust for different terminal widths.
 Also, you can have placeholders of the form `${keyword}s`.
-
-This method was added in version 1.6.6
 
 ## add_init_hook()
 

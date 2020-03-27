@@ -66,13 +66,13 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## <i>cmd</i>() uses file '<i>file</i>' which is not in package
 
 - **ID**: external_file
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: This catkin command uses a file which lies outside of the package source folder. While this may work in your particular setup, you cannot assume file locations in general. Use <code>find_file()</code> to detect external locations insteed.
 
 ## <i>export</i> plugin file '<i>file</i>' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}
 
 - **ID**: uninstalled_plugin
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: Your package can be used from the devel space but cannot be installed properly, because a plugin declaration file which is listed in your package.xml is not installed to the correct location.
 
 ## <i>export</i> plugin file reference must start with '${prefix}/'
@@ -99,17 +99,11 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: Some macros have been deprecated and replaced by newer versions. Please upgrade your CMakeLists.txt to ensure compatibility with future caktin versions.
 
-## <i>type</i>_depend '<i>pkg</i>' is not listed in catkin_package()
-
-- **ID**: missing_catkin_depend
-- **Severity**: error
-- **Explanation**: You have a catkin runtime dependency which is not exported in the CATKIN_DEPENDS stanza of the <code>catkin_package()</code>.
-
 ## <i>wrong_type</i>_depend '<i>pkg</i>' should be a <i>right_type</i>_depend
 
 - **ID**: wrong_depend
 - **Severity**: error
-- **Explanation**: You have listed a package as the wrong dependency type. build_depends are needed to build your package (as in compile the declared executables and libraries). run_depends are needed at runtime to run the nodes or use the libraries and exported headers in other projects. buildtool_depends are significant only for cross-compiling; in that case, buildtool_depends are host architecture (and run during the build process) while build_depends are target architecture (and are linked against). test_depends are additional run_depends which only apply to unit tests.
+- **Explanation**: You have listed a package as the wrong dependency type. The catkin build system defines a number of different dependencies for building a package, running its nodes or linking against its libraries. As a general rule, buildtool_depends are needed to build the package, build_depends are non-transitive build dependencies which are not visible to users of your package, build_export_depends are publicly visible transitive dependencies, exec_depends are needed at runtime, and test_depends are for unit tests only.
 
 ## CMake module '<i>old_module</i>' is deprecated, use '<i>new_module</i>' instead
 
@@ -135,6 +129,24 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: The <code>catkin_metapackage()</code> command signals your intent to declare a meta package, but the package.xml does not contain a <meta> tag.
 
+## catkin_package() dependency '<i>pkg</i>' belongs in CATKIN_DEPENDS
+
+- **ID**: catkin_as_system_depend
+- **Severity**: error
+- **Explanation**: In your <code>catkin_package()</code> call, you have listed a catkin package in the DEPENDS stanza, but it belongs in the CATKIN_DEPENDS stanza instead.
+
+## catkin_package() dependency '<i>pkg</i>' belongs in DEPENDS
+
+- **ID**: system_as_catkin_depend
+- **Severity**: error
+- **Explanation**: In your <code>catkin_package()</code> call, you have listed a system dependency in the CATKIN_DEPENDS stanza, but it belongs in the DEPENDS stanza instead.
+
+## catkin_package() dependency '<i>pkg</i>' is not configured properly
+
+- **ID**: unconfigured_system_depend
+- **Severity**: error
+- **Explanation**: In order to export a system package as dependency, you must either call <code>find_package(<i>pkg</i>)</code> first or initialize the <i>pkg</i>_INCLUDE_DIRS and <i>pkg</i>_LIBRARIES variables manually.
+
 ## catkin_package() exports non-package include path
 
 - **ID**: external_include_path
@@ -144,7 +156,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## catkin_package() exports package include path that is not installed
 
 - **ID**: uninstalled_include_path
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: Your package can be used from the devel space but cannot be installed properly, because the header files will not be copied to the proper location.
 
 ## catkin_package() exports pkg-config module '<i>pkg</i>'
@@ -158,24 +170,6 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **ID**: wrong_catkin_package
 - **Severity**: error
 - **Explanation**: Meta packages use the <code>catkin_metapackage()</code> command to declare a meta package. This performs additional checks and ensures that all requirements are met.
-
-## catkin_package() lists '<i>pkg</i>' as catkin package but it is not
-
-- **ID**: system_as_catkin_depend
-- **Severity**: error
-- **Explanation**: In your <code>catkin_package()</code> call, you have listed a system dependency in the CATKIN_DEPENDS stanza, but it belongs in the DEPENDS stanza instead.
-
-## catkin_package() lists '<i>pkg</i>' as system package but it is not
-
-- **ID**: catkin_as_system_depend
-- **Severity**: error
-- **Explanation**: In your <code>catkin_package()</code> call, you have listed a catkin package in the DEPENDS stanza, but it belongs in the CATKIN_DEPENDS stanza instead.
-
-## catkin_package() lists unconfigured system package '<i>pkg</i>'
-
-- **ID**: unconfigured_system_depend
-- **Severity**: error
-- **Explanation**: In order to export a system package as dependency, you must either call <code>find_package(<i>pkg</i>)</code> first or initialize the <i>pkg</i>_INCLUDE_DIRS and <i>pkg</i>_LIBRARIES variables manually.
 
 ## condition '<i>cond</i>' is ambiguous
 
@@ -234,7 +228,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## exported library '<i>target</i>' is not installed
 
 - **ID**: uninstalled_export_lib
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: Your package can be used from the devel space but cannot be installed properly, because a library that is exported via <code>catkin_package()</code> will not be copied to the proper location.
 
 ## exported package include path but no exported library
@@ -270,7 +264,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 ## find_package(<i>pkg</i>) has no REQUIRED option
 
 - **ID**: missing_required
-- **Severity**: warning, error
+- **Severity**: error, warning
 - **Explanation**: The package cannot build without this dependency, so it should be marked as REQUIRED accordingly. Use <code>if(<i>pkg</i>_FOUND)</code> clauses to use optional packages.
 
 ## generate_messages() called but no message declared
@@ -399,11 +393,11 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: notice
 - **Explanation**: The catkin manual recommends that <code>if()</code> conditions with string operators should have the operands enclosed in double quotes.
 
-## package '<i>pkg</i>' should be listed in catkin_package()
+## package '<i>pkg</i>' must be in CATKIN_DEPENDS in catkin_package()
 
-- **ID**: suggest_catkin_depend
-- **Severity**: warning
-- **Explanation**: Your package configures another package as build dependency, it is listed as run_depend in your package.xml, and its name suggests that it contains ROS messages. In that case, you must add it to the CATKIN_DEPENDS stanza of your <code>catkin_package()</code>
+- **ID**: missing_catkin_depend
+- **Severity**: error
+- **Explanation**: You have a runtime dependency that you must add to the CATKIN_DEPENDS stanza of your <code>catkin_package()</code>.
 
 ## package description starts with boilerplate '<i>text</i>'
 

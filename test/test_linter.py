@@ -1,7 +1,7 @@
 import unittest
 import sys  # noqa
 import os
-from catkin_lint.linter import CMakeLinter, LintInfo, PathConstants
+from catkin_lint.linter import CMakeLinter, LintInfo, PathConstants, ERROR
 from .helper import create_env, create_manifest, mock_lint, patch, posix_and_nt
 import catkin_lint.checks.build as cc
 import catkin_lint.environment
@@ -465,3 +465,36 @@ class LinterTest(unittest.TestCase):
                         }, checks=None, return_var=True
                         )
         self.assertEqual("subdir", var["foo"])
+
+    def test_register_message(self):
+        """Test custom messages"""
+
+        def custom_invalid_id(linter):
+            linter.register_message("invalid", "invalid message")
+
+        def custom_invalid_text(linter):
+            linter.register_message("X_INVALID", "message text has \n newline in it")
+
+        def custom_duplicate_id(linter):
+            linter.register_message("X_DUPLICATE", "message")
+            linter.register_message("X_DUPLICATE", "different message")
+
+        def custom_empty_text(linter):
+            linter.register_message("X_TEST", "")
+
+        def custom_ok(linter):
+            def on_final(info):
+                info.report(ERROR, "X_TEST")
+            linter.register_message("X_TEST", "test message")
+            linter.add_final_hook(on_final)
+
+        env = create_env()
+        pkg = create_manifest("mock")
+        self.assertRaises(ValueError, mock_lint, env, pkg, "", checks=custom_invalid_id)
+        self.assertRaises(ValueError, mock_lint, env, pkg, "", checks=custom_invalid_text)
+        self.assertRaises(ValueError, mock_lint, env, pkg, "", checks=custom_empty_text)
+        self.assertRaises(ValueError, mock_lint, env, pkg, "", checks=custom_duplicate_id)
+        result = mock_lint(env, pkg, "", checks=custom_ok)
+        self.assertEqual(["X_TEST"], result)
+        result = mock_lint(env, pkg, "", checks=custom_ok)
+        self.assertEqual(["X_TEST"], result)

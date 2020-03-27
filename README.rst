@@ -9,7 +9,6 @@ catkin_lint
 I generally recommend that you install **catkin_lint** from my Ubuntu PPA or use the pre-built packages for your Linux distribution. Use the PyPI version if your distribution does not ship **catkin_lint** or you absolutely need the latest release. The version in the ROS Package Archives is updated only once in a while.
 
 * `Debian packages <https://packages.debian.org/catkin-lint>`_
-* `Fedora packages <https://apps.fedoraproject.org/packages/python-catkin_lint>`_
 * `Ubuntu packages <https://packages.ubuntu.com/catkin-lint>`_
 * `ROS Package Archive <http://packages.ros.org/ros/ubuntu/pool/main/c/catkin-lint/>`_
 * `Timo's Ubuntu PPA <https://launchpad.net/~roehling/+archive/latest>`_
