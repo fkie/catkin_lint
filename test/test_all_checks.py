@@ -111,10 +111,12 @@ class CatkinInvokationTest(unittest.TestCase):
             f.write('</package>\n')
         with open(os.path.join(pkgdir, "CMakeLists.txt"), "w") as f:
             f.write(
-                'project(%s)\n' % name +
-                'find_package(catkin REQUIRED ' +
-                (('COMPONENTS ' + ' '.join(dep for dep in depends)) if depends else '') + ')\n'
-                'catkin_package()'
+                'project(%(name)s)\n'
+                'find_package(catkin REQUIRED %(components)s)\n'
+                'catkin_package()\n' % {
+                    "name": name,
+                    "components": ('COMPONENTS ' + ' '.join(dep for dep in depends)) if depends else ''
+                }
             )
         os.makedirs(os.path.join(pkgdir, ".git"))
         with open(os.path.join(pkgdir, ".git", "script"), "w") as f:
