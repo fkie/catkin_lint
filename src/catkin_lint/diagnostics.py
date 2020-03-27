@@ -239,6 +239,14 @@ message_list = {
         This catkin command processes a particular directory which is missing
         from the package source folder.
         """),
+    "BAD_INTERFACE_DIRECTORY":
+    ("%(cmd)s() has foreign %(scope)s path '%(directory)s'",
+        """\
+        All properties of targets are exported hardcoded, so you must not export
+        any public paths if they do not belong to your package. Otherwise, they
+        will potentially break if your CMake targets are imported again on a
+        different machine. Use the PRIVATE scope instead.
+        """),
     "WRONG_INSTALL_DESTINATION":
     ("install(%(type)s ... %(dest)s) does not install to ${CATKIN_INSTALL_PREFIX}",
         """\

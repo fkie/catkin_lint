@@ -30,9 +30,8 @@
 
 import os
 import posixpath
-import re
 import stat
-from ..linter import ERROR, WARNING, NOTICE, PathConstants
+from ..linter import ERROR, WARNING, NOTICE, PathConstants, PathClass
 from ..cmake import argparse as cmake_argparse
 from ..util import iteritems, is_sorted
 from .manifest import depends as manifest_depends
@@ -53,8 +52,21 @@ def includes(linter):
         includes = set([info.source_relative_path(d) for d in args])
         info.build_includes |= includes
 
+    def on_target_include_directories(info, cmd, args):
+        opts, args = cmake_argparse(args, {"BEFORE": "-", "SYSTEM": "-", "PRIVATE": "*", "PUBLIC": "*", "INTERFACE": "*"})
+        for scope in ["PUBLIC", "PRIVATE", "INTERFACE"]:
+            for incl in opts[scope]:
+                if not info.is_valid_path(incl):
+                    info.report(WARNING, "EXTERNAL_DIRECTORY", cmd=cmd, directory=info.report_path(incl))
+                elif scope != "PRIVATE" and not info.is_valid_path(incl, valid=[PathClass.SOURCE]):
+                    info.report(WARNING, "BAD_INTERFACE_DIRECTORY", cmd=cmd, scope=scope, directory=info.report_path(incl))
+                if not info.is_existing_path(incl, check=os.path.isdir):
+                    info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(incl))
+                info.build_includes.add(info.source_relative_path(incl))
+
     linter.add_init_hook(on_init)
     linter.add_command_hook("include_directories", on_include_directories)
+    linter.add_command_hook("target_include_directories", on_target_include_directories)
 
 
 def targets(linter):

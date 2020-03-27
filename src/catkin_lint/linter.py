@@ -155,6 +155,8 @@ class LintInfo(object):
         new_path = path.replace(PathConstants.PACKAGE_BINARY, "${PROJECT_BUILD_DIR}")
         new_path = new_path.replace(PathConstants.CATKIN_DEVEL, "${CATKIN_DEVEL_PREFIX}")
         new_path = new_path.replace(PathConstants.CATKIN_INSTALL, "${CATKIN_INSTALL_PREFIX}")
+        new_path = re.sub(self.find_package_path("([^/]+)", "include"), "${\1_INCLUDE_DIRS}", new_path)
+        new_path = re.sub(self.find_package_path("([^/]+)", "lib/library.so"), "${\1_LIBRARIES}", new_path)
         if new_path.startswith(PathConstants.PACKAGE_SOURCE):
             return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
         return posixpath.normpath(new_path)
