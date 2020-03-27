@@ -659,5 +659,8 @@ def msg(msg_id, **kwargs):
 
 def add_user_defined_msg(msg_id, text, explanation):
     if msg_id in message_list:
-        raise ValueError("duplicate message ID: %s" % msg_id)
-    message_list[msg_id] = (text, explanation)
+        old_text, old_explanation = message_list[msg_id]
+        if text != old_text or explanation != old_explanation:
+            raise ValueError("Conflicting definitions for message ID: %s" % msg_id)
+    else:
+        message_list[msg_id] = (text, explanation)
