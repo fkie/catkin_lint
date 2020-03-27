@@ -150,12 +150,6 @@ message_list = {
         nor a known system dependency. You may have misspelled the name, or your
         rosdep database needs to be refreshed with "rosdep update".
         """),
-    "MISSING_CATKIN_DEPEND":
-    ("%(type)s_depend '%(pkg)s' is not listed in catkin_package()",
-        """\
-        You have a catkin runtime dependency which is not exported in the
-        CATKIN_DEPENDS stanza of the catkin_package().
-        """),
     "INVALID_META_COMMAND":
     ("%(cmd)s() is not allowed in meta packages",
         """\
@@ -245,6 +239,14 @@ message_list = {
         This catkin command processes a particular directory which is missing
         from the package source folder.
         """),
+    "BAD_INTERFACE_DIRECTORY":
+    ("%(cmd)s() has foreign %(scope)s path '%(directory)s'",
+        """\
+        All properties of targets are exported hardcoded, so you must not export
+        any public paths if they do not belong to your package. Otherwise, they
+        will potentially break if your CMake targets are imported again on a
+        different machine. Use the PRIVATE scope instead.
+        """),
     "WRONG_INSTALL_DESTINATION":
     ("install(%(type)s ... %(dest)s) does not install to ${CATKIN_INSTALL_PREFIX}",
         """\
@@ -297,13 +299,12 @@ message_list = {
     "WRONG_DEPEND":
     ("%(wrong_type)s_depend '%(pkg)s' should be a %(right_type)s_depend",
         """\
-        You have listed a package as the wrong dependency type. build_depends are needed
-        to build your package (as in compile the declared executables and libraries).
-        run_depends are needed at runtime to run the nodes or use the libraries
-        and exported headers in other projects. buildtool_depends are significant only
-        for cross-compiling; in that case, buildtool_depends are host architecture (and run
-        during the build process) while build_depends are target architecture (and are
-        linked against). test_depends are additional run_depends which only apply to unit tests.
+        You have listed a package as the wrong dependency type. The catkin build system
+        defines a number of different dependencies for building a package, running its nodes
+        or linking against its libraries. As a general rule, buildtool_depends are needed
+        to build the package, build_depends are non-transitive build dependencies which are not visible
+        to users of your package, build_export_depends are publicly visible transitive dependencies,
+        exec_depends are needed at runtime, and test_depends are for unit tests only.
         """),
     "UNUSED_GENERATE_MSG":
     ("generate_messages() called but no message declared",
@@ -320,19 +321,19 @@ message_list = {
         and add_action_files() respectively.
         """),
     "SYSTEM_AS_CATKIN_DEPEND":
-    ("catkin_package() lists '%(pkg)s' as catkin package but it is not",
+    ("catkin_package() dependency '%(pkg)s' belongs in DEPENDS",
         """\
         In your catkin_package() call, you have listed a system dependency in the
         CATKIN_DEPENDS stanza, but it belongs in the DEPENDS stanza instead.
         """),
     "CATKIN_AS_SYSTEM_DEPEND":
-    ("catkin_package() lists '%(pkg)s' as system package but it is not",
+    ("catkin_package() dependency '%(pkg)s' belongs in CATKIN_DEPENDS",
         """\
         In your catkin_package() call, you have listed a catkin package in the
         DEPENDS stanza, but it belongs in the CATKIN_DEPENDS stanza instead.
         """),
     "UNCONFIGURED_SYSTEM_DEPEND":
-    ("catkin_package() lists unconfigured system package '%(pkg)s'",
+    ("catkin_package() dependency '%(pkg)s' is not configured properly",
         """\
         In order to export a system package as dependency, you must either
         call find_package(%(pkg)s) first or initialize the %(pkg)s_INCLUDE_DIRS and
@@ -431,13 +432,11 @@ message_list = {
         library export function will break if the logical target name is not
         equal to the actual library name.
         """),
-    "SUGGEST_CATKIN_DEPEND":
-    ("package '%(pkg)s' should be listed in catkin_package()",
+    "MISSING_CATKIN_DEPEND":
+    ("package '%(pkg)s' must be in CATKIN_DEPENDS in catkin_package()",
         """\
-        Your package configures another package as build dependency, it is listed as
-        run_depend in your package.xml, and its name suggests
-        that it contains ROS messages. In that case, you must add it to the
-        CATKIN_DEPENDS stanza of your catkin_package()
+        You have a runtime dependency that
+        you must add to the CATKIN_DEPENDS stanza of your catkin_package().
         """),
     "UNDEFINED_TARGET":
     ("referenced target '%(target)s' is not defined",
@@ -660,5 +659,8 @@ def msg(msg_id, **kwargs):
 
 def add_user_defined_msg(msg_id, text, explanation):
     if msg_id in message_list:
-        raise ValueError("duplicate message ID: %s" % msg_id)
-    message_list[msg_id] = (text, explanation)
+        old_text, old_explanation = message_list[msg_id]
+        if text != old_text or explanation != old_explanation:
+            raise ValueError("Conflicting definitions for message ID: %s" % msg_id)
+    else:
+        message_list[msg_id] = (text, explanation)

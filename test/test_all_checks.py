@@ -57,14 +57,23 @@ class DummyDist(object):
     def get_release_package_xml(self, name):
         if name == "roscpp":
             raise KeyError("Mock error")
-        if name == "rospy":
+        if name in ["rospy", "message_runtime"]:
             return '''<package format="2">
-                <name>rospy</name>
+                <name>%s</name>
                 <version>0.0.0</version>
                 <description>Mock package</description>
                 <maintainer email="mock@example.com">Mister Mock</maintainer>
                 <license>none</license>
-            </package>'''
+            </package>''' % name
+        if "msg" in name:
+            return '''<package format="2">
+                <name>%s</name>
+                <version>0.0.0</version>
+                <description>Mock package</description>
+                <maintainer email="mock@example.com">Mister Mock</maintainer>
+                <exec_depend>message_runtime</exec_depend>
+                <license>none</license>
+            </package>''' % name
         return None
 
 
@@ -102,10 +111,12 @@ class CatkinInvokationTest(unittest.TestCase):
             f.write('</package>\n')
         with open(os.path.join(pkgdir, "CMakeLists.txt"), "w") as f:
             f.write(
-                'project(%s)\n' % name +
-                'find_package(catkin REQUIRED ' +
-                (('COMPONENTS ' + ' '.join(dep for dep in depends)) if depends else '') + ')\n'
-                'catkin_package()'
+                'project(%(name)s)\n'
+                'find_package(catkin REQUIRED %(components)s)\n'
+                'catkin_package()\n' % {
+                    "name": name,
+                    "components": ('COMPONENTS ' + ' '.join(dep for dep in depends)) if depends else ''
+                }
             )
         os.makedirs(os.path.join(pkgdir, ".git"))
         with open(os.path.join(pkgdir, ".git", "script"), "w") as f:
@@ -116,7 +127,7 @@ class CatkinInvokationTest(unittest.TestCase):
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
-        print("RUN:" + " ".join(argv))
+        print("RUN: " + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
         catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -132,7 +143,7 @@ class CatkinInvokationTest(unittest.TestCase):
     @patch("rosdistro.get_index", get_dummy_index)
     @patch("rosdistro.get_cached_distribution", raise_io_error)
     def run_catkin_lint_without_rosdistro(self, *argv):
-        print("RUN:" + " ".join(argv))
+        print("RUN: " + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
         catkin_lint.ros._rosdistro_cache = {}
         parser = prepare_arguments(argparse.ArgumentParser())
@@ -152,7 +163,6 @@ class CatkinInvokationTest(unittest.TestCase):
         self.fake_package("gamma", ["missing"], wsdir=self.upstream_ws)
         self.fake_package("invalid_dep", ["boost"], wsdir=self.upstream_ws)
         self.fake_package("delta", ["std_msgs"], wsdir=self.upstream_ws)
-        self.fake_package("std_msgs", [], wsdir=self.upstream_ws)
         self.homedir = mkdtemp()
         self.wsdir = mkdtemp()
         self.ws_srcdir = os.path.join(self.wsdir, "src")
@@ -252,29 +262,28 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 2 packages and found 0 problems", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0")
-        self.assertEqual(exitcode, 0)
-        self.assertIn("additional warning", stdout)
-
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "suggest_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "missing_catkin_depend")
         self.assertEqual(exitcode, 0)
         self.assertIn("messages have been ignored", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "suggest_catkin_depend", "--show-ignored")
-        self.assertEqual(exitcode, 0)
-        self.assertIn("package 'std_msgs' should be listed in catkin_package()", stdout)
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "missing_catkin_depend", "--show-ignored")
+        self.assertIn("package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "suggest_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "missing_catkin_depend")
         self.assertEqual(exitcode, 0)
-        self.assertIn("notice: package 'std_msgs' should be listed in catkin_package()", stdout)
+        self.assertIn("notice: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--warning", "suggest_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--warning", "missing_catkin_depend")
         self.assertEqual(exitcode, 0)
-        self.assertIn("warning: package 'std_msgs' should be listed in catkin_package()", stdout)
+        self.assertIn("warning: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--error", "suggest_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0", "--warning", "missing_catkin_depend")
+        self.assertIn("additional warning", stdout)
+        self.assertEqual(exitcode, 0)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--error", "missing_catkin_depend")
         self.assertEqual(exitcode, 1)
-        self.assertIn("error: package 'std_msgs' should be listed in catkin_package()", stdout)
+        self.assertIn("error: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
         self.assertEqual(exitcode, 1)
