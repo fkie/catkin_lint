@@ -291,7 +291,7 @@ def depends(linter):
 
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep - info.test_dep:
-            if info.env.is_known_pkg(pkg):
+            if info.env.is_known_pkg(pkg) and pkg != "catkin":
                 info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build", file_location=("package.xml", 0))
         for pkg in info.find_packages - info.required_packages - info.checked_packages:
             if info.env.is_catkin_pkg(pkg):
@@ -473,7 +473,7 @@ def installs(linter):
 
     def on_install(info, cmd, args):
         install_type = None
-        opts, args = cmake_argparse(args, {"PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "USE_SOURCE_PERMISSIONS": "-"})
+        opts, args = cmake_argparse(args, {"EXPORT": "?", "PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "PATTERN": "?", "EXCLUDE": "-", "USE_SOURCE_PERMISSIONS": "-", "REGEX": "-"})
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
