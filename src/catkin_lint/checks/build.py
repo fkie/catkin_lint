@@ -97,8 +97,10 @@ def targets(linter):
             info.target_links[args[0]] = set()
 
     def on_target_link_libraries(info, cmd, args):
+        opts, args = cmake_argparse(args, {"PUBLIC": "*", "PRIVATE": "*", "INTERFACE": "*"})
+        deps = opts["PUBLIC"] + opts["PRIVATE"] + opts["INTERFACE"] or args[1:]
         if args[0] in info.target_links:
-            info.target_links[args[0]] |= set([d for d in args[1:] if not os.path.isabs(d)])
+            info.target_links[args[0]] |= set([d for d in deps if not os.path.isabs(d)])
         else:
             info.target_order_violation.add(args[0])
 
