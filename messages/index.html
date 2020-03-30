@@ -63,6 +63,8 @@
         
             <li><a class="toctree-l3" href="#pkg-in-find_packagecatkin-is-not-a-catkin-package">'pkg' in find_package(catkin) is not a catkin package</a></li>
         
+            <li><a class="toctree-l3" href="#cmd-exports-external-scope-path-directory">cmd() exports external scope path 'directory'</a></li>
+        
             <li><a class="toctree-l3" href="#cmd-is-called-before-find_packagecatkin">cmd() is called before find_package(catkin)</a></li>
         
             <li><a class="toctree-l3" href="#cmd-is-not-allowed-in-meta-packages">cmd() is not allowed in meta packages</a></li>
@@ -305,6 +307,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: no_catkin_component</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: The <code>find_package(catkin)</code> call can list other catkin packages as dependencies with the COMPONENTS keyword. This is shorter than multiple <code>find_package()</code> calls, but does not work for system dependencies.</li>
+</ul>
+<h2 id="cmd-exports-external-scope-path-directory"><i>cmd</i>() exports external <i>scope</i> path '<i>directory</i>'</h2>
+<ul>
+<li><strong>ID</strong>: external_interface_path</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: You have exported an include path as part of your interface for dependent targets, but that path does not belong to your package. You probably meant to use the PRIVATE scope if you merely need that include path for your build. If you actually wanted to export the path to your dependees, you hould be aware that target properties will be exported as fixed strings, meaning your installed package will break if that location changes for any reason. A more robust way would be to use <code>target_link_libraries(<i>scope</i>)</code> with the proper imported target instead.</li>
 </ul>
 <h2 id="cmd-is-called-before-find_packagecatkin"><i>cmd</i>() is called before find_package(catkin)</h2>
 <ul>
