@@ -59,7 +59,7 @@ def includes(linter):
                 if not info.is_valid_path(incl):
                     info.report(WARNING, "EXTERNAL_DIRECTORY", cmd=cmd, directory=info.report_path(incl))
                 elif scope != "PRIVATE" and not info.is_valid_path(incl, valid=[PathClass.SOURCE]):
-                    info.report(WARNING, "BAD_INTERFACE_DIRECTORY", cmd=cmd, scope=scope, directory=info.report_path(incl))
+                    info.report(WARNING, "EXTERNAL_INTERFACE_PATH", cmd=cmd, scope=scope, directory=info.report_path(incl))
                 if not info.is_existing_path(incl, check=os.path.isdir):
                     info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(incl))
                 info.build_includes.add(info.source_relative_path(incl))

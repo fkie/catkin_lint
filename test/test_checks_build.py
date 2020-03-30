@@ -24,7 +24,7 @@ class ChecksBuildTest(unittest.TestCase):
         result = mock_lint(env, pkg, "target_include_directories(mock PUBLIC /some/hardcoded/path)", checks=cc.includes)
         self.assertEqual(["EXTERNAL_DIRECTORY"], result)
         result = mock_lint(env, pkg, "find_package(catkin REQUIRED) target_include_directories(mock PUBLIC ${catkin_INCLUDE_DIRS})", checks=cc.includes)
-        self.assertEqual(["BAD_INTERFACE_DIRECTORY"], result)
+        self.assertEqual(["EXTERNAL_INTERFACE_PATH"], result)
         result = mock_lint(env, pkg, "find_package(catkin REQUIRED) include_directories(${catkin_INCLUDE_DIRS})", checks=cc.includes)
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "include_directories(missing_include)", checks=cc.includes)
