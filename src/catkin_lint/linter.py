@@ -152,14 +152,31 @@ class LintInfo(object):
         return new_path
 
     def report_path(self, path):
+        def normalize_part(p):
+            # This is some magic with the "current" dir (.) as anchor so
+            # ".." does not collapse beyond the starting point
+            # Examples:
+            #    ${VAR}/foo/../bar should collapse to ${VAR}/bar
+            #    ${VAR}/../bar should remain as is (and not become ${VAR}/bar or /bar)
+            slash = "/" if p.startswith("/") else ""
+            np = posixpath.normpath("./" + p)
+            if np == ".":
+                return slash
+            return slash + np
         new_path = path.replace(PathConstants.PACKAGE_BINARY, "${PROJECT_BUILD_DIR}")
         new_path = new_path.replace(PathConstants.CATKIN_DEVEL, "${CATKIN_DEVEL_PREFIX}")
         new_path = new_path.replace(PathConstants.CATKIN_INSTALL, "${CATKIN_INSTALL_PREFIX}")
-        new_path = re.sub(self.find_package_path("([^/]+)", "include"), "${\1_INCLUDE_DIRS}", new_path)
-        new_path = re.sub(self.find_package_path("([^/]+)", "lib/library.so"), "${\1_LIBRARIES}", new_path)
+        new_path = re.sub(self.find_package_path(r"([^/]+)", "include"), r"${\g<1>_INCLUDE_DIRS}", new_path)
+        new_path = re.sub(self.find_package_path(r"([^/]+)", "lib/library.so"), r"${\g<1>_LIBRARIES}", new_path)
         if new_path.startswith(PathConstants.PACKAGE_SOURCE):
             return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
-        return posixpath.normpath(new_path)
+        if new_path == path:
+            # No substitutions, return normalized
+            return posixpath.normpath(path)
+        # Normalize but keep all variable substitutions intact
+        ps = re.split(r"(\${[^}]+})", new_path)
+        ps = [normalize_part(p) if not p.startswith("${") else p for p in ps]
+        return "".join(ps)
 
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))

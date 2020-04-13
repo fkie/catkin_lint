@@ -239,13 +239,18 @@ message_list = {
         This catkin command processes a particular directory which is missing
         from the package source folder.
         """),
-    "BAD_INTERFACE_DIRECTORY":
-    ("%(cmd)s() has foreign %(scope)s path '%(directory)s'",
+    "EXTERNAL_INTERFACE_PATH":
+    ("%(cmd)s() exports external %(scope)s path '%(directory)s'",
         """\
-        All properties of targets are exported hardcoded, so you must not export
-        any public paths if they do not belong to your package. Otherwise, they
-        will potentially break if your CMake targets are imported again on a
-        different machine. Use the PRIVATE scope instead.
+        You have exported an include path as part of your
+        interface for dependent targets,
+        but that path does not belong to your package. You probably meant to use
+        the PRIVATE scope if you merely need that include path for your build.
+        If you actually wanted to export the path to your dependees, you hould
+        be aware that target properties will be exported as fixed strings, meaning
+        your installed package will break if that location changes for any reason.
+        A more robust way would be to use target_link_libraries(%(scope)s) with
+        the proper imported target instead.
         """),
     "WRONG_INSTALL_DESTINATION":
     ("install(%(type)s ... %(dest)s) does not install to ${CATKIN_INSTALL_PREFIX}",

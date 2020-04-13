@@ -230,6 +230,25 @@ class LinterTest(unittest.TestCase):
             """, checks=cc.all, package_path="/package-path/other")
         self.assertEqual(["PACKAGE_PATH_NAME"], result)
 
+    def test_report_path(self):
+        """Test path normalization for diagnostic messages"""
+        env = create_env()
+        info = LintInfo(env)
+        self.assertEqual(info.report_path("test"), "test")
+        self.assertEqual(info.report_path("foo/../bar"), "bar")
+        self.assertEqual(info.report_path("/absolute//stuff"), "/absolute/stuff")
+        self.assertEqual(info.report_path("%s/test" % PathConstants.PACKAGE_SOURCE), "test")
+        self.assertEqual(info.report_path("%s/test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/test")
+        self.assertEqual(info.report_path("%s/test" % PathConstants.CATKIN_DEVEL), "${CATKIN_DEVEL_PREFIX}/test")
+        self.assertEqual(info.report_path("%s/test" % PathConstants.CATKIN_INSTALL), "${CATKIN_INSTALL_PREFIX}/test")
+        self.assertEqual(info.report_path(info.find_package_path("test", "include")), "${test_INCLUDE_DIRS}")
+        self.assertEqual(info.report_path(info.find_package_path("test", "lib/library.so")), "${test_LIBRARIES}")
+        self.assertEqual(info.report_path("%s//test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/test")
+        self.assertEqual(info.report_path("%s/bar/../foo" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/foo")
+        self.assertEqual(info.report_path("%s/../test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/../test")
+        self.assertEqual(info.report_path("%s/../test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/../test")
+        self.assertEqual(info.report_path("//%s%s/bar/../foo" % (PathConstants.CATKIN_DEVEL, PathConstants.PACKAGE_BINARY)), "/${CATKIN_DEVEL_PREFIX}${PROJECT_BUILD_DIR}/foo")
+
     def test_list(self):
         """Test CMake list handling"""
         env = create_env()
