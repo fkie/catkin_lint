@@ -1,3 +1,6 @@
+Version 1.6.8
+  * Fix message output format for paths with variables
+
 Version 1.6.7
   * Add support for target_include_directories()
   * Add support for the new signature of target_link_libraries()

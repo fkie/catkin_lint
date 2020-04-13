@@ -21,6 +21,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: The <code>find_package(catkin)</code> call can list other catkin packages as dependencies with the COMPONENTS keyword. This is shorter than multiple <code>find_package()</code> calls, but does not work for system dependencies.
 
+## <i>cmd</i>() exports external <i>scope</i> path '<i>directory</i>'
+
+- **ID**: external_interface_path
+- **Severity**: warning
+- **Explanation**: You have exported an include path as part of your interface for dependent targets, but that path does not belong to your package. You probably meant to use the PRIVATE scope if you merely need that include path for your build. If you actually wanted to export the path to your dependees, you hould be aware that target properties will be exported as fixed strings, meaning your installed package will break if that location changes for any reason. A more robust way would be to use <code>target_link_libraries(<i>scope</i>)</code> with the proper imported target instead.
+
 ## <i>cmd</i>() is called before find_package(catkin)
 
 - **ID**: catkin_order_violation
