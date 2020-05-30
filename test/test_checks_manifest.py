@@ -114,22 +114,31 @@ class ChecksManifestTest(unittest.TestCase):
         env = create_env()
         open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
         pkg = create_manifest("mock")
-        with patch(open_func, mock_open(read_data='<launch></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
-        with patch(open_func, mock_open(read_data='<launch>')):
+        with patch(open_func, mock_open(read_data=b'<?xml version="1.0"?>\n<launch></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data=b'<?xml version="1.0" encoding="UTF-8"?>\n<launch></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data=b'<?xml version="1.0" encoding="UTF-8"?>\n<launch invalid-utf8="\xFF"></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["PARSE_ERROR"], result)
-        with patch(open_func, mock_open(read_data='<launch><node pkg="$(arg weird)"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["PARSE_ERROR"], result)
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="$(arg weird)"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
-        with patch(open_func, mock_open(read_data='<launch><node pkg="other_system"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="other_system"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
-        with patch(open_func, mock_open(read_data='<launch><node pkg="other_catkin"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="other_catkin"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["LAUNCH_DEPEND"], result)
-        with patch(open_func, mock_open(read_data='<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["LAUNCH_DEPEND"], result)
 
