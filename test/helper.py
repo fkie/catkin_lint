@@ -43,7 +43,7 @@ def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "
 
 
 def create_manifest(name, description="", buildtool_depends=["catkin"], build_depends=[], run_depends=[], test_depends=[], meta=False):
-    return Package(
+    package = Package(
         name=name,
         version="0.0.0",
         package_format=1,
@@ -55,10 +55,12 @@ def create_manifest(name, description="", buildtool_depends=["catkin"], build_de
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
+    package.evaluate_conditions({})
+    return package
 
 
 def create_manifest2(name, description="", buildtool_depends=["catkin"], build_depends=[], depends=[], buildtool_export_depends=[], build_export_depends=[], exec_depends=[], test_depends=[], meta=False):
-    return Package(
+    package = Package(
         name=name,
         version="0.0.0",
         package_format=2,
@@ -73,6 +75,8 @@ def create_manifest2(name, description="", buildtool_depends=["catkin"], build_d
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
+    package.evaluate_conditions({})
+    return package
 
 
 def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_var=False, package_path=None):
