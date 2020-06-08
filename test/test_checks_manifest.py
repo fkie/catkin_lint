@@ -173,7 +173,7 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "", checks=cc.package_description)
         self.assertEqual([], result)
 
-    def test_bla(self):
+    def test_evaluate_conditions(self):
         """Test if dependency conditions are properly evaluated"""
 
         # suppose we have a python2 system
