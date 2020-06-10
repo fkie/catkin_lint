@@ -190,7 +190,7 @@ class LinterTest(unittest.TestCase):
             if ("${varname}")
             endif()
             """, checks=cc.all)
-        self.assertEqual(["AMBIGUOUS_CONDITION"], result)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg,
                            """
             project(mock)

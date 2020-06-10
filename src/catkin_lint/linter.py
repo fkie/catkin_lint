@@ -468,7 +468,7 @@ class CMakeLinter(object):
             return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
-            if len(arg_tokens) == 1 and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1]):
+            if len(arg_tokens) == 1 and arg_tokens[0][0] == "WORD" and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1], re.IGNORECASE):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD":
