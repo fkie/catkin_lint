@@ -176,10 +176,7 @@ class ChecksManifestTest(unittest.TestCase):
     def test_evaluate_conditions(self):
         """Test if dependency conditions are properly evaluated"""
 
-        # suppose we have a python2 system
         env = create_env(system_pkgs=['python-yaml'])
-
-        # and a package that is dual python2 & 3 compatible
         pkg = Package(
             name="mock",
             package_format=3,
@@ -187,7 +184,9 @@ class ChecksManifestTest(unittest.TestCase):
                           Dependency('python3-yaml', condition='$ROS_PYTHON_VERSION == 3')],
         )
         pkg.evaluate_conditions({'ROS_PYTHON_VERSION': 2})
-
-        # then the lint should not complain about a missing python3-yaml
         result = mock_lint(env, pkg, "", checks=cc.depends)
         self.assertEqual([], result)
+
+        pkg.evaluate_conditions({'ROS_PYTHON_VERSION': 3})
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual(["UNKNOWN_PACKAGE"], result)

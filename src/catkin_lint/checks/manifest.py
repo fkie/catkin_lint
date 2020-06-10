@@ -50,7 +50,7 @@ def depends(linter):
             deps = {dep.name for dep in info.manifest.exec_depends if dep.evaluated_condition}
             info.exec_dep.update(deps)
         if info.manifest.package_format < 2:
-            deps = {dep.name for dep in info.manifest.run_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.run_depends}
             info.export_dep.update(deps)
             info.exec_dep.update(deps)
         info.test_dep = {dep.name for dep in info.manifest.test_depends if dep.evaluated_condition}
