@@ -13,7 +13,7 @@ _catkin_lint_complete()
 	fi
 	if [ "$prev" == "--rosdistro" ]
 	then
-		COMPREPLY=( $( compgen -W "groovy hydro indigo jade kinetic lunar melodic" -- "$arg" ) )
+		COMPREPLY=( $( compgen -W "groovy hydro indigo jade kinetic lunar melodic noetic" -- "$arg" ) )
 		return 0
 	fi
 	if [ "$prev" == "--ignore" -o "$prev" == "--error" -o "$prev" == "--warning" -o "$prev" == "--notice" ]
