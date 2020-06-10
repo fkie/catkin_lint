@@ -468,7 +468,7 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <ul>
 <li><strong>ID</strong>: ambiguous_condition</li>
 <li><strong>Severity</strong>: warning</li>
-<li><strong>Explanation</strong>: Historically, the <code>if()</code> command will interpret a single token as a variable name and transparently resolve it if possible. Explicit variable references like <code>if(${var})</code> can lead to incorrect results if ${var} resolves to a different variable name. Use <code>if(var)</code> instead.</li>
+<li><strong>Explanation</strong>: Historically, the <code>if()</code> command will interpret a single token as a variable name and transparently resolve it if possible. Unquoted variable references like <code>if(${var})</code> can lead to incorrect results if ${var} resolves to a different variable name. Use <code>if(var)</code> or <code>if("${var}")</code> instead.</li>
 </ul>
 <h2 id="duplicate-cmd">duplicate <i>cmd</i>()</h2>
 <ul>
