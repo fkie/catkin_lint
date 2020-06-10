@@ -170,14 +170,14 @@ class LintInfo(object):
             ps = [normalize_partial_path(p) if not p.startswith("${") else p for p in ps]
             return "".join(ps)
 
-        new_path = path.replace(PathConstants.PACKAGE_SOURCE, "${PROJECT_SOURCE_DIR}")
-        new_path = new_path.replace(PathConstants.PACKAGE_BINARY, "${PROJECT_BINARY_DIR}")
+        new_path = path.replace(PathConstants.PACKAGE_SOURCE, "${CMAKE_SOURCE_DIR}")
+        new_path = new_path.replace(PathConstants.PACKAGE_BINARY, "${CMAKE_BINARY_DIR}")
         new_path = new_path.replace(PathConstants.CATKIN_DEVEL, "${CATKIN_DEVEL_PREFIX}")
         new_path = new_path.replace(PathConstants.CATKIN_INSTALL, "${CATKIN_INSTALL_PREFIX}")
         new_path = re.sub(self.find_package_path(r"([^/]+)", "include"), r"${\g<1>_INCLUDE_DIRS}", new_path)
         new_path = re.sub(self.find_package_path(r"([^/]+)", "lib/library.so"), r"${\g<1>_LIBRARIES}", new_path)
-        if new_path.startswith("${PROJECT_SOURCE_DIR}/") and "${" not in new_path[22:]:
-            new_path = new_path[22:]
+        if new_path.startswith("${CMAKE_SOURCE_DIR}/") and "${" not in new_path[20:]:
+            new_path = new_path[20:]
         return normalize_path(new_path)
 
     def real_path(self, path):
@@ -652,6 +652,8 @@ class CMakeLinter(object):
         info.manifest = manifest
         info.conditionals = []
         info.var = {
+            "CMAKE_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
+            "CMAKE_BINARY_DIR": PathConstants.PACKAGE_BINARY,
             "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
             "CMAKE_CURRENT_BINARY_DIR": PathConstants.PACKAGE_BINARY,
             "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "%s/lib" % PathConstants.CATKIN_DEVEL,
@@ -664,7 +666,7 @@ class CMakeLinter(object):
             "CATKIN_PACKAGE_ETC_DESTINATION": "etc/%s" % info.manifest.name,
             "CATKIN_PACKAGE_INCLUDE_DESTINATION": "include/%s" % info.manifest.name,
             "CATKIN_PACKAGE_LIB_DESTINATION": "lib",
-            "CATKIN_PACKAGE_PYTHON_DESTINATION": "lib/python/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_PYTHON_DESTINATION": "lib/python/packages/%s" % info.manifest.name,
             "CATKIN_PACKAGE_SHARE_DESTINATION": "share/%s" % info.manifest.name,
             "CATKIN_GLOBAL_BIN_DESTINATION": "bin",
             "CATKIN_GLOBAL_ETC_DESTINATION": "etc",
