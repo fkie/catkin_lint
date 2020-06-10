@@ -77,6 +77,20 @@ def is_sorted(lst, key=lambda x, y: x < y):
     return True
 
 
+def enumerate_package_files(rootdir, catkin_ignore=True, ignore_dot=True, ignore_unimportant=True):
+    for dirpath, dirnames, filenames in os.walk(rootdir, topdown=True):
+        if "CATKIN_IGNORE" in filenames and catkin_ignore:
+            del dirnames[:]
+        else:
+            if ignore_dot:
+                dirnames[:] = [d for d in dirnames if not d.startswith(".")]
+            if ignore_unimportant:
+                dirnames[:] = [d for d in dirnames if "test" not in d.lower() and "example" not in d.lower() and d != "build"]
+                filenames[:] = [f for f in filenames if "test" not in f.lower() and "example" not in f.lower()]
+            for filename in filenames:
+                yield dirpath, filename
+
+
 # Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
 try:
     iteritems = dict.iteritems

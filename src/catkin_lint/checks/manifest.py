@@ -33,6 +33,7 @@ import os
 from lxml import etree as ET
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
+from ..util import enumerate_package_files
 from .misc import project
 
 
@@ -73,28 +74,25 @@ def launch_depends(linter):
     essential_packages = set(["rosbag", "rosnode", "rosservice", "rostopic"])
 
     def on_final(info):
-        for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
-            for filename in filenames:
-                fl = filename.lower()
-                if fl.endswith(".launch") and "test" not in fl and "example" not in fl:
-                    full_filename = os.path.join(dirpath, filename)
-                    src_filename = os.path.relpath(full_filename, info.path)
-                    with open(full_filename, "rb") as f:
-                        content = f.read()
-                        try:
-                            root = ET.fromstring(content)
-                            for node in root.getiterator():
-                                if node.tag is not ET.Comment:
-                                    pkg = node.get("pkg")
+        for dirpath, filename in enumerate_package_files(info.path):
+            if filename.lower().endswith(".launch"):
+                full_filename = os.path.join(dirpath, filename)
+                src_filename = os.path.relpath(full_filename, info.path)
+                with open(full_filename, "rb") as f:
+                    content = f.read()
+                    try:
+                        root = ET.fromstring(content)
+                        for node in root.getiterator():
+                            if node.tag is not ET.Comment:
+                                pkg = node.get("pkg")
+                                if pkg is not None and pkg != info.manifest.name and info.env.is_catkin_pkg(pkg) and pkg not in info.exec_dep and pkg not in essential_packages:
+                                    info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
+                                for mo in re.finditer(r"\$\(find\s+([^<>)]+)\)", "<>".join(node.values() + [node.text or "", node.tail or ""])):
+                                    pkg = mo.group(1)
                                     if pkg is not None and pkg != info.manifest.name and info.env.is_catkin_pkg(pkg) and pkg not in info.exec_dep and pkg not in essential_packages:
                                         info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
-                                    for mo in re.finditer(r"\$\(find\s+([^<>)]+)\)", "<>".join(node.values() + [node.text or "", node.tail or ""])):
-                                        pkg = mo.group(1)
-                                        if pkg is not None and pkg != info.manifest.name and info.env.is_catkin_pkg(pkg) and pkg not in info.exec_dep and pkg not in essential_packages:
-                                            info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
-                        except (ET.Error, ValueError) as err:
-                            info.report(WARNING, "PARSE_ERROR", msg=str(err), file_location=(src_filename, 0))
-            dirnames[:] = [d for d in dirnames if not d.startswith(".") and "test" not in d and "build" not in d and "example" not in d]
+                    except (ET.Error, ValueError) as err:
+                        info.report(WARNING, "PARSE_ERROR", msg=str(err), file_location=(src_filename, 0))
 
     linter.require(depends)
     linter.add_final_hook(on_final)

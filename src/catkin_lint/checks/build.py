@@ -33,7 +33,7 @@ import posixpath
 import stat
 from ..linter import ERROR, WARNING, NOTICE, PathConstants, PathClass
 from ..cmake import argparse as cmake_argparse
-from ..util import iteritems, is_sorted
+from ..util import iteritems, is_sorted, enumerate_package_files
 from .manifest import depends as manifest_depends
 from functools import partial
 
@@ -493,13 +493,12 @@ def installs(linter):
                         real_d = info.real_path(info.source_relative_path(d))
                         if os.path.isdir(real_d):
                             if opts["USE_SOURCE_PERMISSIONS"]:
-                                for dirpath, _, filenames in os.walk(real_d, topdown=True):
-                                    for filename in filenames:
-                                        real_filename = os.path.join(dirpath, filename)
-                                        pkg_filename = info.source_relative_path(real_filename[len(info.path) + 1:])
-                                        mode = os.stat(real_filename).st_mode
-                                        if mode & stat.S_IXUSR:
-                                            info.install_programs.add(pkg_filename)
+                                for dirpath, filename in enumerate_package_files(real_d, catkin_ignore=False, ignore_unimportant=False):
+                                    real_filename = os.path.join(dirpath, filename)
+                                    pkg_filename = info.source_relative_path(real_filename[len(info.path) + 1:])
+                                    mode = os.stat(real_filename).st_mode
+                                    if mode & stat.S_IXUSR:
+                                        info.install_programs.add(pkg_filename)
                     else:
                         info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(d))
         if opts["FILES"]:
@@ -612,15 +611,12 @@ def scripts(linter):
         return pkg_filename in info.install_programs or pkg_filename in info.dynamic_reconfigure_files
 
     def on_final(info):
-        for dirpath, dirnames, filenames in os.walk(info.path, topdown=True):
-            for filename in filenames:
-                if "test" not in filename.lower() and "example" not in filename.lower():
-                    full_filename = os.path.join(dirpath, filename)
-                    pkg_filename = info.source_relative_path(full_filename[len(info.path) + 1:])
-                    mode = os.stat(full_filename).st_mode
-                    if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
-                        info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
-            dirnames[:] = [d for d in dirnames if not d.startswith(".") and "test" not in d and "build" not in d and "example" not in d]
+        for dirpath, filename in enumerate_package_files(info.path):
+            full_filename = os.path.join(dirpath, filename)
+            pkg_filename = info.source_relative_path(full_filename[len(info.path) + 1:])
+            mode = os.stat(full_filename).st_mode
+            if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
+                info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
 
     linter.require(installs)
     linter.require(dynamic_reconfigure)
