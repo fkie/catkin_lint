@@ -1,7 +1,10 @@
-import unittest
 import os
 import sys
+import unittest
+from catkin_pkg.package import Package, Dependency
+
 import catkin_lint.checks.manifest as cc
+
 from .helper import create_env, create_manifest, create_manifest2, mock_lint, mock_open, patch, posix_and_nt
 
 
@@ -169,3 +172,21 @@ class ChecksManifestTest(unittest.TestCase):
         pkg = create_manifest("mock", description="Mock Cool Worf")
         result = mock_lint(env, pkg, "", checks=cc.package_description)
         self.assertEqual([], result)
+
+    def test_evaluate_conditions(self):
+        """Test if dependency conditions are properly evaluated"""
+
+        env = create_env(system_pkgs=['python-yaml'])
+        pkg = Package(
+            name="mock",
+            package_format=3,
+            exec_depends=[Dependency('python-yaml', condition='$ROS_PYTHON_VERSION == 2'),
+                          Dependency('python3-yaml', condition='$ROS_PYTHON_VERSION == 3')],
+        )
+        pkg.evaluate_conditions({'ROS_PYTHON_VERSION': 2})
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([], result)
+
+        pkg.evaluate_conditions({'ROS_PYTHON_VERSION': 3})
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual(["UNKNOWN_PACKAGE"], result)
