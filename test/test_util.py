@@ -40,6 +40,11 @@ def force_fail(*args, **kwargs):
     raise OSError("Mock fail")
 
 
+def create_file(path):
+    with open(path, "a") as f:
+        f.write("catkin_lint")
+
+
 class UtilTest(unittest.TestCase):
     def test_word_split(self):
         """Test word_split() utility function"""
@@ -79,3 +84,51 @@ class UtilTest(unittest.TestCase):
                     self.assertFalse(os.path.exists(os.path.join(tmpdir, "test")))
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+class EnumeratePackagesTest(unittest.TestCase):
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        os.mkdir(os.path.join(self.tmpdir, ".hidden"))
+        os.mkdir(os.path.join(self.tmpdir, "alpha"))
+        os.mkdir(os.path.join(self.tmpdir, "build"))
+        os.mkdir(os.path.join(self.tmpdir, "ignored"))
+        os.mkdir(os.path.join(self.tmpdir, "ignored", "alpha"))
+        create_file(os.path.join(self.tmpdir, ".hidden", "file"))
+        create_file(os.path.join(self.tmpdir, "alpha", "example_file"))
+        create_file(os.path.join(self.tmpdir, "alpha", "test_file"))
+        create_file(os.path.join(self.tmpdir, "alpha", "file"))
+        create_file(os.path.join(self.tmpdir, "build", "file"))
+        create_file(os.path.join(self.tmpdir, "ignored", "file"))
+        create_file(os.path.join(self.tmpdir, "ignored", "CATKIN_IGNORE"))
+        create_file(os.path.join(self.tmpdir, "ignored", "alpha", "file"))
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_enumerate_package_files(self):
+        """Test enumerate_package_files() utility function"""
+        self.assertEqual(
+            sorted(list(util.enumerate_package_files(self.tmpdir))),
+            [(os.path.join(self.tmpdir, "alpha"), "file")]
+        )
+        self.assertEqual(
+            sorted(list(util.enumerate_package_files(self.tmpdir, ignore_dot=False))),
+            [(os.path.join(self.tmpdir, ".hidden"), "file"),
+             (os.path.join(self.tmpdir, "alpha"), "file")]
+        )
+        self.assertEqual(
+            sorted(list(util.enumerate_package_files(self.tmpdir, catkin_ignore=False))),
+            [(os.path.join(self.tmpdir, "alpha"), "file"),
+             (os.path.join(self.tmpdir, "ignored"), "CATKIN_IGNORE"),
+             (os.path.join(self.tmpdir, "ignored"), "file"),
+             (os.path.join(self.tmpdir, "ignored", "alpha"), "file")]
+        )
+        self.assertEqual(
+            sorted(list(util.enumerate_package_files(self.tmpdir, ignore_unimportant=False))),
+            [(os.path.join(self.tmpdir, "alpha"), "example_file"),
+             (os.path.join(self.tmpdir, "alpha"), "file"),
+             (os.path.join(self.tmpdir, "alpha"), "test_file"),
+             (os.path.join(self.tmpdir, "build"), "file")]
+        )
