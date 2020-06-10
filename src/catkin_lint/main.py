@@ -101,9 +101,6 @@ def run_linter(args):
         return 0
     nothing_to_do = 0
     pkgs_to_check = []
-    force_error = set([a.upper() for a in args.error])
-    force_warning = set([a.upper() for a in args.warning])
-    force_notice = set([a.upper() for a in args.notice])
     if args.rosdistro:
         os.environ["ROS_DISTRO"] = args.rosdistro
     env = CatkinEnvironment(os_env=os.environ if args.resolve_env else None, use_rosdistro=not args.offline, use_cache=not args.disable_cache)
@@ -153,6 +150,15 @@ def run_linter(args):
     linter = CMakeLinter(env)
     for a in args.ignore:
         linter.ignore_message_ids |= set(a.upper().split(","))
+    for a in args.notice:
+        for aa in a.upper().split(","):
+            linter.message_level_override[aa] = NOTICE
+    for a in args.warning:
+        for aa in a.upper().split(","):
+            linter.message_level_override[aa] = WARNING
+    for a in args.error:
+        for aa in a.upper().split(","):
+            linter.message_level_override[aa] = ERROR
     for check in args.check:
         try:
             add_linter_check(linter, check)
@@ -179,12 +185,6 @@ def run_linter(args):
         linter.messages += linter.ignored_messages
         linter.ignored_messages = []
     for msg in sorted(linter.messages):
-        if msg.id in force_notice:
-            msg.level = NOTICE
-        if msg.id in force_warning:
-            msg.level = WARNING
-        if msg.id in force_error:
-            msg.level = ERROR
         if args.W < msg.level:
             extras[msg.level] += 1
             continue

@@ -90,7 +90,6 @@ class LintInfo(object):
         self.line = 0
         self.ignore_message_ids = set()
         self.ignore_message_ids_once = set()
-        self.ignored_messages = []
         self.command_loc = {}
         self.commands = set()
         self.find_packages = set()
@@ -103,7 +102,9 @@ class LintInfo(object):
         self.var = {}
         self.parent_var = {}
         self.messages = []
+        self.ignored_messages = []
         self.generated_files = set([""])
+        self.message_level_override = {}
 
     def report(self, level, msg_id, **kwargs):
         file_name, line = self.file, self.line
@@ -117,7 +118,7 @@ class LintInfo(object):
                 package=self.manifest.name,
                 file_name=file_name,
                 line=line,
-                level=level,
+                level=self.message_level_override.get(msg_id, level),
                 msg_id=msg_id,
                 text=text,
                 description=description
@@ -127,7 +128,7 @@ class LintInfo(object):
             package=self.manifest.name,
             file_name=file_name,
             line=line,
-            level=level,
+            level=self.message_level_override.get(msg_id, level),
             msg_id=msg_id,
             text=text,
             description=description
@@ -263,6 +264,7 @@ class CMakeLinter(object):
         self.messages = []
         self.ignore_message_ids = set()
         self.ignored_messages = []
+        self.message_level_override = {}
         self._cmd_hooks = {}
         self._running_hooks = set([])
         self._init_hooks = []
@@ -648,6 +650,7 @@ class CMakeLinter(object):
         if info is None:
             info = LintInfo(self.env)
         info.ignore_message_ids = copy(self.ignore_message_ids)
+        info.message_level_override = copy(self.message_level_override)
         info.path = os.path.abspath(path)
         info.manifest = manifest
         info.conditionals = []
