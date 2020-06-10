@@ -649,9 +649,9 @@ message_list = {
     ("condition '%(cond)s' is ambiguous",
         """\
         Historically, the if() command will interpret a single token as a variable
-        name and transparently resolve it if possible. Explicit variable references
+        name and transparently resolve it if possible. Unquoted variable references
         like if(${var}) can lead to incorrect results if ${var} resolves to a different
-        variable name. Use if(var) instead.
+        variable name. Use if(var) or if("${var}") instead.
         """),
 }
 
