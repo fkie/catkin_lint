@@ -66,6 +66,8 @@
         
             <li><a class="toctree-l3" href="#diagnostic-levels">Diagnostic Levels</a></li>
         
+            <li><a class="toctree-l3" href="#configuration-files">Configuration files</a></li>
+        
         </ul>
     
 
@@ -215,6 +217,40 @@ equivalent but more robust.</p>
 should  be addressed to improve the quality of the package. Many notices
 highlight violations of the recommendations and best practises from the
 catkin manual.</p>
+<h2 id="configuration-files">Configuration files</h2>
+<p>Since version 1.6.9, <strong>catkin_lint</strong> can load settings from a configuration file.
+Configuration files can be specified with the <code>--config</code> command line options.
+Additionally, <strong>catkin_lint</strong> will look in the following locations (in precedence order):</p>
+<ul>
+<li><code>.catkin_lint</code> files in the <code>ROS_PACKAGE_PATH</code> directories</li>
+<li><code>$XDG_CONFIG_HOME/catkin_lint</code> (<code>$XDG_CONFIG_HOME</code> defaults to <code>~/.config</code>)</li>
+<li><code>~/.catkin_lint</code></li>
+</ul>
+<p>The file is expected to be in an INI-style format with different sections. 
+The <code>[catkin_lint]</code> section may contain command line options.
+All other sections are considered package names and will override the 
+severity of diagnostic messages.
+The special wildcard section <code>[*]</code> applies to all packages.</p>
+<p>The following example illustrates the configuration file format:</p>
+<pre><code>[catkin_lint]
+output = explain
+color = auto
+package_path = /path/to/extra/packages
+
+[foo]
+missing_catkin_depend = warning
+unknown_package = ignore
+
+
+[bar]
+deprecated_cmd = default
+
+[*]
+deprecated_cmd = error
+launch_depend = notice
+</code></pre>
+<p>Note that the <code>deprecated_cmd</code> override from the wildcard section applies to the package <code>foo</code>,
+but not to the package <code>bar</code>.</p>
               
             </div>
           </div>
@@ -261,5 +297,5 @@ catkin manual.</p>
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2020-06-10 16:16:46
+Build Date UTC : 2020-06-16 15:09:14
 -->
