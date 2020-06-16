@@ -7,14 +7,15 @@ Build-Depends: debhelper (>= 9), dh-python, help2man,
                python-nose, python-mock, python3-nose, python3-mock,
                python-setuptools, python3-setuptools,
                python-catkin-pkg, python-rosdistro,
-               python-rosdep, python-lxml, python3-lxml
+               python-rosdep, python-lxml, python3-lxml,
+               python-configparser
 Homepage: https://github.com/fkie/catkin_lint
 Testsuite: autopkgtest-pkg-python
 Standards-Version: 4.2.0
 
 Package: python-catkin-lint
 Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}
+Depends: ${python:Depends}, python-configparser, ${misc:Depends}
 Provides: ${python:Provides}
 Recommends: python-rospkg, python-rosdep, python-rosdistro
 Conflicts: python3-catkin-lint
