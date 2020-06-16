@@ -158,7 +158,12 @@
 <p><strong>catkin_lint</strong> checks are implemented as
 submodules, and interact with the main program
 via callbacks. You can write your own checks for
-<strong>catkin_lint</strong> and load them with the <code>-c</code> command line option.</p>
+<strong>catkin_lint</strong> and run them with the <code>-c</code> command line option.
+You can also add them to your <code>.catkin_lint</code> configuration file
+to use them by default:</p>
+<pre><code>[catkin_lint]
+extra_checks = my.customized.check my.other.check
+</code></pre>
 <p>Each check is included via an entry function which setups
 the callbacks for the check. The entry function has a single
 parameter <code>linter</code>. The Linter object provides the following
