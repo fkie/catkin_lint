@@ -1,7 +1,40 @@
-import unittest
+# coding=utf-8
+#
+# catkin_lint
+# Copyright (c) 2013-2020 Fraunhofer FKIE
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of the Fraunhofer organization nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import os
 import sys
+import unittest
+from catkin_pkg.package import Package, Dependency
+
 import catkin_lint.checks.manifest as cc
+
 from .helper import create_env, create_manifest, create_manifest2, mock_lint, mock_open, patch, posix_and_nt
 
 
@@ -114,22 +147,31 @@ class ChecksManifestTest(unittest.TestCase):
         env = create_env()
         open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
         pkg = create_manifest("mock")
-        with patch(open_func, mock_open(read_data='<launch></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
-        with patch(open_func, mock_open(read_data='<launch>')):
+        with patch(open_func, mock_open(read_data=b'<?xml version="1.0"?>\n<launch></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data=b'<?xml version="1.0" encoding="UTF-8"?>\n<launch></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data=b'<?xml version="1.0" encoding="UTF-8"?>\n<launch invalid-utf8="\xFF"></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["PARSE_ERROR"], result)
-        with patch(open_func, mock_open(read_data='<launch><node pkg="$(arg weird)"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["PARSE_ERROR"], result)
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="$(arg weird)"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
-        with patch(open_func, mock_open(read_data='<launch><node pkg="other_system"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="other_system"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
-        with patch(open_func, mock_open(read_data='<launch><node pkg="other_catkin"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="other_catkin"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["LAUNCH_DEPEND"], result)
-        with patch(open_func, mock_open(read_data='<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):
+        with patch(open_func, mock_open(read_data=b'<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["LAUNCH_DEPEND"], result)
 
@@ -160,3 +202,21 @@ class ChecksManifestTest(unittest.TestCase):
         pkg = create_manifest("mock", description="Mock Cool Worf")
         result = mock_lint(env, pkg, "", checks=cc.package_description)
         self.assertEqual([], result)
+
+    def test_evaluate_conditions(self):
+        """Test if dependency conditions are properly evaluated"""
+
+        env = create_env(system_pkgs=['python-yaml'])
+        pkg = Package(
+            name="mock",
+            package_format=3,
+            exec_depends=[Dependency('python-yaml', condition='$ROS_PYTHON_VERSION == 2'),
+                          Dependency('python3-yaml', condition='$ROS_PYTHON_VERSION == 3')],
+        )
+        pkg.evaluate_conditions({'ROS_PYTHON_VERSION': 2})
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual([], result)
+
+        pkg.evaluate_conditions({'ROS_PYTHON_VERSION': 3})
+        result = mock_lint(env, pkg, "", checks=cc.depends)
+        self.assertEqual(["UNKNOWN_PACKAGE"], result)

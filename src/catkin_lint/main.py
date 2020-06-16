@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2018 Fraunhofer FKIE
+# Copyright (c) 2013-2020 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -31,6 +31,7 @@
 import os
 import sys
 import argparse
+import configparser
 import importlib
 from . import __version__ as catkin_lint_version
 from .linter import CMakeLinter, ERROR, WARNING, NOTICE
@@ -56,6 +57,7 @@ def prepare_arguments(parser):
     parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
     parser.add_argument("-W", metavar="LEVEL", type=int, default=1, help="set warning level (0-2)")
     parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[], help=argparse.SUPPRESS)
+    parser.add_argument("--config", action="append", metavar="FILE", default=[], help="read configuration from FILE")
     parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
     parser.add_argument("--error", action="append", metavar="ID", default=[], help="treat diagnostic message ID as error")
     parser.add_argument("--warning", action="append", metavar="ID", default=[], help="treat diagnostic message ID as warning")
@@ -73,7 +75,7 @@ def prepare_arguments(parser):
     group.add_argument("--explain", action="store_true", help="output result as text with explanations")
     group.add_argument("--xml", action="store_true", help="output result as XML")
     group.add_argument("--json", action="store_true", help="output result as JSON")
-    parser.add_argument("--color", metavar="MODE", choices=["never", "always", "auto"], default="auto", help="colorize text output")
+    parser.add_argument("--color", metavar="MODE", choices=["never", "always", "auto"], default=None, help="colorize text output")
     parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
     parser.add_argument("--clear-cache", action="store_true", help="clear internal cache and invalidate all downloaded manifests")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
@@ -99,22 +101,78 @@ def run_linter(args):
         from .environment import _dump_cache
         _dump_cache()
         return 0
+    config = configparser.ConfigParser(strict=True)
+    config.optionxform = lambda option: option.lower().replace("-", "_")
+    # Initialize configuration from command line arguments
+    config["*"] = {}
+    tmp = set(b for a in args.ignore for b in a.split(",") if b)
+    for a in tmp:
+        config["*"][a] = "ignore"
+    tmp = set(b for a in args.notice for b in a.split(",") if b)
+    for a in tmp:
+        config["*"][a] = "notice"
+    tmp = set(b for a in args.warning for b in a.split(",") if b)
+    for a in tmp:
+        config["*"][a] = "warning"
+    tmp = set(b for a in args.error for b in a.split(",") if b)
+    for a in tmp:
+        config["*"][a] = "error"
+    config["catkin_lint"] = {}
+    if args.rosdistro:
+        config["catkin_lint"]["rosdistro"] = args.rosdistro
+    if args.resolve_env:
+        config["catkin_lint"]["resolve_env"] = "yes"
+    if args.offline:
+        config["catkin_lint"]["offline"] = "yes"
+    if args.disable_cache:
+        config["catkin_lint"]["disable_cache"] = "yes"
+    if args.package_path:
+        config["catkin_lint"]["package_path"] = args.package_path
+    if args.color:
+        config["catkin_lint"]["color"] = args.color
+    if args.text:
+        config["catkin_lint"]["output"] = "text"
+    if args.xml:
+        config["catkin_lint"]["output"] = "xml"
+    if args.json:
+        config["catkin_lint"]["output"] = "json"
+    if args.explain:
+        config["catkin_lint"]["output"] = "explain"
+
+    for config_file in args.config:
+        try:
+            with open(config_file, "r") as f:
+                config.read_file(f)
+        except IOError as err:
+            sys.stderr.write("catkin_lint: cannot read '%s': %s\n" % (config_file, err))
+            return 1
+    if "ROS_PACKAGE_PATH" in os.environ:
+        config.read([os.path.join(d, ".catkin_lint") for d in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep)])
+    xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "") or os.path.expanduser("~/.config")
+    config.read(
+        [
+            os.path.join(xdg_config_home, "catkin_lint"),
+            os.path.expanduser("~/.catkin_lint")
+        ]
+    )
+
     nothing_to_do = 0
     pkgs_to_check = []
-    force_error = set([a.upper() for a in args.error])
-    force_warning = set([a.upper() for a in args.warning])
-    force_notice = set([a.upper() for a in args.notice])
-    if args.rosdistro:
-        os.environ["ROS_DISTRO"] = args.rosdistro
-    env = CatkinEnvironment(os_env=os.environ if args.resolve_env else None, use_rosdistro=not args.offline, use_cache=not args.disable_cache)
+    if "rosdistro" in config["catkin_lint"]:
+        os.environ["ROS_DISTRO"] = config["catkin_lint"]["rosdistro"]
+    env = CatkinEnvironment(
+        os_env=os.environ if config["catkin_lint"].getboolean("resolve_env", False) else None,
+        use_rosdistro=not config["catkin_lint"].getboolean("offline", False),
+        use_cache=not config["catkin_lint"].getboolean("disable_cache", False)
+    )
     if not args.path and not args.pkg:
         if os.path.isfile("package.xml"):
             pkgs_to_check += env.add_path(os.getcwd())
         else:
             sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
             return os.EX_NOINPUT
-    if args.package_path:
-        for path in args.package_path.split(os.pathsep):
+    if "package_path" in config["catkin_lint"]:
+        for path in config["catkin_lint"]["package_path"].split(os.pathsep):
             env.add_path(path)
     if "ROS_PACKAGE_PATH" in os.environ:
         for path in os.environ["ROS_PACKAGE_PATH"].split(os.pathsep):
@@ -142,18 +200,22 @@ def run_linter(args):
             sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
         env.ok = False
     use_color = {"never": Color.Never, "always": Color.Always, "auto": Color.Auto}
-    if args.xml:
+    color_choice = config["catkin_lint"].get("color", "auto").lower()
+    output_format = config["catkin_lint"].get("output", "text").lower()
+    if output_format == "xml":
         output = XmlOutput()  # this is never colored
-    elif args.json:
+    elif output_format == "json":
         output = JsonOutput()  # also never colored
-    elif args.explain:
-        output = ExplainedTextOutput(use_color[args.color])
+    elif output_format == "explain":
+        output = ExplainedTextOutput(use_color.get(color_choice, Color.Auto))
+    elif output_format == "text":
+        output = TextOutput(use_color.get(color_choice, Color.Auto))
     else:
-        output = TextOutput(use_color[args.color])
+        sys.stderr.write("catkin_lint: unknown output format '%s'\n" % output_format)
+        return 1
     linter = CMakeLinter(env)
-    for a in args.ignore:
-        linter.ignore_message_ids |= set(a.upper().split(","))
-    for check in args.check:
+    import_checks = (args.check or ["all"]) + [check for check in config["catkin_lint"].get("extra_checks", "").split() if check]
+    for check in import_checks:
         try:
             add_linter_check(linter, check)
         except Exception as err:
@@ -161,11 +223,9 @@ def run_linter(args):
             if args.debug:
                 raise
             return 1
-    if not args.check:
-        add_linter_check(linter, "all")
     for path, manifest in pkgs_to_check:
         try:
-            linter.lint(path, manifest)
+            linter.lint(path, manifest, config=config)
         except Exception as err:  # pragma: no cover
             sys.stderr.write("catkin_lint: cannot lint %s: %s\n" % (manifest.name, str(err)))
             if args.debug:
@@ -179,12 +239,6 @@ def run_linter(args):
         linter.messages += linter.ignored_messages
         linter.ignored_messages = []
     for msg in sorted(linter.messages):
-        if msg.id in force_notice:
-            msg.level = NOTICE
-        if msg.id in force_warning:
-            msg.level = WARNING
-        if msg.id in force_error:
-            msg.level = ERROR
         if args.W < msg.level:
             extras[msg.level] += 1
             continue

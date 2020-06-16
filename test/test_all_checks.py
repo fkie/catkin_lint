@@ -1,3 +1,33 @@
+# coding=utf-8
+#
+# catkin_lint
+# Copyright (c) 2013-2020 Fraunhofer FKIE
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of the Fraunhofer organization nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import unittest
 import shutil
 import argparse
@@ -207,6 +237,10 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 1)
         self.assertIn("OS error: mock exception", stdout)
 
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--text")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 3 packages and found 0 problems", stdout)
+
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--explain")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
@@ -241,6 +275,14 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 1 packages and found 0 problems", stdout)
 
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--offline")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 3 packages and found 0 problems", stdout)
+
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--resolve-env")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 3 packages and found 0 problems", stdout)
+
         os.environ["ROS_PACKAGE_PATH"] = os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir])
         exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta")
         self.assertEqual(exitcode, 0)
@@ -266,6 +308,11 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("messages have been ignored", stdout)
 
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--color=always")
+        self.assertIn(chr(0x1b), stdout)
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--color=never")
+        self.assertNotIn(chr(0x1b), stdout)
+
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "missing_catkin_depend", "--show-ignored")
         self.assertIn("package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
 
@@ -287,6 +334,58 @@ class CatkinInvokationTest(unittest.TestCase):
 
         exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
         self.assertEqual(exitcode, 1)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nmissing_catkin_depend = ignore")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertIn("messages have been ignored", stdout)
+        self.assertEqual(exitcode, 0)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[catkin_lint]\noutput = invalid\n\n[*]\nmissing_catkin_depend = ignore")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("unknown output format", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nmissing_catkin_depend = notice")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("notice: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nmissing_catkin_depend = warning")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("warning: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nmissing_catkin_depend = error")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("error: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nmissing_catkin_depend = default")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertIn("package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nmissing_catkin_depend = notice\n\n[delta]\nmissing_catkin_depend = warning\n")
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
+        self.assertIn("warning: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+
+        os.unlink(os.path.join(self.homedir, ".catkin_lint"))
+
+        with open(os.path.join(self.ws_srcdir, "catkin_lint_config"), "w") as f:
+            f.write("[catkin_lint]\npackage_path = %s\n" % self.ws_srcdir)
+        exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta", "--config", os.path.join(self.ws_srcdir, "catkin_lint_config"))
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 2 packages and found 0 problems", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--config", "no_such_file")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("cannot read 'no_such_file'", stdout)
 
         try:
             # The following tests will not produce meaningful results

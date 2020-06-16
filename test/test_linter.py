@@ -1,3 +1,33 @@
+# coding=utf-8
+#
+# catkin_lint
+# Copyright (c) 2013-2020 Fraunhofer FKIE
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of the Fraunhofer organization nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import unittest
 import sys  # noqa
 import os
@@ -190,7 +220,7 @@ class LinterTest(unittest.TestCase):
             if ("${varname}")
             endif()
             """, checks=cc.all)
-        self.assertEqual(["AMBIGUOUS_CONDITION"], result)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg,
                            """
             project(mock)
@@ -238,16 +268,18 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(info.report_path("foo/../bar"), "bar")
         self.assertEqual(info.report_path("/absolute//stuff"), "/absolute/stuff")
         self.assertEqual(info.report_path("%s/test" % PathConstants.PACKAGE_SOURCE), "test")
-        self.assertEqual(info.report_path("%s/test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/test")
+        self.assertEqual(info.report_path("%s/test" % PathConstants.PACKAGE_BINARY), "${CMAKE_BINARY_DIR}/test")
+        self.assertEqual(info.report_path("%s/%s/test" % (PathConstants.PACKAGE_SOURCE, PathConstants.PACKAGE_BINARY)), "${CMAKE_SOURCE_DIR}/${CMAKE_BINARY_DIR}/test")
+        self.assertEqual(info.report_path("%s/%s/test" % (PathConstants.PACKAGE_BINARY, PathConstants.PACKAGE_SOURCE)), "${CMAKE_BINARY_DIR}/${CMAKE_SOURCE_DIR}/test")
         self.assertEqual(info.report_path("%s/test" % PathConstants.CATKIN_DEVEL), "${CATKIN_DEVEL_PREFIX}/test")
         self.assertEqual(info.report_path("%s/test" % PathConstants.CATKIN_INSTALL), "${CATKIN_INSTALL_PREFIX}/test")
         self.assertEqual(info.report_path(info.find_package_path("test", "include")), "${test_INCLUDE_DIRS}")
         self.assertEqual(info.report_path(info.find_package_path("test", "lib/library.so")), "${test_LIBRARIES}")
-        self.assertEqual(info.report_path("%s//test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/test")
-        self.assertEqual(info.report_path("%s/bar/../foo" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/foo")
-        self.assertEqual(info.report_path("%s/../test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/../test")
-        self.assertEqual(info.report_path("%s/../test" % PathConstants.PACKAGE_BINARY), "${PROJECT_BUILD_DIR}/../test")
-        self.assertEqual(info.report_path("//%s%s/bar/../foo" % (PathConstants.CATKIN_DEVEL, PathConstants.PACKAGE_BINARY)), "/${CATKIN_DEVEL_PREFIX}${PROJECT_BUILD_DIR}/foo")
+        self.assertEqual(info.report_path("%s//test" % PathConstants.PACKAGE_BINARY), "${CMAKE_BINARY_DIR}/test")
+        self.assertEqual(info.report_path("%s/bar/../foo" % PathConstants.PACKAGE_BINARY), "${CMAKE_BINARY_DIR}/foo")
+        self.assertEqual(info.report_path("%s/../test" % PathConstants.PACKAGE_BINARY), "${CMAKE_BINARY_DIR}/../test")
+        self.assertEqual(info.report_path("%s/../test" % PathConstants.PACKAGE_BINARY), "${CMAKE_BINARY_DIR}/../test")
+        self.assertEqual(info.report_path("//%s%s/bar/../foo" % (PathConstants.CATKIN_DEVEL, PathConstants.PACKAGE_BINARY)), "/${CATKIN_DEVEL_PREFIX}${CMAKE_BINARY_DIR}/foo")
 
     def test_list(self):
         """Test CMake list handling"""

@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2018 Fraunhofer FKIE
+# Copyright (c) 2013-2020 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -90,7 +90,6 @@ class LintInfo(object):
         self.line = 0
         self.ignore_message_ids = set()
         self.ignore_message_ids_once = set()
-        self.ignored_messages = []
         self.command_loc = {}
         self.commands = set()
         self.find_packages = set()
@@ -103,7 +102,9 @@ class LintInfo(object):
         self.var = {}
         self.parent_var = {}
         self.messages = []
+        self.ignored_messages = []
         self.generated_files = set([""])
+        self.message_level_override = {}
 
     def report(self, level, msg_id, **kwargs):
         file_name, line = self.file, self.line
@@ -117,7 +118,7 @@ class LintInfo(object):
                 package=self.manifest.name,
                 file_name=file_name,
                 line=line,
-                level=level,
+                level=self.message_level_override.get(msg_id, level),
                 msg_id=msg_id,
                 text=text,
                 description=description
@@ -127,7 +128,7 @@ class LintInfo(object):
             package=self.manifest.name,
             file_name=file_name,
             line=line,
-            level=level,
+            level=self.message_level_override.get(msg_id, level),
             msg_id=msg_id,
             text=text,
             description=description
@@ -152,7 +153,7 @@ class LintInfo(object):
         return new_path
 
     def report_path(self, path):
-        def normalize_part(p):
+        def normalize_partial_path(p):
             # This is some magic with the "current" dir (.) as anchor so
             # ".." does not collapse beyond the starting point
             # Examples:
@@ -163,20 +164,22 @@ class LintInfo(object):
             if np == ".":
                 return slash
             return slash + np
-        new_path = path.replace(PathConstants.PACKAGE_BINARY, "${PROJECT_BUILD_DIR}")
+
+        def normalize_path(path):
+            # Normalize the path but keep all variable substitutions intact
+            ps = re.split(r"(\${[^}]+})", path)
+            ps = [normalize_partial_path(p) if not p.startswith("${") else p for p in ps]
+            return "".join(ps)
+
+        new_path = path.replace(PathConstants.PACKAGE_SOURCE, "${CMAKE_SOURCE_DIR}")
+        new_path = new_path.replace(PathConstants.PACKAGE_BINARY, "${CMAKE_BINARY_DIR}")
         new_path = new_path.replace(PathConstants.CATKIN_DEVEL, "${CATKIN_DEVEL_PREFIX}")
         new_path = new_path.replace(PathConstants.CATKIN_INSTALL, "${CATKIN_INSTALL_PREFIX}")
         new_path = re.sub(self.find_package_path(r"([^/]+)", "include"), r"${\g<1>_INCLUDE_DIRS}", new_path)
         new_path = re.sub(self.find_package_path(r"([^/]+)", "lib/library.so"), r"${\g<1>_LIBRARIES}", new_path)
-        if new_path.startswith(PathConstants.PACKAGE_SOURCE):
-            return posixpath.normpath(path[len(PathConstants.PACKAGE_SOURCE) + 1:])
-        if new_path == path:
-            # No substitutions, return normalized
-            return posixpath.normpath(path)
-        # Normalize but keep all variable substitutions intact
-        ps = re.split(r"(\${[^}]+})", new_path)
-        ps = [normalize_part(p) if not p.startswith("${") else p for p in ps]
-        return "".join(ps)
+        if new_path.startswith("${CMAKE_SOURCE_DIR}/") and "${" not in new_path[20:]:
+            new_path = new_path[20:]
+        return normalize_path(new_path)
 
     def real_path(self, path):
         return os.path.normpath(os.path.join(self.path, path))
@@ -259,7 +262,6 @@ class CMakeLinter(object):
     def __init__(self, env):
         self.env = env
         self.messages = []
-        self.ignore_message_ids = set()
         self.ignored_messages = []
         self._cmd_hooks = {}
         self._running_hooks = set([])
@@ -466,7 +468,7 @@ class CMakeLinter(object):
             return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
         if cmd == "if":
             info.conditionals.append(IfCondition(" ".join(args), True))
-            if len(arg_tokens) == 1 and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1]):
+            if len(arg_tokens) == 1 and arg_tokens[0][0] == "WORD" and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1], re.IGNORECASE):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
             for i, tok in enumerate(arg_tokens):
                 if tok[0] != "WORD":
@@ -642,14 +644,36 @@ class CMakeLinter(object):
             info.ignore_message_ids_once.clear()
             self._ctx = save_ctx
 
-    def lint(self, path, manifest, info=None):
+    KEYWORD_TO_SEVERITY = {"error": ERROR, "warning": WARNING, "notice": NOTICE}
+
+    def _get_overrides(self, info, section):
+        for opt in section:
+            val = section[opt].lower().strip()
+            opt = opt.upper()
+            if val == "ignore":
+                info.ignore_message_ids.add(opt)
+            elif val == "default":
+                info.message_level_override.pop(opt, None)
+                info.ignore_message_ids.discard(opt)
+            else:
+                severity = self.KEYWORD_TO_SEVERITY.get(val, None)
+                if severity is not None:
+                    info.message_level_override[opt] = severity
+
+    def lint(self, path, manifest, info=None, config=None):
         if info is None:
             info = LintInfo(self.env)
-        info.ignore_message_ids = copy(self.ignore_message_ids)
+        if config is not None:
+            if "*" in config:
+                self._get_overrides(info, config["*"])
+            if manifest.name in config:
+                self._get_overrides(info, config[manifest.name])
         info.path = os.path.abspath(path)
         info.manifest = manifest
         info.conditionals = []
         info.var = {
+            "CMAKE_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
+            "CMAKE_BINARY_DIR": PathConstants.PACKAGE_BINARY,
             "CMAKE_CURRENT_SOURCE_DIR": PathConstants.PACKAGE_SOURCE,
             "CMAKE_CURRENT_BINARY_DIR": PathConstants.PACKAGE_BINARY,
             "CMAKE_ARCHIVE_OUTPUT_DIRECTORY": "%s/lib" % PathConstants.CATKIN_DEVEL,
@@ -662,7 +686,7 @@ class CMakeLinter(object):
             "CATKIN_PACKAGE_ETC_DESTINATION": "etc/%s" % info.manifest.name,
             "CATKIN_PACKAGE_INCLUDE_DESTINATION": "include/%s" % info.manifest.name,
             "CATKIN_PACKAGE_LIB_DESTINATION": "lib",
-            "CATKIN_PACKAGE_PYTHON_DESTINATION": "lib/python/%s" % info.manifest.name,
+            "CATKIN_PACKAGE_PYTHON_DESTINATION": "lib/python/packages/%s" % info.manifest.name,
             "CATKIN_PACKAGE_SHARE_DESTINATION": "share/%s" % info.manifest.name,
             "CATKIN_GLOBAL_BIN_DESTINATION": "bin",
             "CATKIN_GLOBAL_ETC_DESTINATION": "etc",
@@ -672,6 +696,7 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_PYTHON_DESTINATION": "lib/python/packages",
             "CATKIN_GLOBAL_SHARE_DESTINATION": "share",
             "PYTHON_INSTALL_DIR": "lib/python/packages",
+            "CATKIN_ENABLE_TESTING": "CATKIN_ENABLE_TESTING"
         }
         try:
             if os.path.basename(info.path) != manifest.name:

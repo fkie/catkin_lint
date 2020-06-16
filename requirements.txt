@@ -2,4 +2,4 @@ catkin_pkg
 lxml
 rosdep
 rosdistro
-
+configparser;python_version<"3"
