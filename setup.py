@@ -53,7 +53,7 @@ setup(
     scripts=["bin/catkin_lint"],
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    install_requires=["catkin_pkg", "lxml"],
+    install_requires=["catkin_pkg", "lxml", "configparser;python_version<\"3\""],
     test_suite="nose.collector",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
