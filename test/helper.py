@@ -134,7 +134,7 @@ def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_va
     if checks is not None:
         linter.require(checks)
     info = LintInfo(env)
-    linter.lint(os.path.normpath(package_path), manifest, info)
+    linter.lint(os.path.normpath(package_path), manifest, info=info)
     if not indentation:
         linter.messages = [m for m in linter.messages if m.id != "INDENTATION"]
     if return_var:

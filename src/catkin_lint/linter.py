@@ -262,9 +262,7 @@ class CMakeLinter(object):
     def __init__(self, env):
         self.env = env
         self.messages = []
-        self.ignore_message_ids = set()
         self.ignored_messages = []
-        self.message_level_override = {}
         self._cmd_hooks = {}
         self._running_hooks = set([])
         self._init_hooks = []
@@ -646,11 +644,30 @@ class CMakeLinter(object):
             info.ignore_message_ids_once.clear()
             self._ctx = save_ctx
 
-    def lint(self, path, manifest, info=None):
+    KEYWORD_TO_SEVERITY = {"error": ERROR, "warning": WARNING, "notice": NOTICE}
+
+    def _get_overrides(self, info, section):
+        for opt in section:
+            val = section[opt].lower().strip()
+            opt = opt.upper()
+            if val == "ignore":
+                info.ignore_message_ids.add(opt)
+            elif val == "default":
+                info.message_level_override.pop(opt, None)
+                info.ignore_message_ids.discard(opt)
+            else:
+                severity = self.KEYWORD_TO_SEVERITY.get(val, None)
+                if severity is not None:
+                    info.message_level_override[opt] = severity
+
+    def lint(self, path, manifest, info=None, config=None):
         if info is None:
             info = LintInfo(self.env)
-        info.ignore_message_ids = copy(self.ignore_message_ids)
-        info.message_level_override = copy(self.message_level_override)
+        if config is not None:
+            if "*" in config:
+                self._get_overrides(info, config["*"])
+            if manifest.name in config:
+                self._get_overrides(info, config[manifest.name])
         info.path = os.path.abspath(path)
         info.manifest = manifest
         info.conditionals = []
