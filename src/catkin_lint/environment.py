@@ -223,8 +223,8 @@ _cache = None
 try:
     from rospkg import get_ros_home
     _cache_dir = os.path.join(get_ros_home(), "catkin_lint")
-except ImportError:
-    _cache_dir = os.path.join(os.path.expanduser("~"), ".ros", "catkin_lint")
+except ImportError:  # pragma: no cover
+    _cache_dir = os.pa41th.join(os.path.expanduser("~"), ".ros", "catkin_lint")
 
 
 def _load_cache():
@@ -235,7 +235,7 @@ def _load_cache():
             gc.disable()
             with open(os.path.join(_cache_dir, "packages.pickle"), "rb") as f:
                 _cache = pickle.loads(f.read())
-                if not isinstance(_cache, Cache) or _cache.version != 1:
+                if not isinstance(_cache, Cache) or _cache.version != CACHE_VERSION:
                     raise RuntimeError()
         except Exception:
             _cache = Cache()
