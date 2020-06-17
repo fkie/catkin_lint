@@ -395,7 +395,7 @@ class LinterTest(unittest.TestCase):
             self.assertEqual([], result)
             self.assertFalse(env.is_catkin_pkg("invalid"))
 
-        def raiseError():
+        def raiseError():  # pragma: no cover
             raise RuntimeError()
         with open(os.devnull, "w") as devnull:
             with patch("catkin_lint.environment.get_rosdep", raiseError):
@@ -424,6 +424,13 @@ class LinterTest(unittest.TestCase):
                            }, checks=cc.all
                            )
         self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+                           {
+                               "/package-path/mock/CMakeLists.txt": "project(mock) add_subdirectory(src)",
+                           }, checks=cc.all
+                           )
+        self.assertEqual(["OS_ERROR"], result)
 
         result = mock_lint(env, pkg,
                            {

@@ -427,6 +427,9 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.upstream_ws_srcdir, self.ws_srcdir]), "--pkg", "gamma")
         self.assertEqual(exitcode, 1)
 
+        exitcode, stdout = self.run_catkin_lint("--pkg", "delta")
+        self.assertIn("package 'std_msgs' must be in CATKIN_DEPENDS", stdout)
+
         exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_package")
         self.assertEqual(exitcode, 0)
         self.assertIn("messages have been ignored", stdout)

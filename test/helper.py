@@ -38,9 +38,9 @@ from unittest import skip
 
 import os
 try:
-    from mock import patch, mock_open, DEFAULT  # noqa
-except ImportError:
     from unittest.mock import patch, mock_open, DEFAULT  # noqa
+except ImportError:
+    from mock import patch, mock_open, DEFAULT  # noqa
 
 import posixpath
 import ntpath
@@ -73,7 +73,7 @@ def maybe_patch(target, new=DEFAULT):
     return decorator
 
 
-def requires_module(name):
+def requires_module(name):  # pragma: no cover
     try:
         __import__(name)
         return lambda func: func
@@ -87,9 +87,8 @@ def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "
     env.known_other_pkgs = set(system_pkgs)
 
     def mock_get_manifest(name):
-        if name in catkin_pkgs:
-            return create_manifest(name, description="mocked %s" % name, buildtool_depends=["catkin"] if name != "catkin" else [], run_depends=["message_runtime"] if name.endswith("_msgs") or name == "dynamic_reconfigure" else [])
-        return None
+        assert name in catkin_pkgs
+        return create_manifest(name, description="mocked %s" % name, buildtool_depends=["catkin"] if name != "catkin" else [], run_depends=["message_runtime"] if name.endswith("_msgs") or name == "dynamic_reconfigure" else [])
 
     env.get_manifest = mock_get_manifest
     return env
@@ -149,9 +148,8 @@ def mock_lint(env, manifest, cmakelist, checks=all_checks, indentation=False, re
             else:
                 raise OSError("Mock CMake file not found: %s" % filename)
         else:
-            if filename == os.path.normpath(package_path + "/CMakeLists.txt"):
-                return cmakelist
-            raise OSError("Mock CMake file not found: %s" % filename)
+            assert filename == os.path.normpath(package_path + "/CMakeLists.txt")
+            return cmakelist
 
     linter._read_file = get_cmakelist
     if checks is not None:
