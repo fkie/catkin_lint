@@ -124,3 +124,40 @@ should  be addressed to improve the quality of the package. Many notices
 highlight violations of the recommendations and best practises from the
 catkin manual.
 
+## Configuration files
+
+Since version 1.6.9, **catkin_lint** can load settings from a configuration file.
+Configuration files can be specified with the `--config` command line options.
+Additionally, **catkin_lint** will look in the following locations (in precedence order):
+
+ * `.catkin_lint` files in the `ROS_PACKAGE_PATH` directories
+ * `$XDG_CONFIG_HOME/catkin_lint` (`$XDG_CONFIG_HOME` defaults to `~/.config`)
+ * `~/.catkin_lint`
+
+The file is expected to be in an INI-style format with different sections.
+The `[catkin_lint]` section may contain command line options.
+All other sections are considered package names and will override the
+severity of diagnostic messages.
+The special wildcard section `[*]` applies to all packages.
+
+The following example illustrates the configuration file format:
+
+    [catkin_lint]
+    output = explain
+    color = auto
+    package_path = /path/to/extra/packages
+
+    [foo]
+    missing_catkin_depend = warning
+    unknown_package = ignore
+
+
+    [bar]
+    deprecated_cmd = default
+
+    [*]
+    deprecated_cmd = error
+    launch_depend = notice
+
+Note that the `deprecated_cmd` override from the wildcard section applies to the package `foo`,
+but not to the package `bar`.

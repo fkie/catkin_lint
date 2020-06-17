@@ -1,3 +1,33 @@
+# coding=utf-8
+#
+# catkin_lint
+# Copyright (c) 2013-2020 Fraunhofer FKIE
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of the Fraunhofer organization nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from catkin_lint.linter import CMakeLinter, LintInfo
 from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
@@ -43,7 +73,7 @@ def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "
 
 
 def create_manifest(name, description="", buildtool_depends=["catkin"], build_depends=[], run_depends=[], test_depends=[], meta=False):
-    return Package(
+    package = Package(
         name=name,
         version="0.0.0",
         package_format=1,
@@ -55,10 +85,12 @@ def create_manifest(name, description="", buildtool_depends=["catkin"], build_de
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
+    package.evaluate_conditions({})
+    return package
 
 
 def create_manifest2(name, description="", buildtool_depends=["catkin"], build_depends=[], depends=[], buildtool_export_depends=[], build_export_depends=[], exec_depends=[], test_depends=[], meta=False):
-    return Package(
+    package = Package(
         name=name,
         version="0.0.0",
         package_format=2,
@@ -73,6 +105,8 @@ def create_manifest2(name, description="", buildtool_depends=["catkin"], build_d
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
+    package.evaluate_conditions({})
+    return package
 
 
 def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_var=False, package_path=None):
@@ -100,7 +134,7 @@ def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_va
     if checks is not None:
         linter.require(checks)
     info = LintInfo(env)
-    linter.lint(os.path.normpath(package_path), manifest, info)
+    linter.lint(os.path.normpath(package_path), manifest, info=info)
     if not indentation:
         linter.messages = [m for m in linter.messages if m.id != "INDENTATION"]
     if return_var:

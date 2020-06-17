@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2018 Fraunhofer FKIE
+# Copyright (c) 2013-2020 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -649,9 +649,9 @@ message_list = {
     ("condition '%(cond)s' is ambiguous",
         """\
         Historically, the if() command will interpret a single token as a variable
-        name and transparently resolve it if possible. Explicit variable references
+        name and transparently resolve it if possible. Unquoted variable references
         like if(${var}) can lead to incorrect results if ${var} resolves to a different
-        variable name. Use if(var) instead.
+        variable name. Use if(var) or if("${var}") instead.
         """),
 }
 

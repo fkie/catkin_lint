@@ -1,3 +1,8 @@
+Version 1.6.9
+  * Add support for conditional dependencies (manifest version 3)
+  * New configuration file mechanism
+  * A few minor bugfixes
+
 Version 1.6.8
   * Fix message output format for paths with variables
 

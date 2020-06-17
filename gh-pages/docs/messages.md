@@ -181,7 +181,7 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 
 - **ID**: ambiguous_condition
 - **Severity**: warning
-- **Explanation**: Historically, the <code>if()</code> command will interpret a single token as a variable name and transparently resolve it if possible. Explicit variable references like <code>if(${var})</code> can lead to incorrect results if ${var} resolves to a different variable name. Use <code>if(var)</code> instead.
+- **Explanation**: Historically, the <code>if()</code> command will interpret a single token as a variable name and transparently resolve it if possible. Unquoted variable references like <code>if(${var})</code> can lead to incorrect results if ${var} resolves to a different variable name. Use <code>if(var)</code> or <code>if("${var}")</code> instead.
 
 ## duplicate <i>cmd</i>()
 

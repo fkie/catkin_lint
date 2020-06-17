@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2018 Fraunhofer FKIE
+# Copyright (c) 2013-2020 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -94,6 +94,8 @@ def find_packages(basepath, use_cache=True):
         packages[path] = manifest
     if cache_updated:
         _store_cache()
+    for package in packages.values():
+        package.evaluate_conditions(os.environ)
     return packages
 
 

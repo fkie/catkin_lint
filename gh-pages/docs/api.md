@@ -3,7 +3,12 @@
 **catkin_lint** checks are implemented as
 submodules, and interact with the main program
 via callbacks. You can write your own checks for
-**catkin_lint** and load them with the `-c` command line option.
+**catkin_lint** and run them with the `-c` command line option.
+You can also add them to your `.catkin_lint` configuration file
+to use them by default:
+
+    [catkin_lint]
+    extra_checks = my.customized.check my.other.check
 
 Each check is included via an entry function which setups
 the callbacks for the check. The entry function has a single
