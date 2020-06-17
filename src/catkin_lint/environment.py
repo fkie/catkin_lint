@@ -95,7 +95,8 @@ def find_packages(basepath, use_cache=True):
     if cache_updated:
         _store_cache()
     for package in packages.values():
-        package.evaluate_conditions(os.environ)
+        if hasattr(package, "evaluate_conditions"):
+            package.evaluate_conditions(os.environ)
     return packages
 
 

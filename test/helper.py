@@ -107,7 +107,8 @@ def create_manifest(name, description="", buildtool_depends=["catkin"], build_de
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
-    package.evaluate_conditions({})
+    if hasattr(package, "evaluate_conditions"):
+        package.evaluate_conditions({})
     return package
 
 
@@ -127,7 +128,8 @@ def create_manifest2(name, description="", buildtool_depends=["catkin"], build_d
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
-    package.evaluate_conditions({})
+    if hasattr(package, "evaluate_conditions"):
+        package.evaluate_conditions({})
     return package
 
 

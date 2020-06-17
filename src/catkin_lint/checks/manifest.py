@@ -33,28 +33,28 @@ import os
 from lxml import etree as ET
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
-from ..util import enumerate_package_files
+from ..util import enumerate_package_files, is_active_depend
 from .misc import project
 
 
 def depends(linter):
     def on_init(info):
-        info.buildtool_dep = {dep.name for dep in info.manifest.buildtool_depends if dep.evaluated_condition}
-        info.build_dep = {dep.name for dep in info.manifest.build_depends if dep.evaluated_condition}
+        info.buildtool_dep = {dep.name for dep in info.manifest.buildtool_depends if is_active_depend(dep)}
+        info.build_dep = {dep.name for dep in info.manifest.build_depends if is_active_depend(dep)}
         info.export_dep = set()
         info.exec_dep = set()
         if info.manifest.package_format > 1:
-            deps = {dep.name for dep in info.manifest.build_export_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.build_export_depends if is_active_depend(dep)}
             info.export_dep.update(deps)
-            deps = {dep.name for dep in info.manifest.buildtool_export_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.buildtool_export_depends if is_active_depend(dep)}
             info.export_dep.update(deps)
-            deps = {dep.name for dep in info.manifest.exec_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.exec_depends if is_active_depend(dep)}
             info.exec_dep.update(deps)
         if info.manifest.package_format < 2:
             deps = {dep.name for dep in info.manifest.run_depends}
             info.export_dep.update(deps)
             info.exec_dep.update(deps)
-        info.test_dep = {dep.name for dep in info.manifest.test_depends if dep.evaluated_condition}
+        info.test_dep = {dep.name for dep in info.manifest.test_depends if is_active_depend(dep)}
         if info.env.ok:
             for pkg in info.buildtool_dep | info.build_dep | info.export_dep | info.exec_dep | info.test_dep:
                 if not info.env.is_known_pkg(pkg):
