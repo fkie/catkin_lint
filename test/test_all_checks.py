@@ -32,7 +32,7 @@ import unittest
 import shutil
 import argparse
 import os
-from .helper import create_env, create_manifest, mock_lint, patch
+from .helper import create_env, create_manifest, mock_lint, patch, maybe_patch, requires_module
 from tempfile import mkdtemp
 try:
     from StringIO import StringIO
@@ -125,7 +125,7 @@ def raise_io_error(*args):
 
 class CatkinInvokationTest(unittest.TestCase):
 
-    def fake_package(self, name, depends, wsdir):
+    def fake_package(self, name, depends, wsdir, broken=False):
         pkgdir = os.path.join(wsdir, "src", name)
         os.makedirs(pkgdir)
         with open(os.path.join(pkgdir, "package.xml"), "w") as f:
@@ -141,6 +141,7 @@ class CatkinInvokationTest(unittest.TestCase):
             f.write('</package>\n')
         with open(os.path.join(pkgdir, "CMakeLists.txt"), "w") as f:
             f.write(
+                'cmake_minimum_required(VERSION 3.0)\n'
                 'project(%(name)s)\n'
                 'find_package(catkin REQUIRED %(components)s)\n'
                 'catkin_package()\n' % {
@@ -148,14 +149,16 @@ class CatkinInvokationTest(unittest.TestCase):
                     "components": ('COMPONENTS ' + ' '.join(dep for dep in depends)) if depends else ''
                 }
             )
+            if broken:
+                f.write("catkin_package()\n")
         os.makedirs(os.path.join(pkgdir, ".git"))
         with open(os.path.join(pkgdir, ".git", "script"), "w") as f:
             f.write("Random executable file")
         os.chmod(os.path.join(pkgdir, ".git", "script"), 0o755)
 
-    @patch("rosdistro.get_index_url", get_dummy_index_url)
-    @patch("rosdistro.get_index", get_dummy_index)
-    @patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
+    @maybe_patch("rosdistro.get_index_url", get_dummy_index_url)
+    @maybe_patch("rosdistro.get_index", get_dummy_index)
+    @maybe_patch("rosdistro.get_cached_distribution", get_dummy_cached_distribution)
     def run_catkin_lint(self, *argv):
         print("RUN: " + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
@@ -169,9 +172,9 @@ class CatkinInvokationTest(unittest.TestCase):
         print(stdout.getvalue())
         return returncode, stdout.getvalue()
 
-    @patch("rosdistro.get_index_url", get_dummy_index_url)
-    @patch("rosdistro.get_index", get_dummy_index)
-    @patch("rosdistro.get_cached_distribution", raise_io_error)
+    @maybe_patch("rosdistro.get_index_url", get_dummy_index_url)
+    @maybe_patch("rosdistro.get_index", get_dummy_index)
+    @maybe_patch("rosdistro.get_cached_distribution", raise_io_error)
     def run_catkin_lint_without_rosdistro(self, *argv):
         print("RUN: " + " ".join(argv))
         catkin_lint.environment._cache = None  # force cache reloads
@@ -200,10 +203,13 @@ class CatkinInvokationTest(unittest.TestCase):
         self.fake_package("alpha", ["beta", "rospy", "roscpp"], wsdir=self.wsdir)
         self.fake_package("beta", [], wsdir=self.wsdir)
         self.fake_package("gamma", ["delta"], wsdir=self.wsdir)
-        self.fake_package("broken", ["missing"], wsdir=self.wsdir)
+        self.fake_package("broken", ["missing"], wsdir=self.wsdir, broken=True)
         with open(os.path.join(self.wsdir, "src", "broken", "CATKIN_IGNORE"), "w"):
             pass
-        self.fake_package(".dotdir_with_broken_package", ["missing"], wsdir=self.wsdir)
+        self.fake_package(".dotdir_with_broken_package", ["missing"], wsdir=self.wsdir, broken=True)
+        self.broken_wsdir = mkdtemp()
+        self.broken_ws_srcdir = os.path.join(self.broken_wsdir, "src")
+        self.fake_package("broken", [], wsdir=self.broken_wsdir, broken=True)
         catkin_lint.environment._cache_dir = os.path.join(self.homedir, ".ros", "catkin_lint")
         os.makedirs(catkin_lint.environment._cache_dir)
         os.environ = {
@@ -222,8 +228,8 @@ class CatkinInvokationTest(unittest.TestCase):
         shutil.rmtree(self.upstream_ws, ignore_errors=True)
         os.environ = self.old_environ
 
-    def runTest(self):
-        """Test catkin_lint invocation on a ROS workspace"""
+    def test_cli(self):
+        """Test correct behavior of CLI"""
         exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, os.EX_NOINPUT)
         self.assertIn("no path given and no package.xml in current directory", stdout)
@@ -304,127 +310,37 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 2 packages and found 0 problems", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "missing_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "--ignore", "duplicate_cmd")
         self.assertEqual(exitcode, 0)
         self.assertIn("messages have been ignored", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--color=always")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "--color=always")
         self.assertIn(chr(0x1b), stdout)
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--color=never")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "--color=never")
         self.assertNotIn(chr(0x1b), stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--ignore", "missing_catkin_depend", "--show-ignored")
-        self.assertIn("package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2", "--ignore", "duplicate_cmd", "--show-ignored")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("error: duplicate catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--notice", "missing_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2", "--notice", "duplicate_cmd")
         self.assertEqual(exitcode, 0)
-        self.assertIn("notice: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+        self.assertIn("notice: duplicate catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--warning", "missing_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2", "--warning", "duplicate_cmd")
         self.assertEqual(exitcode, 0)
-        self.assertIn("warning: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+        self.assertIn("warning: duplicate catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W0", "--warning", "missing_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W0", "--warning", "duplicate_cmd")
         self.assertIn("additional warning", stdout)
         self.assertEqual(exitcode, 0)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2", "--error", "missing_catkin_depend")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2", "--error", "duplicate_cmd")
         self.assertEqual(exitcode, 1)
-        self.assertIn("error: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
+        self.assertIn("error: duplicate catkin_package()", stdout)
 
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "--strict")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "--strict", "--warning", "duplicate_cmd")
         self.assertEqual(exitcode, 1)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[*]\nmissing_catkin_depend = ignore")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertIn("messages have been ignored", stdout)
-        self.assertEqual(exitcode, 0)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[catkin_lint]\noutput = invalid\n\n[*]\nmissing_catkin_depend = ignore")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertEqual(exitcode, 1)
-        self.assertIn("unknown output format", stdout)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[*]\nmissing_catkin_depend = notice")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertEqual(exitcode, 0)
-        self.assertIn("notice: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[*]\nmissing_catkin_depend = warning")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertEqual(exitcode, 0)
-        self.assertIn("warning: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[*]\nmissing_catkin_depend = error")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertEqual(exitcode, 1)
-        self.assertIn("error: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[*]\nmissing_catkin_depend = default")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertIn("package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
-
-        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
-            f.write("[*]\nmissing_catkin_depend = notice\n\n[delta]\nmissing_catkin_depend = warning\n")
-        exitcode, stdout = self.run_catkin_lint("--pkg", "delta", "-W2")
-        self.assertIn("warning: package 'std_msgs' must be in CATKIN_DEPENDS in catkin_package()", stdout)
-
-        os.unlink(os.path.join(self.homedir, ".catkin_lint"))
-
-        with open(os.path.join(self.ws_srcdir, "catkin_lint_config"), "w") as f:
-            f.write("[catkin_lint]\npackage_path = %s\n" % self.ws_srcdir)
-        exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta", "--config", os.path.join(self.ws_srcdir, "catkin_lint_config"))
-        self.assertEqual(exitcode, 0)
-        self.assertIn("checked 2 packages and found 0 problems", stdout)
-
-        exitcode, stdout = self.run_catkin_lint("--config", "no_such_file")
-        self.assertEqual(exitcode, 1)
-        self.assertIn("cannot read 'no_such_file'", stdout)
-
-        try:
-            # The following tests will not produce meaningful results
-            # if rosdep2 or rosdistro is unavailable
-            import rosdep2  # noqa
-            import rosdistro  # noqa
-
-            exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
-            self.assertEqual(exitcode, 0)
-
-            exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.upstream_ws_srcdir, self.ws_srcdir]), "--pkg", "gamma")
-            self.assertEqual(exitcode, 1)
-
-            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_package")
-            self.assertEqual(exitcode, 0)
-            self.assertIn("messages have been ignored", stdout)
-
-            del os.environ["ROS_DISTRO"]
-            exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
-            self.assertEqual(exitcode, 0)
-
-            exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "melodic")
-            self.assertEqual(exitcode, 1)
-
-            del os.environ["ROS_DISTRO"]
-            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"))
-            self.assertEqual(exitcode, 0)
-            self.assertNotIn("error: unknown package", stdout)
-
-            exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--rosdistro", "melodic")
-            self.assertEqual(exitcode, 1)
-            self.assertIn("error: unknown package", stdout)
-
-            exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "melodic")
-            self.assertEqual(exitcode, 0)
-            self.assertIn("cannot initialize rosdistro", stdout)
-
-        except ImportError:
-            pass
 
         exitcode, stdout = self.run_catkin_lint("--list-check-ids")
         self.assertEqual(exitcode, 0)
@@ -447,3 +363,90 @@ class CatkinInvokationTest(unittest.TestCase):
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--rosdistro", "melodic")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
+
+    def test_config(self):
+        """Test configuration file handling from CLI"""
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nduplicate_cmd = ignore")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("messages have been ignored", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[catkin_lint]\noutput = invalid\n\n[*]\nduplicate_cmd = ignore")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("unknown output format", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nduplicate_cmd = notice")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("notice: duplicate catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nduplicate_cmd = warning")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("warning: duplicate catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nduplicate_cmd = error")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("error: duplicate catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nduplicate_cmd = default")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("error: duplicate catkin_package()", stdout)
+
+        with open(os.path.join(self.homedir, ".catkin_lint"), "w") as f:
+            f.write("[*]\nduplicate_cmd = notice\n\n[broken]\nduplicate_cmd = warning\n")
+        exitcode, stdout = self.run_catkin_lint(self.broken_ws_srcdir, "-W2")
+        self.assertIn("warning: duplicate catkin_package()", stdout)
+
+        with open(os.path.join(self.ws_srcdir, "catkin_lint_config"), "w") as f:
+            f.write("[catkin_lint]\npackage_path = %s\n" % self.ws_srcdir)
+        exitcode, stdout = self.run_catkin_lint("--pkg", "alpha", "--pkg", "beta", "--config", os.path.join(self.ws_srcdir, "catkin_lint_config"))
+        self.assertEqual(exitcode, 0)
+        self.assertIn("checked 2 packages and found 0 problems", stdout)
+
+        exitcode, stdout = self.run_catkin_lint("--config", "no_such_file")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("cannot read 'no_such_file'", stdout)
+
+    @requires_module("rosdep2")
+    @requires_module("rosdistro")
+    def test_rosdep_and_rosdistro(self):
+        """Test rosdep2 and rosdistro integration from CLI"""
+        exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.ws_srcdir, self.upstream_ws_srcdir]), "--pkg", "gamma")
+        self.assertEqual(exitcode, 0)
+
+        exitcode, stdout = self.run_catkin_lint("--package-path", os.pathsep.join([self.upstream_ws_srcdir, self.ws_srcdir]), "--pkg", "gamma")
+        self.assertEqual(exitcode, 1)
+
+        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--ignore", "unknown_package")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("messages have been ignored", stdout)
+
+        del os.environ["ROS_DISTRO"]
+        exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep")
+        self.assertEqual(exitcode, 0)
+
+        exitcode, stdout = self.run_catkin_lint("--pkg", "invalid_dep", "--rosdistro", "melodic")
+        self.assertEqual(exitcode, 1)
+
+        del os.environ["ROS_DISTRO"]
+        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"))
+        self.assertEqual(exitcode, 0)
+        self.assertNotIn("error: unknown package", stdout)
+
+        exitcode, stdout = self.run_catkin_lint(os.path.join(self.ws_srcdir, "alpha"), "--rosdistro", "melodic")
+        self.assertEqual(exitcode, 1)
+        self.assertIn("error: unknown package", stdout)
+
+        exitcode, stdout = self.run_catkin_lint_without_rosdistro(self.ws_srcdir, "--rosdistro", "melodic")
+        self.assertEqual(exitcode, 0)
+        self.assertIn("cannot initialize rosdistro", stdout)

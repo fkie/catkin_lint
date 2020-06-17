@@ -31,15 +31,16 @@
 from catkin_lint.linter import CMakeLinter, LintInfo
 from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
-from catkin_lint.checks import all
+from catkin_lint.checks import all as all_checks
 from catkin_lint.util import iteritems
 from functools import wraps
+from unittest import skip
 
 import os
 try:
-    from mock import patch, mock_open  # noqa
+    from mock import patch, mock_open, DEFAULT  # noqa
 except ImportError:
-    from unittest.mock import patch, mock_open  # noqa
+    from unittest.mock import patch, mock_open, DEFAULT  # noqa
 
 import posixpath
 import ntpath
@@ -56,6 +57,28 @@ def posix_and_nt(func):
     if wrapper.__doc__ is not None:
         wrapper.__doc__ += " (POSIX/NT)"
     return wrapper
+
+
+# Decorator to patch function if the module can be imported
+def maybe_patch(target, new=DEFAULT):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                with patch(target, new):
+                    return func(*args, **kwargs)
+            except ImportError:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def requires_module(name):
+    try:
+        __import__(name)
+        return lambda func: func
+    except Exception:
+        return skip("cannot import %s" % name)
 
 
 def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "dynamic_reconfigure", "other_catkin", "other_msgs", "first_pkg", "second_pkg"], system_pkgs=["other_system"]):
@@ -109,7 +132,7 @@ def create_manifest2(name, description="", buildtool_depends=["catkin"], build_d
     return package
 
 
-def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_var=False, package_path=None):
+def mock_lint(env, manifest, cmakelist, checks=all_checks, indentation=False, return_var=False, package_path=None):
     linter = CMakeLinter(env)
     if package_path is None:
         package_path = "/package-path/%s" % manifest.name
