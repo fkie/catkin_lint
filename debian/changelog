@@ -1,4 +1,4 @@
-catkin-lint (1.6.9-1) unstable; urgency=medium
+catkin-lint (1.6.9-1~20.04) focal; urgency=medium
 
   * New release.
 
