@@ -30,6 +30,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from setuptools import setup
+from setuptools.command.test import test as TestCommand
 import versioneer
 import os
 
@@ -37,6 +38,20 @@ import os
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+
+class NoseTestCommand(TestCommand):
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import nose
+        nose.run_exit(argv=["nosetests"])
+
+
+cmdclass = versioneer.get_cmdclass()
+cmdclass["test"] = NoseTestCommand
 
 setup(
     name="catkin_lint",
@@ -52,9 +67,9 @@ setup(
     data_files=[("share/bash-completion/completions", ["bash/catkin_lint"])],
     scripts=["bin/catkin_lint"],
     version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    cmdclass=cmdclass,
     install_requires=["catkin_pkg", "lxml", "configparser;python_version<\"3\""],
-    test_suite="nose.collector",
+    tests_require=["nose", "coverage", "mock"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
