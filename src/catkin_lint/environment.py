@@ -225,7 +225,7 @@ try:  # pragma: no cover
     from rospkg import get_ros_home
     _cache_dir = os.path.join(get_ros_home(), "catkin_lint")
 except ImportError:  # pragma: no cover
-    _cache_dir = os.pa41th.join(os.path.expanduser("~"), ".ros", "catkin_lint")
+    _cache_dir = os.path.join(os.path.expanduser("~"), ".ros", "catkin_lint")
 
 
 def _load_cache():
