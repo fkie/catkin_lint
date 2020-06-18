@@ -11,12 +11,11 @@ I generally recommend that you install **catkin_lint** from my Ubuntu PPA or use
 * `Debian packages <https://packages.debian.org/catkin-lint>`_
 * `Ubuntu packages <https://packages.ubuntu.com/catkin-lint>`_
 * `ROS Package Archive <http://packages.ros.org/ros/ubuntu/pool/main/c/catkin-lint/>`_
-* `Timo's Ubuntu PPA <https://launchpad.net/~roehling/+archive/latest>`_
+* `Timo's Ubuntu PPA for ROS packages <https://launchpad.net/~roehling/+archive/ros>`_
 * `PyPI <https://pypi.org/project/catkin_lint>`_
 * `Github <https://github.com/fkie/catkin_lint>`_
 
-You can find the documentation with detailed installation instructions at
-`http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
+You can find the documentation with detailed installation instructions at `http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
 
 .. |ci_badge| image:: https://github.com/fkie/catkin_lint/workflows/CI/badge.svg
    :target: https://github.com/fkie/catkin_lint/actions
