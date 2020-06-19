@@ -95,6 +95,10 @@ class CMakeParserTest(unittest.TestCase):
             [("cmd", ['string that spans\nmultiple lines'])]
         )
         self.assertEqual(
+            self.parse_all('cmd("string with \\\nline continuation")'),
+            [("cmd", ['string with line continuation'])]
+        )
+        self.assertEqual(
             self.parse_all('cmd("\\\\"\\")'),
             [("cmd", ['\\', '"'])]
         )
@@ -243,6 +247,10 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual(
             self.parse_all("cmd(one;two three)"),
             [("cmd", ["one", "two", "three"])]
+        )
+        self.assertEqual(
+            self.parse_all("cmd(one\\;two three)"),
+            [("cmd", ["one;two", "three"])]
         )
         self.assertEqual(
             self.parse_all('cmd("one;two" three)'),

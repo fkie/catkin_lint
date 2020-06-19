@@ -41,8 +41,13 @@ def _escape(s):
     return re.sub(r'([\\$"])', r"\\\1", s)
 
 
+_special_escapes = {"\\n": "\n", "\\t": "\t", "\\r": "\r"}
+
+
 def _unescape(s):
-    return s if "\\" not in s else re.sub(r'\\(.)', r"\1", s)
+    if "\\" not in s:
+        return s
+    return "".join((_special_escapes.get(p, p[1:]) if p.startswith("\\") else p) for p in re.split(r'(\\.)', s))
 
 
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
