@@ -243,6 +243,10 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, 1)
         self.assertIn("OS error: mock exception", stdout)
 
+        exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--quiet")
+        self.assertEqual(exitcode, 0)
+        self.assertNotIn("checked 3 packages and found 0 problems", stdout)
+
         exitcode, stdout = self.run_catkin_lint(self.ws_srcdir, "--text")
         self.assertEqual(exitcode, 0)
         self.assertIn("checked 3 packages and found 0 problems", stdout)
