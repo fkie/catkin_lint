@@ -7,7 +7,7 @@ _catkin_lint_complete()
 	local arg="${COMP_WORDS[COMP_CWORD]}"
 	local prev="${COMP_WORDS[COMP_CWORD-1]}"
 	local documented_args=(
-		"-h" "--help"
+		"-h" "--help" "--help-problem"
 		"--version"
 		"--quiet" "-q"
 		"--severity-level" "-W0" "-W1" "-W2"
@@ -37,7 +37,7 @@ _catkin_lint_complete()
 		--rosdistro)
 			COMPREPLY=($(compgen -W "groovy hydro indigo jade kinetic lunar melodic noetic $ROS_DISTRO" -- "$arg"))
 			;;
-		--ignore|--error|--warning|--notice)
+		--ignore|--error|--warning|--notice|--help-problem)
 			COMPREPLY=($(compgen -W "$(catkin_lint --list-check-ids)" -- "$arg"))
 			;;
 		--color)

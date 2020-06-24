@@ -55,6 +55,7 @@ def prepare_arguments(parser):
     parser.epilog = "Options marked with [*] can be set in the [catkin_lint] section of a configuration file."
     parser.add_argument("--version", action="version", version=catkin_lint_version)
     parser.add_argument("path", metavar="PATH", nargs="*", default=[], help="path to catkin packages")
+    parser.add_argument("--help-problem", metavar="ID", nargs="?", default=None, const="**SUMMARY**", help="show information about detectable problems")
     m = parser.add_mutually_exclusive_group()
     m.add_argument("--quiet", "-q", action="store_true", default=None, help="suppress final summary [*]")
     m.add_argument("--no-quiet", action="store_false", default=None, help="override quiet=yes option from configuration file")
@@ -112,11 +113,38 @@ def get_severity_overrides_from_args(args, optionxform=lambda x: x):
     return result
 
 
+def show_help_with_problems(problem):
+    from .diagnostics import message_list
+    import re
+    import textwrap
+
+    if problem == "**SUMMARY**":
+        sys.stdout.write("catkin_lint detects the following problems:\n\n")
+        ids = list(message_list.keys())
+        ids.sort()
+        for k in ids:
+            sys.stdout.write("  %-30s -- %s\n" % (k.lower(), message_list[k][0]))
+        sys.stdout.write("\nYou can get a more detailed explanation for each problem with\n    catkin_lint --help-problem ID\n")
+        return 0
+    problem_key = problem.upper().replace("-", "_")
+    if problem_key not in message_list:
+        sys.stderr.write("catkin_lint: unknown message ID '%s'\n" % problem)
+        return 1
+    short_desc, long_desc = message_list[problem_key]
+    sys.stdout.write("%s -- %s\n\n" % (problem_key.lower(), short_desc))
+    explanation = re.sub(r"\s+", " ", long_desc).strip()
+    sys.stdout.write(textwrap.fill(explanation))
+    sys.stdout.write("\n\n")
+    return 0
+
+
 def run_linter(args):
     if args.clear_cache:
         from .environment import _clear_cache
         _clear_cache()
         return 0
+    if args.help_problem is not None:
+        return show_help_with_problems(args.help_problem)
     if args.list_check_ids:
         from .diagnostics import message_list
         ids = [k.lower() for k in message_list.keys()]
