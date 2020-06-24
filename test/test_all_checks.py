@@ -234,6 +234,15 @@ class CatkinInvokationTest(unittest.TestCase):
         self.assertEqual(exitcode, os.EX_NOINPUT)
         self.assertIn("no path given and no package.xml in current directory", stdout)
 
+        exitcode, stdout = self.run_catkin_lint("--help-problem")
+        self.assertEqual(exitcode, 0)
+
+        exitcode, stdout = self.run_catkin_lint("--help-problem", "does-not-exist")
+        self.assertEqual(exitcode, 1)
+
+        exitcode, stdout = self.run_catkin_lint("--help-problem", "duplicate_cmd")
+        self.assertEqual(exitcode, 0)
+
         os.chdir(os.path.join(self.ws_srcdir, "beta"))
         exitcode, stdout = self.run_catkin_lint()
         self.assertEqual(exitcode, 0)
