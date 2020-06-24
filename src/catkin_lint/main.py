@@ -113,7 +113,6 @@ def get_severity_overrides_from_args(args, optionxform=lambda x: x):
 
 
 def run_linter(args):
-    print(args)
     if args.clear_cache:
         from .environment import _clear_cache
         _clear_cache()
