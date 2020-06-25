@@ -109,13 +109,21 @@ def is_catkin_package(manifest):
     return True
 
 
+class PackageType:
+    UNKNOWN = 0
+    CATKIN = 1
+    OTHER = 2
+    ANY = 3  # CATKIN | OTHER
+    INDETERMINATE = 32768
+
+
 class CatkinEnvironment(object):
     def __init__(self, os_env=None, use_rosdep=True, use_rosdistro=True, use_cache=True, quiet=False):
         self.package_path_order = []
         self.searched_paths = {}
         self.known_catkin_pkgs = set()
         self.known_other_pkgs = set()
-        self.ok = True
+        self.knows_everything = use_rosdep and use_rosdistro
         self.os_env = os_env
         self.use_cache = use_cache
         self.use_rosdistro = use_rosdistro
@@ -130,7 +138,7 @@ class CatkinEnvironment(object):
                 if not self.quiet:
                     sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
                     sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
-                self.ok = False
+                self.knows_everything = False
             finally:
                 gc.enable()
 
@@ -160,19 +168,22 @@ class CatkinEnvironment(object):
                     return p, m
         raise KeyError()
 
-    def is_catkin_pkg(self, name):
+    def get_package_type(self, name):
         if name in self.known_catkin_pkgs:
-            return True
+            return PackageType.CATKIN
         if name in self.known_other_pkgs:
-            return False
+            return PackageType.OTHER
         if self.rosdep is not None:
-            if not self.rosdep.is_ros(name):
-                return False
-            try:
-                return is_catkin_package(self.get_manifest(name))
-            except (IOError, KeyError):
-                return True
-        return False
+            if self.rosdep.has_key(name):  # noqa
+                try:
+                    if self.rosdep.is_ros(name):
+                        manifest = self.get_manifest(name)
+                        if manifest is not None and is_catkin_package(manifest):
+                            return PackageType.CATKIN
+                    return PackageType.OTHER
+                except (IOError, KeyError):
+                    return PackageType.INDETERMINATE
+        return PackageType.UNKNOWN if self.knows_everything else PackageType.INDETERMINATE
 
     def get_manifest(self, name):
         global _cache
@@ -201,9 +212,9 @@ class CatkinEnvironment(object):
             if self.rosdistro is None:
                 self.rosdistro = get_rosdistro(quiet=self.quiet)
             if not self.rosdistro.ok():
-                if not self.quiet and self.ok:
+                if not self.quiet and self.knows_everything:
                     sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
-                self.ok = False
+                self.knows_everything = False
                 raise KeyError()
             manifest = self.rosdistro.download_manifest(name)
             if self.use_cache:
@@ -211,13 +222,6 @@ class CatkinEnvironment(object):
                 _store_cache()
             return manifest
         raise KeyError()
-
-    def is_known_pkg(self, name):
-        if name in self.known_catkin_pkgs or name in self.known_other_pkgs:
-            return True
-        if self.rosdep is not None:
-            return self.rosdep.has_key(name)  # noqa
-        return False
 
 
 _cache = None

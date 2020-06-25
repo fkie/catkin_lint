@@ -385,15 +385,18 @@ class LinterTest(unittest.TestCase):
         with patch("catkin_lint.environment.find_packages", lambda x, use_cache: mock_packages):
             result = env.add_path(os.path.normpath("/"))
             self.assertEqual(1, len(result))
-            self.assertTrue(env.is_catkin_pkg("mock_catkin"))
-            self.assertFalse(env.is_catkin_pkg("mock_other"))
+            self.assertEqual(env.get_package_type("mock_catkin"), catkin_lint.environment.PackageType.CATKIN)
+            self.assertEqual(env.get_package_type("mock_other"), catkin_lint.environment.PackageType.OTHER)
             result = env.add_path(os.path.normpath("/"))
             self.assertEqual(1, len(result))
-            self.assertTrue(env.is_catkin_pkg("mock_catkin"))
-            self.assertFalse(env.is_catkin_pkg("mock_other"))
+            self.assertEqual(env.get_package_type("mock_catkin"), catkin_lint.environment.PackageType.CATKIN)
+            self.assertEqual(env.get_package_type("mock_other"), catkin_lint.environment.PackageType.OTHER)
             result = env.add_path(os.path.normpath("/missing"))
             self.assertEqual([], result)
-            self.assertFalse(env.is_catkin_pkg("invalid"))
+            env.knows_everything = True
+            self.assertEqual(env.get_package_type("invalid"), catkin_lint.environment.PackageType.UNKNOWN)
+            env.knows_everything = False
+            self.assertEqual(env.get_package_type("invalid"), catkin_lint.environment.PackageType.INDETERMINATE)
 
         def raiseError():  # pragma: no cover
             raise RuntimeError()
@@ -401,7 +404,7 @@ class LinterTest(unittest.TestCase):
             with patch("catkin_lint.environment.get_rosdep", raiseError):
                 with patch("sys.stderr", devnull):
                     env = catkin_lint.environment.CatkinEnvironment()
-                    self.assertFalse(env.ok)
+                    self.assertFalse(env.knows_everything)
         self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
     @posix_and_nt

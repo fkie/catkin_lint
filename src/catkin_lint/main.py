@@ -87,7 +87,7 @@ def prepare_arguments(parser):
     parser.add_argument("--color", metavar="MODE", choices=["never", "always", "auto"], default=None, help="colorize text output; valid values are \"never\", \"always\", and \"auto\" [*]")
     m = parser.add_mutually_exclusive_group()
     m.add_argument("--offline", action="store_true", default=None, help="do not download package index to look for packages [*]")
-    m.add_argument("--no-offline", action="store_false", default=None, help="override offline=yes option from configuration file")
+    m.add_argument("--no-offline", action="store_false", help="override offline=yes option from configuration file")
     parser.add_argument("--clear-cache", action="store_true", help="clear internal cache and invalidate all downloaded manifests")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--disable-cache", action="store_true", help=argparse.SUPPRESS)
@@ -163,22 +163,20 @@ def run_linter(args):
     config["catkin_lint"] = {}
     if args.rosdistro:
         config["catkin_lint"]["rosdistro"] = args.rosdistro
-    if args.resolve_env:
-        config["catkin_lint"]["resolve_env"] = "yes"
-    if args.offline:
-        config["catkin_lint"]["offline"] = "yes"
-    if args.disable_cache:
-        config["catkin_lint"]["disable_cache"] = "yes"
-    if args.quiet is not None:
-        config["catkin_lint"]["quiet"] = "yes" if args.quiet else "no"
-    if args.strict is not None:
-        config["catkin_lint"]["strict"] = "yes" if args.strict else "no"
     if args.package_path:
         config["catkin_lint"]["package_path"] = args.package_path
     if args.color:
         config["catkin_lint"]["color"] = args.color
     if args.output:
         config["catkin_lint"]["output"] = args.output
+    if args.disable_cache:
+        config["catkin_lint"]["disable_cache"] = "yes"
+    if args.offline is not None:
+        config["catkin_lint"]["offline"] = "yes" if args.offline else "no"
+    if args.quiet is not None:
+        config["catkin_lint"]["quiet"] = "yes" if args.quiet else "no"
+    if args.strict is not None:
+        config["catkin_lint"]["strict"] = "yes" if args.strict else "no"
     if args.severity_level is not None:
         config["catkin_lint"]["severity_level"] = str(args.severity_level)
     if args.resolve_env is not None:
@@ -248,10 +246,10 @@ def run_linter(args):
         sys.stderr.write("catkin_lint: no packages to check\n")
         return nothing_to_do
     if "ROS_DISTRO" not in os.environ:
-        if env.ok and not quiet:
+        if env.knows_everything and not quiet:
             sys.stderr.write("catkin_lint: neither ROS_DISTRO environment variable nor --rosdistro option set\n")
             sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
-        env.ok = False
+        env.knows_everything = False
     use_color = {"never": Color.Never, "always": Color.Always, "auto": Color.Auto}
     color_choice = config["catkin_lint"].get("color", "auto").lower()
     output_format = config["catkin_lint"].get("output", "text").lower()

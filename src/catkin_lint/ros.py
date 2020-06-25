@@ -46,12 +46,7 @@ class Rosdep(object):
         self.quiet = quiet
 
     def is_ros(self, name):
-        try:
-            if self.view is not None:
-                return self.view.lookup(name).data["_is_ros"]
-        except KeyError:
-            pass
-        return False
+        return self.view.lookup(name).data.get("_is_ros", False) if self.view is not None else False
 
     def has_key(self, name):
         return self.view is not None and name in self.view.keys()

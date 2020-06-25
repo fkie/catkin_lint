@@ -82,9 +82,10 @@ def requires_module(name):  # pragma: no cover
 
 
 def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "dynamic_reconfigure", "other_catkin", "other_msgs", "first_pkg", "second_pkg"], system_pkgs=["other_system"]):
-    env = CatkinEnvironment(use_rosdep=False, use_cache=False)
+    env = CatkinEnvironment(use_rosdep=False, use_rosdistro=False, use_cache=False)
     env.known_catkin_pkgs = set(catkin_pkgs)
     env.known_other_pkgs = set(system_pkgs)
+    env.knows_everything = True
 
     def mock_get_manifest(name):
         assert name in catkin_pkgs
