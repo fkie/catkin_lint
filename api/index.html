@@ -87,6 +87,8 @@
         
             <li><a class="toctree-l3" href="#report">report()</a></li>
         
+            <li><a class="toctree-l3" href="#location_of">location_of()</a></li>
+        
             <li><a class="toctree-l3" href="#source_relative_path">source_relative_path()</a></li>
         
             <li><a class="toctree-l3" href="#binary_relative_path">binary_relative_path()</a></li>
@@ -101,6 +103,8 @@
         
             <li><a class="toctree-l3" href="#is_existing_path">is_existing_path()</a></li>
         
+            <li><a class="toctree-l3" href="#report_path">report_path()</a></li>
+        
             <li><a class="toctree-l3" href="#is_catkin_install_destination">is_catkin_install_destination()</a></li>
         
         </ul>
@@ -109,6 +113,8 @@
     <li class="toctree-l2"><a href="#catkinenvironment-object">CatkinEnvironment object</a></li>
     
         <ul>
+        
+            <li><a class="toctree-l3" href="#get_package_type">get_package_type()</a></li>
         
             <li><a class="toctree-l3" href="#is_catkin_pkg">is_catkin_pkg()</a></li>
         
@@ -194,7 +200,7 @@ IDs.</p>
 describes the problem. The description can be a paragraph
 or two for a more in-depth explanation. The description will reformat
 line breaks automatically to adjust for different terminal widths.
-Also, you can have placeholders of the form <code>${keyword}s</code>.</p>
+Also, you can have placeholders of the form <code>%(keyword)s</code>.</p>
 <h2 id="add_init_hook">add_init_hook()</h2>
 <pre><code class="python">def callback(info):
     ...
@@ -280,7 +286,25 @@ uses unique variable names that do not conflict with other checks.</p>
 <code>catkin_lint.linter.ERROR</code>, <code>catkin_lint.linter.WARNING</code>, or
 <code>catkin_lint.linter.NOTICE</code>. The <code>msg_id</code> refers to one
 of the defined diagnostic messages. Certain messages have placeholder
-variables that must be specified, e.g. <code>cmd</code> for the command name.</p>
+variables that must be specified, e.g. <code>cmd</code> for the command name. If
+you wish to report a path, you should sanitize it with <code>report_path()</code>
+first.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Starting with version 1.6.0, you can target a report to a different
+file location with the <code>file_location</code> keyword argument.</p>
+</div>
+<h2 id="location_of">location_of()</h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method was added in version 1.6.0</p>
+</div>
+<pre><code class="python">info.location_of(cmd)
+</code></pre>
+
+<p>Returns the file location of the most recent invocation of the CMake
+command <code>cmd</code>. This is useful if a problem is detected belatedly,
+but should still be attributed to a particular faulty command.</p>
 <h2 id="source_relative_path">source_relative_path()</h2>
 <pre><code class="python">info.source_relative_path(path)
 </code></pre>
@@ -308,12 +332,20 @@ returned by <code>source_relative_path()</code>.</p>
 <p>Returns <code>True</code> if the path is either below the package source
 directory or the package build directory.</p>
 <h2 id="path_class">path_class()</h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method was added in version 1.5.0</p>
+</div>
 <pre><code class="python">info.path_class(path)
 </code></pre>
 
 <p>Returns a value from the <code>PathClass</code> class, which can be one of
 <code>SOURCE</code>, <code>BINARY</code>, <code>DISCOVERED</code>, or <code>OTHER</code>.</p>
 <h2 id="is_valid_path">is_valid_path()</h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method was added in version 1.5.0</p>
+</div>
 <pre><code class="python">info.is_valid_path(path, valid=[PathClass.SOURCE, PathClass.BINARY, PathClass.DISCOVERED])
 </code></pre>
 
@@ -321,6 +353,10 @@ directory or the package build directory.</p>
 any path is accepted which is either in the source tree, the a built file, or
 a path discovered by the appropriate CMake functions such as <code>find_file()</code>.</p>
 <h2 id="is_existing_path">is_existing_path()</h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method was added in version 1.5.0</p>
+</div>
 <pre><code class="python">info.is_existing_path(path, check=os.path.exists, require_source_folder=False, discovered_path_ok=True)
 </code></pre>
 
@@ -330,6 +366,13 @@ or <code>add_custom_command</code>. If <code>discovered_path_ok</code> is <code>
 discovered by <code>find_package()</code>, <code>find_path()</code>, <code>find_file()</code> or <code>find_library()</code>
 will be accepted as well. If <code>require_source_folder</code> is <code>True</code>, then any files
 which are not physically located within the source folder will be rejected.</p>
+<h2 id="report_path">report_path()</h2>
+<pre><code class="python">info.report_path(path)
+</code></pre>
+
+<p>Returns <code>path</code> in a form that is suitable for user consumption, i.e., as argument of
+<code>report()</code>. In particular, this will ensure that mock paths are rewritten in a form
+that is informative for the user.</p>
 <h2 id="is_catkin_install_destination">is_catkin_install_destination()</h2>
 <pre><code class="python">info.is_catkin_install_destination(path, subdir=None)
 </code></pre>
@@ -339,24 +382,50 @@ the catkin workspace. If <code>subdir</code> is not <code>None</code>, it checks
 if the path points to the specified subdirectory in the install
 space.</p>
 <h1 id="catkinenvironment-object">CatkinEnvironment object</h1>
+<h2 id="get_package_type">get_package_type()</h2>
+<pre><code class="python">env.get_package_type(name)
+</code></pre>
+
+<p>Returns one of the following values:</p>
+<ul>
+<li><code>catkin_lint.environment.PackageType.CATKIN</code> if <code>name</code> is a catkin package</li>
+<li><code>catkin_lint.environment.PackageType.OTHER</code> if <code>name</code> is a package but not catkin-based</li>
+<li><code>catkin_lint.environment.PackageType.UNKNOWN</code> if <code>name</code> is not a known package</li>
+<li><code>catkin_lint.environment.PackageType.INDETERMINATE</code> if the package type could not be determined</li>
+</ul>
 <h2 id="is_catkin_pkg">is_catkin_pkg()</h2>
 <pre><code class="python">env.is_catkin_pkg(name)
 </code></pre>
 
-<p>Returns <code>True</code> if <code>name</code> is a catkin package.</p>
+<p>Returns <code>True</code> if <code>name</code> is a catkin package. May return
+wrong results if <code>env.ok</code> is not <code>True</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function is deprecated since version 1.6.10.
+Please use <code>get_package_type()</code> instead.</p>
+</div>
 <h2 id="is_known_pkg">is_known_pkg()</h2>
 <pre><code class="python">env.is_known_pkg(name)
 </code></pre>
 
-<p>Returns <code>True</code> if <code>name</code> is a known package.</p>
+<p>Returns <code>True</code> if <code>name</code> is a known package. May return
+wrong results if <code>env.ok</code> is not <code>True</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This function is deprecated since version 1.6.10.
+Please use <code>get_package_type()</code> instead.</p>
+</div>
 <h2 id="ok">ok</h2>
 <pre><code class="python">    env.ok
 </code></pre>
 
 <p>Is <code>True</code> if the list of ROS dependencies was properly
-initialized. If it is <code>False</code>, the function <code>is_catkin_pkg()</code>
-may return wrong results, so checks for invalid dependencies should
-be skipped to prevent false positives.</p>
+initialized.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This property is deprecated since version 1.6.10.
+Please use <code>get_package_type()</code> instead.</p>
+</div>
               
             </div>
           </div>
