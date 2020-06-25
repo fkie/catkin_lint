@@ -168,6 +168,22 @@ class CatkinEnvironment(object):
                     return p, m
         raise KeyError()
 
+    @property
+    def ok(self):
+        if not self.quiet:  # pragma: no cover
+            sys.stderr.write("catkin_lint: deprecated access to env.ok, use env.get_package_type() instead\n")
+        return self.knows_everything
+
+    def is_catkin_pkg(self, name):
+        if not self.quiet:  # pragma: no cover
+            sys.stderr.write("catkin_lint: deprecated call to env.is_catkin_pkg(), use env.get_package_type() instead\n")
+        return self.get_package_type(name) == PackageType.CATKIN
+
+    def is_known_pkg(self, name):
+        if not self.quiet:  # pragma: no cover
+            sys.stderr.write("catkin_lint: deprecated call to env.is_known_pkg(), use env.get_package_type() instead\n")
+        return self.get_package_type(name) & PackageType.ANY
+
     def get_package_type(self, name):
         if name in self.known_catkin_pkgs:
             return PackageType.CATKIN
