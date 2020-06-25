@@ -342,7 +342,7 @@ class CatkinInvokationTest(unittest.TestCase):
 
         exitcode, stdout = self.run_catkin_lint(broken_gamma_path, "--json")
         self.assertIn("\"errors\":", stdout)
-    
+
         exitcode, stdout = self.run_catkin_lint(broken_gamma_path, "--xml")
         self.assertIn("</catkin_lint>", stdout)
 
