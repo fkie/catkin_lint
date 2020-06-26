@@ -263,6 +263,9 @@ space.
 
 ## get_package_type()
 
+!!! note
+    This method was added in version 1.6.10
+
 ```python
 env.get_package_type(name)
 ```
