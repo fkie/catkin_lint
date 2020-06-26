@@ -1,3 +1,9 @@
+Version 1.6.10
+  * Test suite coverage now at 100%
+  * Improve CMake parser
+  * Add new option --help-problem for CLI help
+  * Update documentation and add man page
+
 Version 1.6.9
   * Add support for conditional dependencies (manifest version 3)
   * New configuration file mechanism
