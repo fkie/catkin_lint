@@ -15,7 +15,8 @@ I generally recommend that you install **catkin_lint** from my Ubuntu PPA or use
 * `PyPI <https://pypi.org/project/catkin_lint>`_
 * `Github <https://github.com/fkie/catkin_lint>`_
 
-You can find the documentation with detailed installation instructions at `http://fkie.github.io/catkin_lint <http://fkie.github.io/catkin_lint>`_.
+You can find more information about **catkin_lint** in the `online documentation`_ and
+the available command line arguments on the `manpage`_.
 
 .. |ci_badge| image:: https://github.com/fkie/catkin_lint/workflows/CI/badge.svg
    :target: https://github.com/fkie/catkin_lint/actions
@@ -27,3 +28,5 @@ You can find the documentation with detailed installation instructions at `http:
    :target: https://github.com/fkie/catkin_lint/releases
 .. |debian_badge| image:: https://img.shields.io/badge/dynamic/json.svg?label=Debian&url=https%3A%2F%2Fsources.debian.org%2Fapi%2Fsrc%2Fros-catkin-lint&query=%24.versions%5B0%5D.version&colorB=blue
    :target: https://packages.debian.org/source/sid/ros-catkin-lint
+.. _online documentation: https://fkie.github.io/catkin_lint/
+.. _manpage: https://github.com/fkie/catkin_lint/blob/master/catkin_lint.pod
