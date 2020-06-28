@@ -33,32 +33,32 @@ import os
 from lxml import etree as ET
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
-from ..util import enumerate_package_files
+from ..util import enumerate_package_files, is_active_depend
+from ..environment import PackageType
 from .misc import project
 
 
 def depends(linter):
     def on_init(info):
-        info.buildtool_dep = {dep.name for dep in info.manifest.buildtool_depends if dep.evaluated_condition}
-        info.build_dep = {dep.name for dep in info.manifest.build_depends if dep.evaluated_condition}
+        info.buildtool_dep = {dep.name for dep in info.manifest.buildtool_depends if is_active_depend(dep)}
+        info.build_dep = {dep.name for dep in info.manifest.build_depends if is_active_depend(dep)}
         info.export_dep = set()
         info.exec_dep = set()
         if info.manifest.package_format > 1:
-            deps = {dep.name for dep in info.manifest.build_export_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.build_export_depends if is_active_depend(dep)}
             info.export_dep.update(deps)
-            deps = {dep.name for dep in info.manifest.buildtool_export_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.buildtool_export_depends if is_active_depend(dep)}
             info.export_dep.update(deps)
-            deps = {dep.name for dep in info.manifest.exec_depends if dep.evaluated_condition}
+            deps = {dep.name for dep in info.manifest.exec_depends if is_active_depend(dep)}
             info.exec_dep.update(deps)
         if info.manifest.package_format < 2:
             deps = {dep.name for dep in info.manifest.run_depends}
             info.export_dep.update(deps)
             info.exec_dep.update(deps)
-        info.test_dep = {dep.name for dep in info.manifest.test_depends if dep.evaluated_condition}
-        if info.env.ok:
-            for pkg in info.buildtool_dep | info.build_dep | info.export_dep | info.exec_dep | info.test_dep:
-                if not info.env.is_known_pkg(pkg):
-                    info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg, file_location=("package.xml", 0))
+        info.test_dep = {dep.name for dep in info.manifest.test_depends if is_active_depend(dep)}
+        for pkg in info.buildtool_dep | info.build_dep | info.export_dep | info.exec_dep | info.test_dep:
+            if info.env.get_package_type(pkg) == PackageType.UNKNOWN:
+                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg, file_location=("package.xml", 0))
         if info.manifest.is_metapackage() and info.build_dep:
             info.report(ERROR, "INVALID_META_DEPEND", type="build", file_location=("package.xml", 0))
         if info.manifest.is_metapackage() and info.test_dep:
@@ -85,11 +85,11 @@ def launch_depends(linter):
                         for node in root.getiterator():
                             if node.tag is not ET.Comment:
                                 pkg = node.get("pkg")
-                                if pkg is not None and pkg != info.manifest.name and info.env.is_catkin_pkg(pkg) and pkg not in info.exec_dep and pkg not in essential_packages:
+                                if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in info.exec_dep and pkg not in essential_packages:
                                     info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
                                 for mo in re.finditer(r"\$\(find\s+([^<>)]+)\)", "<>".join(node.values() + [node.text or "", node.tail or ""])):
                                     pkg = mo.group(1)
-                                    if pkg is not None and pkg != info.manifest.name and info.env.is_catkin_pkg(pkg) and pkg not in info.exec_dep and pkg not in essential_packages:
+                                    if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in info.exec_dep and pkg not in essential_packages:
                                         info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
                     except (ET.Error, ValueError) as err:
                         info.report(WARNING, "PARSE_ERROR", msg=str(err), file_location=(src_filename, 0))

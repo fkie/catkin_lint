@@ -6,29 +6,59 @@ _catkin_lint_complete()
 {
 	local arg="${COMP_WORDS[COMP_CWORD]}"
 	local prev="${COMP_WORDS[COMP_CWORD-1]}"
-	if [ "$prev" == "--pkg" -o "$prev" == "--skip-pkg" ]
-	then
-		COMPREPLY=( $( compgen -W "$( rospack list-names 2>/dev/null )" -- "$arg" ) )
-		return 0
-	fi
-	if [ "$prev" == "--rosdistro" ]
-	then
-		COMPREPLY=( $( compgen -W "groovy hydro indigo jade kinetic lunar melodic noetic" -- "$arg" ) )
-		return 0
-	fi
-	if [ "$prev" == "--ignore" -o "$prev" == "--error" -o "$prev" == "--warning" -o "$prev" == "--notice" ]
-	then
-		COMPREPLY=( $( compgen -W "$( catkin_lint --list-check-ids )" -- "$arg" ) )
-		return 0
-	fi
-	if [ "$prev" == "--config" ]
-	then
-		COMPREPLY=( $( compgen -f -- "$arg" ) )
-		return 0
-	fi
-	compopt -o filenames 2>/dev/null
-	COMPREPLY=( $( compgen -W "-h -q --help --version --config -W0 -W1 -W2 --strict --text --explain --xml --json --quiet --offline --clear-cache --pkg --skip-pkg --ignore --package-path --rosdistro --resolve-env --error --warning --notice --show-ignored" -- "$arg" ) )
-	COMPREPLY+=( $( compgen -d -- "$arg" ) )
+	local documented_args=(
+		"-h" "--help" "--help-problem"
+		"--version"
+		"--quiet" "-q"
+		"--severity-level" "-W0" "-W1" "-W2"
+		"--config"
+		"--ignore" "--error" "--warning" "--notice"
+		"--strict"
+		"--show-ignored"
+		"--pkg"
+		"--skip-pkg"
+		"--skip-path"
+		"--package-path"
+		"--rosdistro"
+		"--resolve-env"
+		"--output" "--text" "--explain" "--xml" "--json"
+		"--color"
+		"--offline"
+		"--clear-cache"
+	)
+	case "$prev" in
+		--pkg|--skip-pkg)
+			COMPREPLY=($(compgen -W "$(rospack list-names 2>/dev/null)" -- "$arg"))
+			;;
+		--package-path|--skip-path)
+			compopt -o filenames 2>/dev/null
+			COMPREPLY=($(compgen -d -- "$arg"))
+			;;
+		--rosdistro)
+			COMPREPLY=($(compgen -W "groovy hydro indigo jade kinetic lunar melodic noetic $ROS_DISTRO" -- "$arg"))
+			;;
+		--ignore|--error|--warning|--notice|--help-problem)
+			COMPREPLY=($(compgen -W "$(catkin_lint --list-check-ids)" -- "$arg"))
+			;;
+		--color)
+			COMPREPLY=($(compgen -W "always auto never" -- "$arg"))
+			;;
+		--output)
+			COMPREPLY=($(compgen -W "explain json text xml" -- "$arg"))
+			;;
+		--severity-level|-W)
+			COMPREPLY=($(compgen -W "0 1 2" -- "$arg"))
+			;;
+		--config)
+			compopt -o filenames 2>/dev/null
+			COMPREPLY=($(compgen -f -- "$arg"))
+			;;
+		*)
+			compopt -o filenames 2>/dev/null
+			COMPREPLY=($(compgen -W "${documented_args[*]}" -- "$arg"))
+			COMPREPLY+=($(compgen -d -- "$arg"))
+			;;
+	esac
 	return 0
 }
 

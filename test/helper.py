@@ -31,15 +31,16 @@
 from catkin_lint.linter import CMakeLinter, LintInfo
 from catkin_lint.environment import CatkinEnvironment
 from catkin_pkg.package import Package, Dependency, Person, Export
-from catkin_lint.checks import all
+from catkin_lint.checks import all as all_checks
 from catkin_lint.util import iteritems
 from functools import wraps
+from unittest import skip
 
 import os
 try:
-    from mock import patch, mock_open  # noqa
+    from unittest.mock import patch, mock_open, DEFAULT  # noqa
 except ImportError:
-    from unittest.mock import patch, mock_open  # noqa
+    from mock import patch, mock_open, DEFAULT  # noqa
 
 import posixpath
 import ntpath
@@ -58,15 +59,37 @@ def posix_and_nt(func):
     return wrapper
 
 
+# Decorator to patch function if the module can be imported
+def maybe_patch(target, new=DEFAULT):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                with patch(target, new):
+                    return func(*args, **kwargs)
+            except ImportError:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def requires_module(name):  # pragma: no cover
+    try:
+        __import__(name)
+        return lambda func: func
+    except Exception:
+        return skip("cannot import %s" % name)
+
+
 def create_env(catkin_pkgs=["catkin", "message_generation", "message_runtime", "dynamic_reconfigure", "other_catkin", "other_msgs", "first_pkg", "second_pkg"], system_pkgs=["other_system"]):
-    env = CatkinEnvironment(use_rosdep=False, use_cache=False)
+    env = CatkinEnvironment(use_rosdep=False, use_rosdistro=False, use_cache=False)
     env.known_catkin_pkgs = set(catkin_pkgs)
     env.known_other_pkgs = set(system_pkgs)
+    env.knows_everything = True
 
     def mock_get_manifest(name):
-        if name in catkin_pkgs:
-            return create_manifest(name, description="mocked %s" % name, buildtool_depends=["catkin"] if name != "catkin" else [], run_depends=["message_runtime"] if name.endswith("_msgs") or name == "dynamic_reconfigure" else [])
-        return None
+        assert name in catkin_pkgs
+        return create_manifest(name, description="mocked %s" % name, buildtool_depends=["catkin"] if name != "catkin" else [], run_depends=["message_runtime"] if name.endswith("_msgs") or name == "dynamic_reconfigure" else [])
 
     env.get_manifest = mock_get_manifest
     return env
@@ -85,7 +108,8 @@ def create_manifest(name, description="", buildtool_depends=["catkin"], build_de
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
-    package.evaluate_conditions({})
+    if hasattr(package, "evaluate_conditions"):
+        package.evaluate_conditions({})
     return package
 
 
@@ -105,11 +129,12 @@ def create_manifest2(name, description="", buildtool_depends=["catkin"], build_d
         test_depends=[Dependency(d) for d in test_depends],
         exports=[Export("metapackage")] if meta else []
     )
-    package.evaluate_conditions({})
+    if hasattr(package, "evaluate_conditions"):
+        package.evaluate_conditions({})
     return package
 
 
-def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_var=False, package_path=None):
+def mock_lint(env, manifest, cmakelist, checks=all_checks, indentation=False, return_var=False, package_path=None):
     linter = CMakeLinter(env)
     if package_path is None:
         package_path = "/package-path/%s" % manifest.name
@@ -126,9 +151,8 @@ def mock_lint(env, manifest, cmakelist, checks=all, indentation=False, return_va
             else:
                 raise OSError("Mock CMake file not found: %s" % filename)
         else:
-            if filename == os.path.normpath(package_path + "/CMakeLists.txt"):
-                return cmakelist
-            raise OSError("Mock CMake file not found: %s" % filename)
+            assert filename == os.path.normpath(package_path + "/CMakeLists.txt")
+            return cmakelist
 
     linter._read_file = get_cmakelist
     if checks is not None:

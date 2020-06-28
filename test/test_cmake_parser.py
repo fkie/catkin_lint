@@ -95,6 +95,10 @@ class CMakeParserTest(unittest.TestCase):
             [("cmd", ['string that spans\nmultiple lines'])]
         )
         self.assertEqual(
+            self.parse_all('cmd("string with \\\nline continuation")'),
+            [("cmd", ['string with line continuation'])]
+        )
+        self.assertEqual(
             self.parse_all('cmd("\\\\"\\")'),
             [("cmd", ['\\', '"'])]
         )
@@ -245,6 +249,10 @@ class CMakeParserTest(unittest.TestCase):
             [("cmd", ["one", "two", "three"])]
         )
         self.assertEqual(
+            self.parse_all("cmd(one\\;two three)"),
+            [("cmd", ["one;two", "three"])]
+        )
+        self.assertEqual(
             self.parse_all('cmd("one;two" three)'),
             [("cmd", ["one;two", "three"])]
         )
@@ -255,6 +263,26 @@ class CMakeParserTest(unittest.TestCase):
         self.assertEqual(
             self.parse_all('cmd(one;"two;three")'),
             [("cmd", ["one", "two;three"])]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(one [[two]] three)'),
+            [("cmd", ["one", "two", "three"])]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(one [=[two]]]=] three)'),
+            [("cmd", ["one", "two]]", "three"])]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(one [=[two]==]]=] three)'),
+            [("cmd", ["one", "two]==]", "three"])]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(one [[\ntwo]] three)'),
+            [("cmd", ["one", "two", "three"])]
+        )
+        self.assertEqual(
+            self.parse_all('cmd(one [=[ two [==[ ]=] [=[three ]==] ]=])'),
+            [("cmd", ["one", " two [==[ ", "three ]==] "])]
         )
         self.assertEqual(
             self.parse_all('if(NOT (A OR B)) endif()'),
@@ -318,6 +346,10 @@ class CMakeParserTest(unittest.TestCase):
         )
         self.assertEqual(
             self.parse_all('cmd(\\${args})', var={"args": "fail"}),
+            [("cmd", ["${args}"])]
+        )
+        self.assertEqual(
+            self.parse_all('cmd([[${args}]])', var={"args": "fail"}),
             [("cmd", ["${args}"])]
         )
         self.assertEqual(
@@ -482,6 +514,16 @@ class CMakeParserTest(unittest.TestCase):
             # cmd()
             """),
             [("cmd", ["one", "two", "three"])]
+        )
+        self.assertEqual(
+            self.parse_all("""\
+            # initial comment
+            cmd(one #[[ bracket comment ]=]
+            fail # embedded comment ]]
+            two
+            )
+            """),
+            [("cmd", ["one", "two"])]
         )
 
     def test_line_numbering(self):

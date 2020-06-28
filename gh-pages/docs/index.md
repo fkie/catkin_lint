@@ -24,10 +24,10 @@ $ sudo apt install catkin-lint
     release, please run `sudo apt install python-catkin-lint` instead.
 
 
-Alternatively, you can use [Timo's PPA](https://launchpad.net/~roehling/+archive/latest) on Launchpad,
+Alternatively, you can use [Timo's Ubuntu PPA for ROS Packages](https://launchpad.net/~roehling/+archive/ros) on Launchpad,
 which will always ship the latest release:
 ```sh
-$ sudo add-apt-repository ppa:roehling/latest
+$ sudo add-apt-repository ppa:roehling/ros
 $ sudo apt update
 $ sudo apt install catkin-lint
 ```

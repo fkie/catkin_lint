@@ -45,6 +45,10 @@ def create_file(path):
         f.write("catkin_lint")
 
 
+class Object(object):
+    pass
+
+
 class UtilTest(unittest.TestCase):
     def test_word_split(self):
         """Test word_split() utility function"""
@@ -73,6 +77,15 @@ class UtilTest(unittest.TestCase):
         self.assertFalse(util.is_sorted(["b", "a", "c", "d"]))
         self.assertFalse(util.is_sorted(["a", "c", "b", "d"]))
         self.assertFalse(util.is_sorted(["a", "b", "d", "c"]))
+
+    def test_is_active_depend(self):
+        """Test is_active_depend() utility function"""
+        m = Object()
+        self.assertTrue(util.is_active_depend(m))
+        setattr(m, "evaluated_condition", False)
+        self.assertFalse(util.is_active_depend(m))
+        setattr(m, "evaluated_condition", True)
+        self.assertTrue(util.is_active_depend(m))
 
     def test_write_atomic(self):
         """Test write_atomic() utility function"""

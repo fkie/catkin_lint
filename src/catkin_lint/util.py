@@ -77,6 +77,12 @@ def is_sorted(lst, key=lambda x, y: x < y):
     return True
 
 
+def is_active_depend(d):
+    if hasattr(d, "evaluated_condition"):
+        return d.evaluated_condition
+    return True
+
+
 def enumerate_package_files(rootdir, catkin_ignore=True, ignore_dot=True, ignore_unimportant=True):
     for dirpath, dirnames, filenames in os.walk(rootdir, topdown=True):
         if "CATKIN_IGNORE" in filenames and catkin_ignore:

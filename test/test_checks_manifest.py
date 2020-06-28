@@ -203,6 +203,7 @@ class ChecksManifestTest(unittest.TestCase):
         result = mock_lint(env, pkg, "", checks=cc.package_description)
         self.assertEqual([], result)
 
+    @unittest.skipUnless(hasattr(Package, "evaluate_conditions"), "catkin_pkg module is too old")
     def test_evaluate_conditions(self):
         """Test if dependency conditions are properly evaluated"""
 

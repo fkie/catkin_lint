@@ -34,6 +34,7 @@ import stat
 from ..linter import ERROR, WARNING, NOTICE, PathConstants, PathClass
 from ..cmake import argparse as cmake_argparse
 from ..util import iteritems, is_sorted, enumerate_package_files
+from ..environment import PackageType
 from .manifest import depends as manifest_depends
 from functools import partial
 
@@ -271,14 +272,13 @@ def depends(linter):
                     info.report(ERROR, "SHADOWED_FIND", pkg=pkg)
                 else:
                     info.report(WARNING, "DUPLICATE_FIND", pkg=pkg)
-            if not info.env.is_known_pkg(pkg):
-                if info.env.ok:
-                    info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
-            elif not info.env.is_catkin_pkg(pkg):
-                if info.env.ok:
-                    info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
+            pkg_type = info.env.get_package_type(pkg)
+            if pkg_type == PackageType.UNKNOWN:
+                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+            elif pkg_type == PackageType.OTHER:
+                info.report(ERROR, "NO_CATKIN_COMPONENT", pkg=pkg)
         for pkg in args[1:]:
-            if info.env.is_known_pkg(pkg):
+            if info.env.get_package_type(pkg) & PackageType.ANY:
                 info.report(NOTICE, "MISSING_COMPONENTS", pkg=pkg)
         info.find_packages |= set(this_components)
         info.required_packages |= set(this_components)
@@ -291,13 +291,13 @@ def depends(linter):
 
     def on_final(info):
         for pkg in info.required_packages - info.build_dep - info.buildtool_dep - info.test_dep:
-            if info.env.is_known_pkg(pkg) and pkg != "catkin":
+            if info.env.get_package_type(pkg) & PackageType.ANY and pkg != "catkin":
                 info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="build", file_location=("package.xml", 0))
         for pkg in info.find_packages - info.required_packages - info.checked_packages:
-            if info.env.is_catkin_pkg(pkg):
+            if info.env.get_package_type(pkg) == PackageType.CATKIN:
                 info.report(ERROR, "MISSING_REQUIRED", pkg=pkg, file_location=("CMakeLists.txt", 0))
         for pkg in info.build_dep - (info.find_packages - info.test_packages):
-            if info.env.is_catkin_pkg(pkg):
+            if info.env.get_package_type(pkg) == PackageType.CATKIN:
                 # Ignore pure Python packages (or at least packages that look like it), following the
                 # Jack O'Quin heuristic from issue fkie/catkin_lint#22
                 if pkg not in info.pkg_modules and (info.executables or info.libraries or "catkin_python_setup" not in info.commands):
@@ -342,16 +342,15 @@ def exports(linter):
             if not is_sorted(opts[list_name]):
                 info.report(NOTICE, "UNSORTED_LIST", name=list_name)
         for pkg in opts["CATKIN_DEPENDS"]:
-            if not info.env.is_known_pkg(pkg):
-                if info.env.ok:
-                    info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
-            elif not info.env.is_catkin_pkg(pkg):
-                if info.env.ok:
-                    info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
+            pkg_type = info.env.get_package_type(pkg)
+            if pkg_type == PackageType.UNKNOWN:
+                info.report(ERROR, "UNKNOWN_PACKAGE", pkg=pkg)
+            elif pkg_type == PackageType.OTHER:
+                info.report(ERROR, "SYSTEM_AS_CATKIN_DEPEND", pkg=pkg)
         for pkg in opts["DEPENDS"]:
-            if info.env.is_catkin_pkg(pkg):
-                if info.env.ok:
-                    info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
+            pkg_type = info.env.get_package_type(pkg)
+            if pkg_type == PackageType.CATKIN:
+                info.report(ERROR, "CATKIN_AS_SYSTEM_DEPEND", pkg=pkg)
             elif pkg in info.pkg_modules_prefix:
                 info.report(ERROR, "EXPORTED_PKG_CONFIG", pkg=pkg)
             elif pkg not in info.find_packages and not ("%s_INCLUDE_DIRS" % pkg in info.var and "%s_LIBRARIES" % pkg in info.var):
@@ -367,22 +366,20 @@ def exports(linter):
 
     def on_final(info):
         for pkg in info.export_packages - info.export_dep:
-            if info.env.is_known_pkg(pkg):
+            if info.env.get_package_type(pkg) & PackageType.ANY:
                 if pkg == "message_runtime":
                     if pkg not in info.exec_dep:
                         info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "exec", file_location=("package.xml", 0))
                 else:
                     info.report(ERROR, "MISSING_DEPEND", pkg=pkg, type="run" if info.manifest.package_format < 2 else "build_export", file_location=("package.xml", 0))
         for pkg in (info.find_packages & info.build_dep & info.export_dep) - info.export_packages:
-            if info.env.is_catkin_pkg(pkg) and info.env.ok:
-                try:
-                    pkg_manifest = info.env.get_manifest(pkg)
+            if info.env.get_package_type(pkg) == PackageType.CATKIN:
+                pkg_manifest = info.env.get_manifest(pkg)
+                if pkg_manifest is not None:
                     for dep in pkg_manifest.exec_depends:
                         if dep.name == "message_runtime":
                             info.report(ERROR, "MISSING_CATKIN_DEPEND", pkg=pkg, file_location=info.location_of("catkin_package"))
                             break
-                except KeyError:
-                    pass
         if info.export_includes and info.libraries and not info.export_libs:
             info.report(WARNING, "MISSING_EXPORT_LIB", file_location=info.location_of("catkin_package"))
         if info.executables or info.libraries:
@@ -438,7 +435,7 @@ def pkg_config(linter):
             if "=" in pkg:
                 pkg = pkg.split("=")[0].rstrip("<>=")
             info.pkg_modules.add(pkg)
-            if info.env.is_catkin_pkg(pkg):
+            if info.env.get_package_type(pkg) == PackageType.CATKIN:
                 info.report(ERROR, "MISCONFIGURED_CATKIN_PACKAGE", pkg=pkg)
 
     linter.add_init_hook(on_init)
