@@ -377,7 +377,7 @@ class LinterTest(unittest.TestCase):
     @patch("os.path.realpath", lambda x: x)
     def test_environment(self):
         """Test catkin environment"""
-        env = catkin_lint.environment.CatkinEnvironment(use_rosdep=False)
+        env = catkin_lint.environment.CatkinEnvironment(use_rosdep=False, quiet=True)
         mock_packages = {}
         mock_packages[os.path.normpath("/mock_catkin")] = create_manifest("mock_catkin")
         mock_packages[os.path.normpath("/mock_other")] = create_manifest("mock_other")
@@ -385,23 +385,34 @@ class LinterTest(unittest.TestCase):
         with patch("catkin_lint.environment.find_packages", lambda x, use_cache: mock_packages):
             result = env.add_path(os.path.normpath("/"))
             self.assertEqual(1, len(result))
+            self.assertEqual(env.get_package_type("mock_catkin"), catkin_lint.environment.PackageType.CATKIN)
             self.assertTrue(env.is_catkin_pkg("mock_catkin"))
+            self.assertTrue(env.is_known_pkg("mock_catkin"))
+            self.assertEqual(env.get_package_type("mock_other"), catkin_lint.environment.PackageType.OTHER)
             self.assertFalse(env.is_catkin_pkg("mock_other"))
+            self.assertTrue(env.is_known_pkg("mock_other"))
             result = env.add_path(os.path.normpath("/"))
             self.assertEqual(1, len(result))
-            self.assertTrue(env.is_catkin_pkg("mock_catkin"))
-            self.assertFalse(env.is_catkin_pkg("mock_other"))
+            self.assertEqual(env.get_package_type("mock_catkin"), catkin_lint.environment.PackageType.CATKIN)
+            self.assertEqual(env.get_package_type("mock_other"), catkin_lint.environment.PackageType.OTHER)
             result = env.add_path(os.path.normpath("/missing"))
             self.assertEqual([], result)
-            self.assertFalse(env.is_catkin_pkg("invalid"))
+            env.knows_everything = True
+            self.assertTrue(env.ok)
+            self.assertEqual(env.get_package_type("invalid"), catkin_lint.environment.PackageType.UNKNOWN)
+            self.assertFalse(env.is_known_pkg("invalid"))
+            env.knows_everything = False
+            self.assertFalse(env.ok)
+            self.assertEqual(env.get_package_type("invalid"), catkin_lint.environment.PackageType.INDETERMINATE)
+            self.assertFalse(env.is_known_pkg("invalid"))
 
-        def raiseError():
+        def raiseError():  # pragma: no cover
             raise RuntimeError()
         with open(os.devnull, "w") as devnull:
             with patch("catkin_lint.environment.get_rosdep", raiseError):
                 with patch("sys.stderr", devnull):
                     env = catkin_lint.environment.CatkinEnvironment()
-                    self.assertFalse(env.ok)
+                    self.assertFalse(env.knows_everything)
         self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
     @posix_and_nt
@@ -424,6 +435,13 @@ class LinterTest(unittest.TestCase):
                            }, checks=cc.all
                            )
         self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+                           {
+                               "/package-path/mock/CMakeLists.txt": "project(mock) add_subdirectory(src)",
+                           }, checks=cc.all
+                           )
+        self.assertEqual(["OS_ERROR"], result)
 
         result = mock_lint(env, pkg,
                            {

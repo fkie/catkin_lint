@@ -1,0 +1,403 @@
+# catkin_lint
+# Copyright (c) 2013-2020 Fraunhofer FKIE
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+#
+#  * Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+#  * Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#  * Neither the name of the Fraunhofer organization nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+# IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+# PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+# PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+=head1 NAME
+
+catkin_lint - check catkin packages for common errors
+
+=head1 SYNOPSIS
+
+B<catkin_lint> [B<--config> I<FILE>] [B<--quiet> | B<--no-quiet>]
+            [B<--severity-level> I<LEVEL>]
+            [B<--notice> I<ID>] [B<--warning> I<ID>] [B<--error> I<ID>]
+            [B<--ignore> I<ID>] [B<--show-ignored>]
+            [B<--strict> | B<--no-strict>]
+            [B<--pkg> I<PKG>] [B<--skip-pkg> I<PKG>]
+            [B<--package-path> I<PATH>] [B<--skip-path> I<MATCH>]
+            [B<--rosdistro> I<DISTRO>] [B<--offline>] [B<--no-offline>]
+            [B<--resolve-env> | B<--no-resolve-env>]
+            [B<--output> I<FORMAT> | B<--text> | B<--explain> | B<--xml> | B<--json>]
+            [B<--color> I<MODE>]
+            [I<PATH> [I<PATH> ...]]
+
+=head1 DESCRIPTION
+
+B<catkin_lint> checks package configurations for the B<catkin> build system of B<ROS>.
+It runs a static analysis of the C<package.xml> and C<CMakeLists.txt> files in your package,
+and it will detect and report a number of common problems.
+
+All diagnosed problems come in one of three possible severities:
+
+I<Errors> are severe enough to break the build and/or produce unintended side effects.
+Usually, they violate the rules outlined in the B<catkin> manual.
+
+I<Warnings> are potential errors which may indicate a bug in your package but may be justified
+for reasons B<catkin_lint> cannot discern. Constructs which trigger a warning can usually
+be modified in a way that is functionally equivalent but more robust.
+
+I<Notices> are issues which are not objectionable from a technical view point but should be
+addressed to improve the quality of the package. Many notices highlight violations of the
+recommendations and best practises from the B<catkin> manual.
+
+=head1 OPTIONS
+
+=over
+
+=item B<--config> I<FILE>
+
+Read configuration settings from I<FILE>. This option can be used multiple times.
+See L<CONFIGURATION FILE FORMAT> for details.
+
+=item B<--quiet>, B<-q>
+
+Suppress all outputs expect for the detected problems, in particular, do not show
+the summary at the end.
+
+=item B<--no-quiet>
+
+Show a summary of the findings at the end. This is the default setting.
+
+=item B<--severity-level> I<LEVEL>, B<-W> I<LEVEL>
+
+Choose the severity level for diagnostic output. Level 0 displays errors only,
+level 1 displays errors and warnings, and level 2 displays everything. The default
+setting is B<-W1>.
+
+=item B<--notice> I<ID>, B<--warning> I<ID>, B<--error> I<ID>
+
+Override the default severity of certain problems. See L<PROBLEM IDS> for details
+on the available IDs.
+
+=item B<--ignore> I<ID>
+
+Ignore a problem. This is mostly useful to work around a known bug in B<catkin_lint>,
+because problems tend to not go away if you ignore them. See L<PROBLEM IDS> for details
+on the available IDs.
+
+=item B<--show-ignored>
+
+Show all problems you ignored. Use this if an ignored problem did not go away, but
+you forgot which one.
+
+=item B<--strict>
+
+Treat any reported problem as a fatal error. Some people use the option to enforce
+that warnings get fixed, too. You can also combine this with B<-W2>
+to turn even notices into errors, if you are exceptionally pedantic and/or have a
+high pain tolerance.
+
+=item B<--no-strict>
+
+This will undo the effects of your rash decision to put C<strict=yes> in your
+configuration file. This is also the default setting.
+
+=item B<--pkg> I<PKG>
+
+Check the package I<PKG> for problems. The package must be in the B<ROS> package search
+path.
+
+=item B<--skip-pkg> I<PKG>
+
+Skip the package I<PKG> when processing a package subtree. The package will not be linted,
+but it will be treated as a known package for dependency resolutions.
+
+=item B<--package-path> I<PATH>[:I<PATH>[...]]
+
+Add one or more additional locations to the B<ROS> package search path. Separate multiple
+locations with C<:>. B<catkin_lint> will use this path list and the B<ROS_PACKAGE_PATH>
+environment variable to resolve the B<--pkg> option and dependencies of linted packages.
+
+=item B<--skip-path> I<MATCH>
+
+Skip packages if their location contains I<MATCH>. No wildcards or pattern matching allowed,
+only proper substrings are recognized.
+
+=item B<--rosdistro> I<DISTRO>
+
+Assume that all packages are supposed to work with the B<ROS> distribution I<DISTRO>. By default, this
+value is taken from the B<ROS_DISTRO> environment variable. B<catkin_lint> will use this to
+query the B<ROS> database for packages which are not locally installed.
+
+=item B<--offline>
+
+Forbid metadata queries to the B<ROS> package index. This will disable certain diagnostics which
+rely on knowing details about all package dependencies. Metadata queries are not needed for
+packages which can be found locally through the B<ROS> package search path.
+
+=item B<--no-offline>
+
+Allow metadata queries to the B<ROS> package index. This is the default.
+
+=item B<--resolve-env>
+
+Resolve environment variables B<$ENV{}> in CMake scripts. By default, B<catkin_lint> will treat
+all environment variables like empty strings and issue a warning.
+
+=item B<--no-resolve-env>
+
+Do not resolve environment variables B<$ENV{}> in CMake scripts and issue a warning if they are
+used. This is the default.
+
+=item B<--output> I<FORMAT>
+
+Select the output format for the diagnosed problems. Valid output formats are B<text>, B<explain>,
+B<json>, and B<xml>. See L<OUTPUT FORMATS> for more details.
+
+=item B<--text>, B<--explain>, B<--json>, B<--xml>
+
+These are deprecated aliases for B<--output> I<FORMAT>.
+
+=item B<--color> I<MODE>
+
+Configure the colorization of the B<text> and B<explain> output formats. The default mode is B<auto>,
+which will use ANSI colors if B<catkin_lint> detects a terminal as output. The modes B<always> and
+B<never> will override the detection and output ANSI colors always or never, respectively.
+
+=back
+
+=head1 OUTPUT FORMATS
+
+B<catkin_lint> supports a variety of output formats as argument for the B<--output> option:
+
+=over
+
+=item B<text>
+
+This is the default format, which outputs a short, human-readable description of all problems.
+
+=item B<explain>
+
+This is an extended B<text> format, which will show an additional explanation when a problem type
+occurs for the first time. It will also mention the message ID which you need to change the
+severity or ignore a problem.
+
+=item B<json>
+
+Outputs all problems in JSON format.
+
+=item B<xml>
+
+Outputs all problems in XML format.
+
+=back
+
+=head1 ENVIRONMENT
+
+B<catkin_lint> uses B<ROS_PACKAGE_PATH> to find locally available packages and B<ROS_DISTRO> to 
+determine the installed B<ROS> distribution when querying the B<ROS> package index or the B<rosdep> database.
+All other environment variables will be ignored, unless B<catkin_lint> is instructed to resolve
+them in CMake scripts by B<--resolve-env>.
+
+=head1 RETURN VALUES
+
+=over
+
+=item B<0>
+
+All packages were linted successfully and no errors occurred.
+
+=item B<1>
+
+An error occurred.
+
+=item B<66>
+
+No packages found.
+
+=back
+
+=head1 CONFIGURATION FILE FORMAT
+
+B<catkin_lint> will look for configuration options in the following files:
+
+=over 
+
+=item *
+
+Files explicitly specified using B<--config>
+
+=item *
+
+F<.catkin_lint> files in all locations from B<ROS_PACKAGE_PATH>
+
+=item *
+
+F<$XDG_CONFIG_HOME/catkin_lint>
+
+=item *
+
+F<~/.config/catkin_lint> if B<XDG_CONFIG_HOME> is unset or empty
+
+=item *
+
+F<~/.catkin_lint>
+
+=back
+
+B<catkin_lint> will read all available configuration files and merge them into
+a single configuration. Earlier entries in the above list will take precedence
+if conflicting options are found. Command line arguments will override any
+configuration file setting. Configuration files are in an INI-style format with
+one or more sections in it.
+
+=head2 [catkin_lint] section
+
+The main section is called C<[catkin_lint]> and will take the following 
+B<catkin_lint> specific options:
+
+=over
+
+=item B<color> = B<auto> E<verbar> B<never> E<verbar> B<always>
+
+Determine output colorization mode. The default setting B<auto> will enable
+colorization if and only if standard output is connected to terminal. The modes B<always>
+and B<never> will override the detection and output ANSI colors always or never,
+respectively.
+
+=item B<offline> = B<no> E<verbar> B<yes>
+
+Allow or forbid metadata queries to the B<ROS> package index. This will disable certain
+diagnostics which rely on knowing details about all package dependencies. Metadata
+queries are not needed for packages which can be found locally through the B<ROS>
+package search path. The default setting is B<no>.
+
+=item B<output> = B<text> E<verbar> B<explain> E<verbar> B<json> E<verbar> B<xml>
+
+Select the output format for problem reports. See L<OUTPUT FORMATS> for details.
+The default setting is B<text>.
+
+=item B<package_path> = I<PATH>[:I<PATH>[...]]
+
+Prepend the specified I<PATH>s to B<ROS_PACKAGE_PATH> in order to find locally
+available packages and/or package dependencies.
+
+=item B<quiet> = B<no> E<verbar> B<yes>
+
+Select output verbosity. The default setting B<no> allows B<catkin_lint> to print
+some additional information to standard error, such as a final summary of all
+detected problems.
+
+=item B<resolve_env> = B<no> E<verbar> B<yes>
+
+Allow or forbid resolution of environment variables. The default setting B<no>
+lets B<catkin_lint> ignore environment variables and issue a warning whenever
+a CMake command references the environment using B<$ENV{}>.
+
+=item B<rosdistro> = I<DISTRO>
+
+Assume that all packages are supposed to work with the B<ROS> distribution I<DISTRO>.
+By default, this value is taken from the B<ROS_DISTRO> environment variable.
+B<catkin_lint> will use this to query the B<ROS> database for packages which are not
+locally installed.
+
+=item B<severity_level> = B<0> E<verbar> B<1> E<verbar> B<2>
+
+Choose the severity level for diagnostic output. Level 0 displays errors only,
+level 1 displays errors and warnings, and level 2 displays everything. The default
+setting is B<1>.
+
+=item B<strict> = B<no> E<verbar> B<yes>
+
+In strict mode, B<catkin_lint> will treat every reported problem as error and return
+with exit code 1 (see L<RETURN VALUES>). By default, warnings and notices are
+informational only. This setting is mostly interesting for automated test runs,
+where the exit code is evaluated. Note that ignored problems and everything hidden
+by the chosen B<severity_level> will not be considered failures.
+
+=back
+
+=head2 Package-specific severity overrides
+
+All section names besides C<[catkin_lint]> are interpreted as package names and
+will override the reported severities of problems. As a special case, the
+section C<[*]> will apply to all packages. The overrides are specified in the
+format C<ID = Severity>, where the severity can be one of
+B<ignore>, B<error>, B<warning>, B<notice>, or B<default>. See L<PROBLEM IDS> for
+details on the available IDs.
+
+Unlike B<--strict>, this gives you very fine-grained control over which problems
+are supposed to be fatal, so you are encouraged to integrate B<catkin_lint> into
+your CI test pipeline and tune the settings in a way that fits your project.
+
+=head1 PROBLEM IDS
+
+You can run B<catkin_lint --help-problem> to get a list of all problem IDs, and
+B<catkin_lint --help-problem I<ID>> for a more detailed explanation of each
+problem.
+
+=head1 EXAMPLES
+
+=head2 Command line arguments
+
+=over
+
+=item B<catkin_lint ~/catkin_ws/src>
+
+Check all packages in F<~/catkin_ws/src> for problems.
+
+=item B<catkin_lint --pkg foo --pkg bar>
+
+Check the packages C<foo> and C<bar> for problems, assuming that
+they can be found in one of the locations listed in B<ROS_PACKAGE_PATH>.
+
+=item B<catkin_lint --pkg foo --pkg bar --package-path ~/my_other_ws/src>
+
+Check the packages C<foo> and C<bar> for problems when the
+former assumption turned out to be false.
+
+=item B<catkin_lint ~/catkin_ws/src --skip-path unstable>
+
+Check all packages in F<~/catkin_ws/src>, but skip all packages in a path
+that contains the string C<unstable>.
+
+=item B<catkin_lint ~/catkin_ws/src --skip-pkg baz>
+
+Check all packages except C<baz> in F<~/catkin_ws/src>.
+
+=back
+
+=head2 Configuration file
+
+The following configuration file will instruct B<catkin_lint> to output its results
+in JSON format, ignore any problems with unknown packages (except in the package foo),
+and elevate the notice about unsorted lists to a warning for all packages (including foo):
+
+    [catkin_lint]
+    output = json
+    quiet = yes
+
+    [*]
+    unknown_package = ignore
+    unsorted_list = warning
+
+    [foo]
+    unknown_package = default
+
+=head1 REFERENCES
+
+L<https://fkie.github.io/catkin_lint/>

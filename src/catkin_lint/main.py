@@ -52,31 +52,42 @@ def add_linter_check(linter, check):
 
 
 def prepare_arguments(parser):
+    parser.epilog = "Options marked with [*] can be set in the [catkin_lint] section of a configuration file."
     parser.add_argument("--version", action="version", version=catkin_lint_version)
     parser.add_argument("path", metavar="PATH", nargs="*", default=[], help="path to catkin packages")
-    parser.add_argument("-q", "--quiet", action="store_true", help="suppress final summary")
-    parser.add_argument("-W", metavar="LEVEL", type=int, default=1, help="set warning level (0-2)")
+    parser.add_argument("--help-problem", metavar="ID", nargs="?", default=None, const="**SUMMARY**", help="show information about detectable problems")
+    m = parser.add_mutually_exclusive_group()
+    m.add_argument("--quiet", "-q", action="store_true", default=None, help="suppress final summary [*]")
+    m.add_argument("--no-quiet", action="store_false", default=None, help="override quiet=yes option from configuration file")
+    parser.add_argument("--severity-level", "-W", metavar="LEVEL", type=int, default=None, help="set severity level (0-2) [*]")
     parser.add_argument("-c", "--check", metavar="MODULE.CHECK", action="append", default=[], help=argparse.SUPPRESS)
-    parser.add_argument("--config", action="append", metavar="FILE", default=[], help="read configuration from FILE")
-    parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID")
-    parser.add_argument("--error", action="append", metavar="ID", default=[], help="treat diagnostic message ID as error")
-    parser.add_argument("--warning", action="append", metavar="ID", default=[], help="treat diagnostic message ID as warning")
-    parser.add_argument("--notice", action="append", metavar="ID", default=[], help="treat diagnostic message ID as notice")
-    parser.add_argument("--strict", action="store_true", help="treat everything reported as error")
+    parser.add_argument("--config", action="append", metavar="FILE", default=[], help="read configuration from FILE (can be used multiple times)")
+    parser.add_argument("--ignore", action="append", metavar="ID", default=[], help="ignore diagnostic message ID (can be used multiple times)")
+    parser.add_argument("--error", action="append", metavar="ID", default=[], help="treat diagnostic message ID as error (can be used multiple times)")
+    parser.add_argument("--warning", action="append", metavar="ID", default=[], help="treat diagnostic message ID as warning (can be used multiple times)")
+    parser.add_argument("--notice", action="append", metavar="ID", default=[], help="treat diagnostic message ID as notice (can be used multiple times)")
+    m = parser.add_mutually_exclusive_group()
+    m.add_argument("--strict", action="store_true", default=None, help="treat everything reported as error [*]")
+    m.add_argument("--no-strict", action="store_false", dest="strict", help="override strict=yes option from configuration file")
     parser.add_argument("--show-ignored", action="store_true", help="show messages even if they have been ignored explicitly")
     parser.add_argument("--pkg", action="append", default=[], help="specify catkin package by name (can be used multiple times)")
     parser.add_argument("--skip-pkg", metavar="PKG", action="append", default=[], help="skip testing a catkin package (can be used multiple times)")
     parser.add_argument("--skip-path", metavar="PATH", action="append", default=[], help="skip testing any package in a path that contains PATH (can be used multiple times)")
-    parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s')" % os.pathsep)
-    parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable)")
-    parser.add_argument("--resolve-env", action="store_true", help="resolve $ENV{} references from environment variables")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--text", action="store_true", help="output result as text (default)")
-    group.add_argument("--explain", action="store_true", help="output result as text with explanations")
-    group.add_argument("--xml", action="store_true", help="output result as XML")
-    group.add_argument("--json", action="store_true", help="output result as JSON")
-    parser.add_argument("--color", metavar="MODE", choices=["never", "always", "auto"], default=None, help="colorize text output")
-    parser.add_argument("--offline", action="store_true", help="do not download package index to look for packages")
+    parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s') [*]" % os.pathsep)
+    parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable) [*]")
+    m = parser.add_mutually_exclusive_group()
+    m.add_argument("--resolve-env", action="store_true", default=None, help="resolve $ENV{} references from environment variables [*]")
+    m.add_argument("--no-resolve-env", action="store_false", help="override resolve_env=yes option from configuration file")
+    m = parser.add_mutually_exclusive_group()
+    m.add_argument("--output", metavar="FORMAT", choices=["text", "explain", "xml", "json"], default="text", help="choose output format for results (default: text) [*]")
+    m.add_argument("--text", action="store_const", dest="output", const="text", help="output results as text (same as --output=text)")
+    m.add_argument("--explain", action="store_const", dest="output", const="explain", help="output result as text with explanations (same as --output=explain)")
+    m.add_argument("--xml", action="store_const", dest="output", const="xml", help="output result as XML (same as --output=xml)")
+    m.add_argument("--json", action="store_const", dest="output", const="json", help="output result as JSON (same as --output=json)")
+    parser.add_argument("--color", metavar="MODE", choices=["never", "always", "auto"], default=None, help="colorize text output; valid values are \"never\", \"always\", and \"auto\" [*]")
+    m = parser.add_mutually_exclusive_group()
+    m.add_argument("--offline", action="store_true", default=None, help="do not download package index to look for packages [*]")
+    m.add_argument("--no-offline", action="store_false", help="override offline=yes option from configuration file")
     parser.add_argument("--clear-cache", action="store_true", help="clear internal cache and invalidate all downloaded manifests")
     parser.add_argument("--debug", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--disable-cache", action="store_true", help=argparse.SUPPRESS)
@@ -85,11 +96,55 @@ def prepare_arguments(parser):
     return parser
 
 
+def get_severity_overrides_from_args(args, optionxform=lambda x: x):
+    result = {}
+    tmp = set(b for a in args.ignore for b in a.split(",") if b)
+    for a in tmp:
+        result[optionxform(a)] = "ignore"
+    tmp = set(b for a in args.notice for b in a.split(",") if b)
+    for a in tmp:
+        result[optionxform(a)] = "notice"
+    tmp = set(b for a in args.warning for b in a.split(",") if b)
+    for a in tmp:
+        result[optionxform(a)] = "warning"
+    tmp = set(b for a in args.error for b in a.split(",") if b)
+    for a in tmp:
+        result[optionxform(a)] = "error"
+    return result
+
+
+def show_help_with_problems(problem):
+    from .diagnostics import message_list
+    import re
+    import textwrap
+
+    if problem == "**SUMMARY**":
+        sys.stdout.write("catkin_lint detects the following problems:\n\n")
+        ids = list(message_list.keys())
+        ids.sort()
+        for k in ids:
+            sys.stdout.write("  %-30s -- %s\n" % (k.lower(), message_list[k][0]))
+        sys.stdout.write("\nYou can get a more detailed explanation for each problem with\n    catkin_lint --help-problem ID\n")
+        return 0
+    problem_key = problem.upper().replace("-", "_")
+    if problem_key not in message_list:
+        sys.stderr.write("catkin_lint: unknown message ID '%s'\n" % problem)
+        return 1
+    short_desc, long_desc = message_list[problem_key]
+    sys.stdout.write("%s -- %s\n\n" % (problem_key.lower(), short_desc))
+    explanation = re.sub(r"\s+", " ", long_desc).strip()
+    sys.stdout.write(textwrap.fill(explanation))
+    sys.stdout.write("\n\n")
+    return 0
+
+
 def run_linter(args):
     if args.clear_cache:
         from .environment import _clear_cache
         _clear_cache()
         return 0
+    if args.help_problem is not None:
+        return show_help_with_problems(args.help_problem)
     if args.list_check_ids:
         from .diagnostics import message_list
         ids = [k.lower() for k in message_list.keys()]
@@ -105,39 +160,27 @@ def run_linter(args):
     config.optionxform = lambda option: option.lower().replace("-", "_")
     # Initialize configuration from command line arguments
     config["*"] = {}
-    tmp = set(b for a in args.ignore for b in a.split(",") if b)
-    for a in tmp:
-        config["*"][a] = "ignore"
-    tmp = set(b for a in args.notice for b in a.split(",") if b)
-    for a in tmp:
-        config["*"][a] = "notice"
-    tmp = set(b for a in args.warning for b in a.split(",") if b)
-    for a in tmp:
-        config["*"][a] = "warning"
-    tmp = set(b for a in args.error for b in a.split(",") if b)
-    for a in tmp:
-        config["*"][a] = "error"
     config["catkin_lint"] = {}
     if args.rosdistro:
         config["catkin_lint"]["rosdistro"] = args.rosdistro
-    if args.resolve_env:
-        config["catkin_lint"]["resolve_env"] = "yes"
-    if args.offline:
-        config["catkin_lint"]["offline"] = "yes"
-    if args.disable_cache:
-        config["catkin_lint"]["disable_cache"] = "yes"
     if args.package_path:
         config["catkin_lint"]["package_path"] = args.package_path
     if args.color:
         config["catkin_lint"]["color"] = args.color
-    if args.text:
-        config["catkin_lint"]["output"] = "text"
-    if args.xml:
-        config["catkin_lint"]["output"] = "xml"
-    if args.json:
-        config["catkin_lint"]["output"] = "json"
-    if args.explain:
-        config["catkin_lint"]["output"] = "explain"
+    if args.output:
+        config["catkin_lint"]["output"] = args.output
+    if args.disable_cache:
+        config["catkin_lint"]["disable_cache"] = "yes"
+    if args.offline is not None:
+        config["catkin_lint"]["offline"] = "yes" if args.offline else "no"
+    if args.quiet is not None:
+        config["catkin_lint"]["quiet"] = "yes" if args.quiet else "no"
+    if args.strict is not None:
+        config["catkin_lint"]["strict"] = "yes" if args.strict else "no"
+    if args.severity_level is not None:
+        config["catkin_lint"]["severity_level"] = str(args.severity_level)
+    if args.resolve_env is not None:
+        config["catkin_lint"]["resolve_env"] = "yes" if args.resolve_env else "no"
 
     for config_file in args.config:
         try:
@@ -156,14 +199,22 @@ def run_linter(args):
         ]
     )
 
+    # Override severity settings from command line
+    severity_overrides = get_severity_overrides_from_args(args, config.optionxform)
+    for section in config.sections():
+        if section != "catkin_lint":
+            config[section].update(severity_overrides)
+
     nothing_to_do = 0
     pkgs_to_check = []
     if "rosdistro" in config["catkin_lint"]:
         os.environ["ROS_DISTRO"] = config["catkin_lint"]["rosdistro"]
+    quiet = config["catkin_lint"].getboolean("quiet", False)
     env = CatkinEnvironment(
         os_env=os.environ if config["catkin_lint"].getboolean("resolve_env", False) else None,
         use_rosdistro=not config["catkin_lint"].getboolean("offline", False),
-        use_cache=not config["catkin_lint"].getboolean("disable_cache", False)
+        use_cache=not config["catkin_lint"].getboolean("disable_cache", False),
+        quiet=quiet
     )
     if not args.path and not args.pkg:
         if os.path.isfile("package.xml"):
@@ -195,10 +246,10 @@ def run_linter(args):
         sys.stderr.write("catkin_lint: no packages to check\n")
         return nothing_to_do
     if "ROS_DISTRO" not in os.environ:
-        if env.ok and not args.quiet:
+        if env.knows_everything and not quiet:
             sys.stderr.write("catkin_lint: neither ROS_DISTRO environment variable nor --rosdistro option set\n")
             sys.stderr.write("catkin_lint: unknown dependencies will be ignored\n")
-        env.ok = False
+        env.knows_everything = False
     use_color = {"never": Color.Never, "always": Color.Always, "auto": Color.Auto}
     color_choice = config["catkin_lint"].get("color", "auto").lower()
     output_format = config["catkin_lint"].get("output", "text").lower()
@@ -235,21 +286,23 @@ def run_linter(args):
     exit_code = 0
     diagnostic_label = {ERROR: "error", WARNING: "warning", NOTICE: "notice"}
     output.prolog(fd=sys.stdout)
+    severity_level = config["catkin_lint"].getint("severity_level", 1)
+    be_strict = config["catkin_lint"].getboolean("strict", False)
     if args.show_ignored:
         linter.messages += linter.ignored_messages
         linter.ignored_messages = []
     for msg in sorted(linter.messages):
-        if args.W < msg.level:
+        if severity_level < msg.level:
             extras[msg.level] += 1
             continue
-        if args.strict:
+        if be_strict:
             msg.level = ERROR
         if msg.level == ERROR:
             exit_code = 1
         output.message(msg, fd=sys.stdout)
         problems += 1
     output.epilog(fd=sys.stdout)
-    if not args.quiet:
+    if not quiet:
         sys.stderr.write("catkin_lint: checked %d packages and found %d problems\n" % (len(pkgs_to_check), problems))
         for level in [ERROR, WARNING, NOTICE]:
             if extras[level] > 0:

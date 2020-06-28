@@ -706,7 +706,7 @@ class CMakeLinter(object):
             self._parse_file(info, os.path.join(path, "CMakeLists.txt"))
             for cb in self._final_hooks:
                 cb(info)
-        except IOError as err:
+        except (OSError, IOError) as err:
             info.report(ERROR, "OS_ERROR", msg=str(err))
         self.messages += info.messages
         self.ignored_messages += info.ignored_messages

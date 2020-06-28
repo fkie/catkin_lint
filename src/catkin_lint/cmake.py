@@ -41,8 +41,13 @@ def _escape(s):
     return re.sub(r'([\\$"])', r"\\\1", s)
 
 
+_special_escapes = {"\\n": "\n", "\\t": "\t", "\\r": "\r"}
+
+
 def _unescape(s):
-    return s if "\\" not in s else re.sub(r'\\(.)', r"\1", s)
+    if "\\" not in s:
+        return s
+    return "".join((_special_escapes.get(p, p[1:]) if p.startswith("\\") else p) for p in re.split(r'(\\.)', s))
 
 
 _find_var = re.compile(r'(?<!\\)\$\{([a-z_0-9]+)\}', re.IGNORECASE).search
@@ -86,12 +91,13 @@ _token_spec = [
     ('LPAREN', r'\('),
     ('RPAREN', r'\)'),
     ('STRING', r'"(?:\\.|[^\\"])*"'),
+    ('BRACKET', r'\[(?P<BRACKET_FILL>=*)\[.*?\](?P=BRACKET_FILL)\]'),
     ('SEMICOLON', r';'),
     ('WORD', r'(?:\\.|[^\\\(\)"# \t\r\n;])+'),
     ('PRAGMA', r'#catkin_lint:.*?$'),
-    ('COMMENT', r'#.*?$'),
+    ('COMMENT', r'#\[(?P<COMMENT_FILL>=*)\[.*?\](?P=COMMENT_FILL)\]|#.*?$'),
 ]
-_next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE).match
+_next_token = re.compile('|'.join('(?P<%s>%s)' % pair for pair in _token_spec), re.MULTILINE | re.IGNORECASE | re.DOTALL).match
 
 
 def _lexer(s):
@@ -109,6 +115,9 @@ def _lexer(s):
                 val = mo.group(typ)
                 if typ == "STRING":
                     val = val[1:-1]
+                    val = re.sub(r"\\\n", "", val)
+                if typ == "BRACKET":
+                    val = re.sub(r"^\[(=*)\[(?:\r\n|\r|\n)?(.*)\]\1\]$", r"\2", val)
                 yield (typ, val, line, col)
             col += mo.end() - mo.start()
         pos = mo.end()

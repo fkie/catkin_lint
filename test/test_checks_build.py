@@ -865,10 +865,10 @@ class ChecksBuildTest(unittest.TestCase):
         open_func = "builtins.open" if sys.version_info[0] >= 3 else "__builtin__.open"
 
         # Work around a limitation of older Python mock_open() implementations
-        with patch(open_func, new_callable=mock_open, read_data="test\nthis\n"):
+        with patch(open_func, new_callable=mock_open, read_data="test\nthis\n"):  # pragma: no cover
             with open("anything", "r") as f:
                 if f.readline() != "test\n":
-                    return
+                    unittest.skip("known bug in old mock_open()")
 
         with patch(open_func, new_callable=mock_open, read_data="no python shebang\ncontent\n"):
             result = mock_lint(env, pkg,
