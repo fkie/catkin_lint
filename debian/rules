@@ -24,11 +24,12 @@ export PYBUILD_INSTALL_ARGS = --install-lib=/usr/share/catkin-lint
 %:
 	dh $@ --with python3 --buildsystem=pybuild
 
-execute_after_dh_auto_install:
+override_dh_auto_install:
+	dh_auto_install -O--buildsystem=pybuild
 	mv debian/catkin-lint/usr/bin/catkin_lint debian/catkin-lint/usr/share/catkin-lint/run
 
-execute_before_dh_installman: debian/catkin_lint.1
-	true
+override_dh_installman: debian/catkin_lint.1
+	dh_installman -O--buildsystem=pybuild
 
 debian/catkin_lint.1: catkin_lint.pod
 	pod2man --release="$(actual_version)" --center="Robot OS" $< > $@
