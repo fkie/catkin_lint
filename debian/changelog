@@ -1,3 +1,10 @@
+catkin-lint (1.6.10-1~19.10.1) eoan; urgency=medium
+
+  * Revert usage of execute_after_* and execute_before_*
+    This feature needs debhelper >= 12.8, not available in eoan.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Mon, 29 Jun 2020 10:27:30 +0200
+
 catkin-lint (1.6.10-1~20.04) focal; urgency=medium
 
   * New release.
