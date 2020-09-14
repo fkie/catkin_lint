@@ -4,7 +4,23 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2020-06-26</lastmod>
+     <lastmod>2020-09-14</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/install/</loc>
+     <lastmod>2020-09-14</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+    <url>
+     <loc>/usage/</loc>
+     <lastmod>2020-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,7 +28,7 @@
     
     <url>
      <loc>/messages/</loc>
-     <lastmod>2020-06-26</lastmod>
+     <lastmod>2020-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -20,7 +36,7 @@
     
     <url>
      <loc>/api/</loc>
-     <lastmod>2020-06-26</lastmod>
+     <lastmod>2020-09-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
