@@ -3,6 +3,8 @@ theme: readthedocs
 markdown_extensions:
 - admonition
 pages:
-- Home: 'index.md'
+- Overview: 'index.md'
+- Installation: 'install.md'
+- Usage: 'usage.md'
 - Messages: 'messages.md'
 - API: 'api.md'
