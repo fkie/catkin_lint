@@ -14,11 +14,11 @@ jobs:
             max-parallel: 2
             fail-fast: false
             matrix:
-                python-version: [2.7, 3.5]
+                python-version: ['2.x', '3.x', 'pypy3']
         steps:
-            - uses: actions/checkout@v1
+            - uses: actions/checkout@v2
             - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v1
+              uses: actions/setup-python@v2
               with:
                   python-version: ${{ matrix.python-version }}
             - name: Install dependencies
