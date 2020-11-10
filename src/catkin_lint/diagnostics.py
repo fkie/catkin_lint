@@ -653,6 +653,14 @@ message_list = {
         like if(${var}) can lead to incorrect results if ${var} resolves to a different
         variable name. Use if(var) or if("${var}") instead.
         """),
+    "HEADER_OUTSIDE_PACKAGE_INCLUDE_PATH":
+    ("header file '%(file)s' is not installed to package-specific include path",
+        """\
+        It is recommend that all header files are installed into a
+        package-specific include subdirectory to prevent file name collisions
+        between different packages. The variable ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+        will point to the correct location.
+        """),
 }
 
 

@@ -446,8 +446,8 @@ def installs(linter):
     def on_init(info):
         info.install_targets = set()
         info.install_programs = set()
-        info.install_includes = False
         info.install_files = set()
+        info.has_includes_installed = False
 
     def on_catkin_install_python(info, cmd, args):
         opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
@@ -488,14 +488,17 @@ def installs(linter):
                         info.report(WARNING, "EXTERNAL_DIRECTORY", cmd=cmd, directory=info.report_path(d))
                     if info.is_existing_path(d, check=os.path.isdir):
                         real_d = info.real_path(info.source_relative_path(d))
+                        _, dir_component = os.path.split(d)
                         if os.path.isdir(real_d):
-                            if opts["USE_SOURCE_PERMISSIONS"]:
-                                for dirpath, filename in enumerate_package_files(real_d, catkin_ignore=False, ignore_unimportant=False):
-                                    real_filename = os.path.join(dirpath, filename)
+                            for dirpath, filename in enumerate_package_files(real_d, catkin_ignore=False, ignore_unimportant=False):
+                                real_filename = os.path.join(dirpath, filename)
+                                if opts["USE_SOURCE_PERMISSIONS"]:
                                     pkg_filename = info.source_relative_path(real_filename[len(info.path) + 1:])
                                     mode = os.stat(real_filename).st_mode
                                     if mode & stat.S_IXUSR:
                                         info.install_programs.add(pkg_filename)
+                                relative_filename = os.path.relpath(real_filename, real_d)
+                                info.install_files.add(posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, opts["DESTINATION"], dir_component, relative_filename)))
                     else:
                         info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(d))
         if opts["FILES"]:
@@ -524,7 +527,7 @@ def installs(linter):
                 elif not info.is_catkin_install_destination(opts[dest]):
                     info.report(WARNING, "WRONG_INSTALL_DESTINATION", type=install_type, dest=dest)
                 if info.is_catkin_install_destination(opts[dest], "include"):
-                    info.install_includes = True
+                    info.has_includes_installed = True
 
     def on_final(info):
         for lib in info.export_libs:
@@ -533,8 +536,14 @@ def installs(linter):
         for tgt in info.executables - info.install_targets:
             if "test" not in tgt.lower() and "example" not in tgt.lower():
                 info.report(WARNING, "UNINSTALLED_TARGET", target=tgt, file_location=("CMakeLists.txt", 0))
-        if info.export_includes and not info.install_includes:
+        include_path = posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, "include")) + posixpath.sep
+        package_include_path = posixpath.join(include_path, info.manifest.name) + posixpath.sep
+        include_files = [f for f in info.install_files if f.startswith(include_path)]
+        if info.export_includes and not info.has_includes_installed:
             info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_INCLUDE_PATH", file_location=info.location_of("catkin_package"))
+        for f in include_files:
+            if not f.startswith(package_include_path):
+                info.report(NOTICE, "HEADER_OUTSIDE_PACKAGE_INCLUDE_PATH", file=info.report_path(f))
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
