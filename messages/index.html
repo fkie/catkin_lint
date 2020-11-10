@@ -161,6 +161,8 @@
         
             <li><a class="toctree-l3" href="#global-variable-var-should-contain-project-name">global variable 'var' should contain project name</a></li>
         
+            <li><a class="toctree-l3" href="#header-file-file-is-not-installed-to-package-specific-include-path">header file 'file' is not installed to package-specific include path</a></li>
+        
             <li><a class="toctree-l3" href="#include-path-path-is-exported-but-not-used-for-the-build">include path 'path' is exported but not used for the build</a></li>
         
             <li><a class="toctree-l3" href="#include-paths-path-and-parent_path-are-ambiguous">include paths 'path' and 'parent_path' are ambiguous</a></li>
@@ -581,6 +583,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: global_var_collision</li>
 <li><strong>Severity</strong>: notice</li>
 <li><strong>Explanation</strong>: Global variables and options are stored in the cache. You should prefix your variable names with the project name to avoid name collisions with other packages.</li>
+</ul>
+<h2 id="header-file-file-is-not-installed-to-package-specific-include-path">header file '<i>file</i>' is not installed to package-specific include path</h2>
+<ul>
+<li><strong>ID</strong>: header_outside_package_include_path</li>
+<li><strong>Severity</strong>: notice</li>
+<li><strong>Explanation</strong>: It is recommend that all header files are installed into a package-specific include subdirectory to prevent file name collisions between different packages. The variable ${CATKIN_PACKAGE_INCLUDE_DESTINATION} will point to the correct location.</li>
 </ul>
 <h2 id="include-path-path-is-exported-but-not-used-for-the-build">include path '<i>path</i>' is exported but not used for the build</h2>
 <ul>
