@@ -509,6 +509,9 @@ def installs(linter):
             info.install_files |= set([posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, opts["DESTINATION"], posixpath.basename(f))) for f in opts["FILES"]])
         if opts["TARGETS"]:
             install_type = "TARGETS"
+            for target in opts["TARGETS"]:
+                if target not in info.targets:
+                    info.report(ERROR, "UNDEFINED_TARGET", target=target)
             info.install_targets |= set(opts["TARGETS"])
         if install_type is None:
             return
@@ -537,9 +540,6 @@ def installs(linter):
                 for lib in depends:
                     if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries and lib not in info.interface_libraries:
                         info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib, file_location=info.location_of("catkin_package"))
-        for target in info.install_targets:
-            if target not in info.targets:
-                info.report(ERROR, "UNDEFINED_TARGET", target=target, file_location=("CMakeLists.txt", 0))
 
     linter.require(targets)
     linter.require(exports)
