@@ -105,7 +105,11 @@ class ChecksBuildTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "link_directories(in_package)", checks=cc.link_directories)
         self.assertEqual(["LINK_DIRECTORY"], result)
+        result = mock_lint(env, pkg, "target_link_directories(target in_package)", checks=cc.link_directories)
+        self.assertEqual(["LINK_DIRECTORY"], result)
         result = mock_lint(env, pkg, "link_directories(/not/in/package)", checks=cc.link_directories)
+        self.assertEqual(["EXTERNAL_LINK_DIRECTORY"], result)
+        result = mock_lint(env, pkg, "target_link_directories(target /not/in/package)", checks=cc.link_directories)
         self.assertEqual(["EXTERNAL_LINK_DIRECTORY"], result)
 
     @posix_and_nt

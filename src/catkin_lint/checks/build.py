@@ -214,7 +214,17 @@ def link_directories(linter):
         else:
             info.report(WARNING, "LINK_DIRECTORY")
 
+    def on_target_link_directories(info, cmd, args):
+        opts, args = cmake_argparse(args, {"BEFORE": "-", "PUBLIC": "*", "PRIVATE": "*", "INTERFACE": "*"})
+        externals = opts["PUBLIC"] + opts["PRIVATE"] + opts["INTERFACE"] or args[1:]
+        externals = [p for p in externals if not info.is_internal_path(p)]
+        if externals:
+            info.report(ERROR, "EXTERNAL_LINK_DIRECTORY")
+        else:
+            info.report(WARNING, "LINK_DIRECTORY")
+
     linter.add_command_hook("link_directories", on_link_directories)
+    linter.add_command_hook("target_link_directories", on_target_link_directories)
 
 
 def depends(linter):
