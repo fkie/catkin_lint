@@ -208,6 +208,7 @@ def source_files(linter):
 
 def link_directories(linter):
     def on_link_directories(info, cmd, args):
+        _, args = cmake_argparse(args, {"BEFORE": "-", "AFTER": "-"})
         externals = [p for p in args if not info.is_internal_path(p)]
         if externals:
             info.report(ERROR, "EXTERNAL_LINK_DIRECTORY")
@@ -236,7 +237,13 @@ def depends(linter):
         info.checked_packages = set()
 
     def on_find_package(info, cmd, args):
-        opts, args = cmake_argparse(args, {"REQUIRED": "-", "COMPONENTS": "*", "OPTIONAL_COMPONENTS": "*"})
+        opts, args = cmake_argparse(args, {
+            "EXACT": "-", "QUIET": "-", "MODULE": "-", "NO_POLICY_SCOPE": "-", "REQUIRED": "-", "COMPONENTS": "*", "OPTIONAL_COMPONENTS": "*",
+            "NAMES": "*", "CONFIGS": "*", "HINTS": "*", "PATHS": "*", "PATH_SUFFIXES": "*", "NO_DEFAULT_PATH": "-", "NO_PACKAGE_ROOT_PATH": "-",
+            "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "NO_SYSTEM_ENVIRONMENT_PATH": "-", "NO_CMAKE_PACKAGE_REGISTRY": "-",
+            "NO_CMAKE_BUILDS_PATH": "-", "NO_CMAKE_SYSTEM_PATH": "-", "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY": "-", "CMAKE_FIND_ROOT_PATH_BOTH": "-",
+            "ONLY_CMAKE_FIND_ROOT_PATH": "-", "NO_CMAKE_FIND_ROOT_PATH": "-"
+        })
         this_components = opts["COMPONENTS"] if opts["COMPONENTS"] else args[1:]
         if "project" not in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="project")
@@ -347,7 +354,10 @@ def exports(linter):
         info.export_targets = set()
 
     def on_catkin_package(info, cmd, args):
-        opts, args = cmake_argparse(args, {"INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*"})
+        opts, args = cmake_argparse(args, {
+            "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*",
+            "SKIP_CMAKE_CONFIG_GENERATION": "-", "SKIP_PKG_CONFIG_GENERATION": "-"
+        })
         for list_name in ["CATKIN_DEPENDS", "DEPENDS", "CFG_EXTRAS", "EXPORTED_TARGETS"]:
             if not is_sorted(opts[list_name]):
                 info.report(NOTICE, "UNSORTED_LIST", name=list_name)
@@ -439,7 +449,7 @@ def pkg_config(linter):
         info.pkg_modules_prefix = set()
 
     def on_pkg_check_modules(info, cmd, args):
-        opts, args = cmake_argparse(args, {"REQUIRED": "-", "QUIET": "-", "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "IMPORTED_TARGET": "-"})
+        opts, args = cmake_argparse(args, {"REQUIRED": "-", "QUIET": "-", "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "IMPORTED_TARGET": "-", "GLOBAL": "-"})
         info.pkg_modules_prefix.add(args[0])
         for pkg in args[1:]:
             if "=" in pkg:
@@ -460,7 +470,7 @@ def installs(linter):
         info.has_includes_installed = False
 
     def on_catkin_install_python(info, cmd, args):
-        opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
+        opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!", "OPTIONAL": "-"})
         for f in opts["PROGRAMS"]:
             if f:
                 if not info.is_valid_path(f):
@@ -472,7 +482,7 @@ def installs(linter):
                             shebang = fd.readline()
                             if not shebang.startswith("#!") or "python" not in shebang:
                                 info.report(ERROR, "MISSING_SHEBANG", file=info.report_path(f), interpreter="python")
-                else:
+                elif not opts["OPTIONAL"]:
                     info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
                 info.install_programs.add(info.source_relative_path(f))
         if not info.is_catkin_bin_install_destination(opts["DESTINATION"]):
@@ -480,7 +490,16 @@ def installs(linter):
 
     def on_install(info, cmd, args):
         install_type = None
-        opts, args = cmake_argparse(args, {"EXPORT": "?", "PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "PATTERN": "?", "EXCLUDE": "-", "USE_SOURCE_PERMISSIONS": "-", "REGEX": "-"})
+        opts, args = cmake_argparse(args, {
+            "EXPORT": "?", "PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*",
+            "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?",
+            "OBJECTS DESTINATION": "?", "FRAMEWORK DESTINATION": "?", "BUNDLE DESTINATION": "?",
+            "PRIVATE_HEADER DESTINATION": "?", "PUBLIC_HEADER DESTINATION": "?", "RESOURCE DESTINATION": "?",
+            "INCLUDES DESTINATION": "*",
+            "PATTERN": "?", "EXCLUDE": "-", "USE_SOURCE_PERMISSIONS": "-", "REGEX": "-",
+            "PERMISSIONS": "*", "CONFIGURATIONS": "*", "COMPONENT": "?", "NAMELINK_COMPONENT": "?", "OPTIONAL": "-",
+            "EXCLUDE_FROM_ALL": "-", "NAMELINK_ONLY": "-", "NAMELINK_SKIP": "-"
+        })
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
