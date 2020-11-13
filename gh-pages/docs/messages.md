@@ -1,7 +1,7 @@
 # catkin_lint diagnostic messages
 
 This is a list of all messages which might be shown by **catkin_lint**.
-Each diagnostic has a unique ID (such as *catkin_order_violation*),
+Each problem has a unique ID (such as *catkin_order_violation*),
 which you can use to disable certain messages, either with the command line option
 `--ignore ID`, or by adding a pragma line `#catkin_lint: ignore ID` at the beginning
 of the CMakeLists.txt file. As a third option, you can add a pragma line `#catkin_lint: ignore_once ID`
@@ -284,6 +284,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **ID**: global_var_collision
 - **Severity**: notice
 - **Explanation**: Global variables and options are stored in the cache. You should prefix your variable names with the project name to avoid name collisions with other packages.
+
+## header file '<i>file</i>' is not installed to package-specific include path
+
+- **ID**: header_outside_package_include_path
+- **Severity**: notice
+- **Explanation**: It is recommend that all header files are installed into a package-specific include subdirectory to prevent file name collisions between different packages. The variable ${CATKIN_PACKAGE_INCLUDE_DESTINATION} will point to the correct location.
 
 ## include path '<i>path</i>' is exported but not used for the build
 

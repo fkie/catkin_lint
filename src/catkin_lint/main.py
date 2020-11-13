@@ -37,6 +37,7 @@ from . import __version__ as catkin_lint_version
 from .linter import CMakeLinter, ERROR, WARNING, NOTICE
 from .environment import CatkinEnvironment
 from .output import Color, TextOutput, ExplainedTextOutput, JsonOutput, XmlOutput
+from .util import getcwd
 
 import catkin_lint.checks
 
@@ -218,7 +219,7 @@ def run_linter(args):
     )
     if not args.path and not args.pkg:
         if os.path.isfile("package.xml"):
-            pkgs_to_check += env.add_path(os.getcwd())
+            pkgs_to_check += env.add_path(getcwd())
         else:
             sys.stderr.write("catkin_lint: no path given and no package.xml in current directory\n")
             return os.EX_NOINPUT

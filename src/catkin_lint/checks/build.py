@@ -208,13 +208,24 @@ def source_files(linter):
 
 def link_directories(linter):
     def on_link_directories(info, cmd, args):
+        _, args = cmake_argparse(args, {"BEFORE": "-", "AFTER": "-"})
         externals = [p for p in args if not info.is_internal_path(p)]
         if externals:
             info.report(ERROR, "EXTERNAL_LINK_DIRECTORY")
         else:
             info.report(WARNING, "LINK_DIRECTORY")
 
+    def on_target_link_directories(info, cmd, args):
+        opts, args = cmake_argparse(args, {"BEFORE": "-", "PUBLIC": "*", "PRIVATE": "*", "INTERFACE": "*"})
+        externals = opts["PUBLIC"] + opts["PRIVATE"] + opts["INTERFACE"] or args[1:]
+        externals = [p for p in externals if not info.is_internal_path(p)]
+        if externals:
+            info.report(ERROR, "EXTERNAL_LINK_DIRECTORY")
+        else:
+            info.report(WARNING, "LINK_DIRECTORY")
+
     linter.add_command_hook("link_directories", on_link_directories)
+    linter.add_command_hook("target_link_directories", on_target_link_directories)
 
 
 def depends(linter):
@@ -226,7 +237,13 @@ def depends(linter):
         info.checked_packages = set()
 
     def on_find_package(info, cmd, args):
-        opts, args = cmake_argparse(args, {"REQUIRED": "-", "COMPONENTS": "*", "OPTIONAL_COMPONENTS": "*"})
+        opts, args = cmake_argparse(args, {
+            "EXACT": "-", "QUIET": "-", "MODULE": "-", "NO_POLICY_SCOPE": "-", "REQUIRED": "-", "COMPONENTS": "*", "OPTIONAL_COMPONENTS": "*",
+            "NAMES": "*", "CONFIGS": "*", "HINTS": "*", "PATHS": "*", "PATH_SUFFIXES": "*", "NO_DEFAULT_PATH": "-", "NO_PACKAGE_ROOT_PATH": "-",
+            "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "NO_SYSTEM_ENVIRONMENT_PATH": "-", "NO_CMAKE_PACKAGE_REGISTRY": "-",
+            "NO_CMAKE_BUILDS_PATH": "-", "NO_CMAKE_SYSTEM_PATH": "-", "NO_CMAKE_SYSTEM_PACKAGE_REGISTRY": "-", "CMAKE_FIND_ROOT_PATH_BOTH": "-",
+            "ONLY_CMAKE_FIND_ROOT_PATH": "-", "NO_CMAKE_FIND_ROOT_PATH": "-"
+        })
         this_components = opts["COMPONENTS"] if opts["COMPONENTS"] else args[1:]
         if "project" not in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=cmd, second_cmd="project")
@@ -337,7 +354,10 @@ def exports(linter):
         info.export_targets = set()
 
     def on_catkin_package(info, cmd, args):
-        opts, args = cmake_argparse(args, {"INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*"})
+        opts, args = cmake_argparse(args, {
+            "INCLUDE_DIRS": "*", "LIBRARIES": "*", "DEPENDS": "*", "CATKIN_DEPENDS": "*", "CFG_EXTRAS": "*", "EXPORTED_TARGETS": "*",
+            "SKIP_CMAKE_CONFIG_GENERATION": "-", "SKIP_PKG_CONFIG_GENERATION": "-"
+        })
         for list_name in ["CATKIN_DEPENDS", "DEPENDS", "CFG_EXTRAS", "EXPORTED_TARGETS"]:
             if not is_sorted(opts[list_name]):
                 info.report(NOTICE, "UNSORTED_LIST", name=list_name)
@@ -429,7 +449,7 @@ def pkg_config(linter):
         info.pkg_modules_prefix = set()
 
     def on_pkg_check_modules(info, cmd, args):
-        opts, args = cmake_argparse(args, {"REQUIRED": "-", "QUIET": "-", "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "IMPORTED_TARGET": "-"})
+        opts, args = cmake_argparse(args, {"REQUIRED": "-", "QUIET": "-", "NO_CMAKE_PATH": "-", "NO_CMAKE_ENVIRONMENT_PATH": "-", "IMPORTED_TARGET": "-", "GLOBAL": "-"})
         info.pkg_modules_prefix.add(args[0])
         for pkg in args[1:]:
             if "=" in pkg:
@@ -446,11 +466,11 @@ def installs(linter):
     def on_init(info):
         info.install_targets = set()
         info.install_programs = set()
-        info.install_includes = False
         info.install_files = set()
+        info.has_includes_installed = False
 
     def on_catkin_install_python(info, cmd, args):
-        opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!"})
+        opts, args = cmake_argparse(args, {"PROGRAMS": "+", "DESTINATION": "!", "OPTIONAL": "-"})
         for f in opts["PROGRAMS"]:
             if f:
                 if not info.is_valid_path(f):
@@ -462,7 +482,7 @@ def installs(linter):
                             shebang = fd.readline()
                             if not shebang.startswith("#!") or "python" not in shebang:
                                 info.report(ERROR, "MISSING_SHEBANG", file=info.report_path(f), interpreter="python")
-                else:
+                elif not opts["OPTIONAL"]:
                     info.report(ERROR, "MISSING_FILE", cmd=cmd, file=info.report_path(f))
                 info.install_programs.add(info.source_relative_path(f))
         if not info.is_catkin_bin_install_destination(opts["DESTINATION"]):
@@ -470,7 +490,16 @@ def installs(linter):
 
     def on_install(info, cmd, args):
         install_type = None
-        opts, args = cmake_argparse(args, {"EXPORT": "?", "PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*", "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?", "PATTERN": "?", "EXCLUDE": "-", "USE_SOURCE_PERMISSIONS": "-", "REGEX": "-"})
+        opts, args = cmake_argparse(args, {
+            "EXPORT": "?", "PROGRAMS": "*", "FILES": "*", "TARGETS": "*", "DIRECTORY": "*",
+            "DESTINATION": "?", "ARCHIVE DESTINATION": "?", "LIBRARY DESTINATION": "?", "RUNTIME DESTINATION": "?",
+            "OBJECTS DESTINATION": "?", "FRAMEWORK DESTINATION": "?", "BUNDLE DESTINATION": "?",
+            "PRIVATE_HEADER DESTINATION": "?", "PUBLIC_HEADER DESTINATION": "?", "RESOURCE DESTINATION": "?",
+            "INCLUDES DESTINATION": "*",
+            "PATTERN": "?", "EXCLUDE": "-", "USE_SOURCE_PERMISSIONS": "-", "REGEX": "-",
+            "PERMISSIONS": "*", "CONFIGURATIONS": "*", "COMPONENT": "?", "NAMELINK_COMPONENT": "?", "OPTIONAL": "-",
+            "EXCLUDE_FROM_ALL": "-", "NAMELINK_ONLY": "-", "NAMELINK_SKIP": "-"
+        })
         if opts["PROGRAMS"]:
             install_type = "PROGRAMS"
             for f in opts["PROGRAMS"]:
@@ -488,14 +517,17 @@ def installs(linter):
                         info.report(WARNING, "EXTERNAL_DIRECTORY", cmd=cmd, directory=info.report_path(d))
                     if info.is_existing_path(d, check=os.path.isdir):
                         real_d = info.real_path(info.source_relative_path(d))
+                        _, dir_component = os.path.split(d)
                         if os.path.isdir(real_d):
-                            if opts["USE_SOURCE_PERMISSIONS"]:
-                                for dirpath, filename in enumerate_package_files(real_d, catkin_ignore=False, ignore_unimportant=False):
-                                    real_filename = os.path.join(dirpath, filename)
+                            for dirpath, filename in enumerate_package_files(real_d, catkin_ignore=False, ignore_unimportant=False):
+                                real_filename = os.path.join(dirpath, filename)
+                                if opts["USE_SOURCE_PERMISSIONS"]:
                                     pkg_filename = info.source_relative_path(real_filename[len(info.path) + 1:])
                                     mode = os.stat(real_filename).st_mode
                                     if mode & stat.S_IXUSR:
                                         info.install_programs.add(pkg_filename)
+                                relative_filename = os.path.relpath(real_filename, real_d)
+                                info.install_files.add(posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, opts["DESTINATION"], dir_component, relative_filename)))
                     else:
                         info.report(ERROR, "MISSING_DIRECTORY", cmd=cmd, directory=info.report_path(d))
         if opts["FILES"]:
@@ -509,6 +541,9 @@ def installs(linter):
             info.install_files |= set([posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, opts["DESTINATION"], posixpath.basename(f))) for f in opts["FILES"]])
         if opts["TARGETS"]:
             install_type = "TARGETS"
+            for target in opts["TARGETS"]:
+                if target not in info.targets:
+                    info.report(ERROR, "UNDEFINED_TARGET", target=target)
             info.install_targets |= set(opts["TARGETS"])
         if install_type is None:
             return
@@ -521,7 +556,7 @@ def installs(linter):
                 elif not info.is_catkin_install_destination(opts[dest]):
                     info.report(WARNING, "WRONG_INSTALL_DESTINATION", type=install_type, dest=dest)
                 if info.is_catkin_install_destination(opts[dest], "include"):
-                    info.install_includes = True
+                    info.has_includes_installed = True
 
     def on_final(info):
         for lib in info.export_libs:
@@ -530,16 +565,19 @@ def installs(linter):
         for tgt in info.executables - info.install_targets:
             if "test" not in tgt.lower() and "example" not in tgt.lower():
                 info.report(WARNING, "UNINSTALLED_TARGET", target=tgt, file_location=("CMakeLists.txt", 0))
-        if info.export_includes and not info.install_includes:
+        include_path = posixpath.normpath(posixpath.join(PathConstants.CATKIN_INSTALL, "include")) + posixpath.sep
+        package_include_path = posixpath.join(include_path, info.manifest.name) + posixpath.sep
+        include_files = [f for f in info.install_files if f.startswith(include_path)]
+        if info.export_includes and not info.has_includes_installed:
             info.report(ERROR if "install" in info.commands else WARNING, "UNINSTALLED_INCLUDE_PATH", file_location=info.location_of("catkin_package"))
+        for f in include_files:
+            if not f.startswith(package_include_path):
+                info.report(NOTICE, "HEADER_OUTSIDE_PACKAGE_INCLUDE_PATH", file=info.report_path(f))
         for target, depends in iteritems(info.target_links):
             if target in info.install_targets:
                 for lib in depends:
                     if lib in info.libraries and lib not in info.install_targets and lib not in info.static_libraries and lib not in info.interface_libraries:
                         info.report(ERROR, "UNINSTALLED_DEPEND", export_target=target, target=lib, file_location=info.location_of("catkin_package"))
-        for target in info.install_targets:
-            if target not in info.targets:
-                info.report(ERROR, "UNDEFINED_TARGET", target=target, file_location=("CMakeLists.txt", 0))
 
     linter.require(targets)
     linter.require(exports)

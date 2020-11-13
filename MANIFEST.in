@@ -1,4 +1,4 @@
-include *.rst *.txt *.xsd *.py
+include *.rst *.txt *.xsd *.py *.pod
 include bash/catkin_lint
 include test/*.py test/sources.cache/*
 include versioneer.py

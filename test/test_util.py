@@ -98,6 +98,35 @@ class UtilTest(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
+    def test_getcwd(self):
+        """Test getcwd() and abspath() utility function"""
+        pwd = os.environ.get("PWD")
+        oldpwd = os.getcwd()
+        tmpdir = tempfile.mkdtemp()
+        alphadir = os.path.join(tmpdir, "alpha")
+        betadir = os.path.join(tmpdir, "beta")
+        try:
+            os.makedirs(alphadir)
+            os.symlink(alphadir, betadir)
+            os.chdir(betadir)
+            os.environ["PWD"] = betadir
+            self.assertEqual(os.getcwd(), alphadir)
+            self.assertEqual(util.getcwd(), betadir)
+            self.assertEqual(util.abspath("."), betadir)
+            self.assertEqual(util.abspath(".."), tmpdir)
+            self.assertEqual(util.abspath("/abs/path"), os.path.normpath("/abs/path"))
+            del os.environ["PWD"]
+            self.assertEqual(util.getcwd(), alphadir)
+        except OSError:  # pragma: no cover
+            self.skipTest("failed to properly set up directory symlink")
+        finally:  # pragma: no cover
+            os.chdir(oldpwd)
+            shutil.rmtree(tmpdir, ignore_errors=True)
+            if pwd:
+                os.environ["PWD"] = pwd
+            else:
+                os.environ.pop("PWD", None)
+
 
 class EnumeratePackagesTest(unittest.TestCase):
 

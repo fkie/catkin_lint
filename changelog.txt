@@ -1,3 +1,10 @@
+Version 1.6.11
+  * PyPy is officially supported now
+  * Add support for target_link_directories()
+  * Add support for new keywords to various CMake commands
+  * Improve handling of packages in symlinked directories
+  * A few minor improvements
+
 Version 1.6.10
   * Test suite coverage now at 100%
   * Improve CMake parser
