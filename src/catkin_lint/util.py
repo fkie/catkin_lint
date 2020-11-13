@@ -33,6 +33,28 @@ import re
 import tempfile
 
 
+def getcwd():
+    # os.getcwd() will always report the real path, even though
+    # we would prefer the logical path if the directory path
+    # contains symlinks. Unfortunately, there is no portable way
+    # to do this, so we rely on the environment variable PWD,
+    # which is set by most shells. If PWD is unset or stale, we
+    # fall back to os.getcwd()
+    actual_pwd = os.getcwd()
+    if "PWD" in os.environ:
+        logical_pwd = os.environ.get("PWD")
+        if os.path.realpath(logical_pwd) == actual_pwd:
+            return logical_pwd
+    return actual_pwd
+
+
+def abspath(path):
+    # os.path.abspath calls os.getcwd(), but we would prefer the
+    # logical path if available, so we reimplement it in terms of
+    # getcwd() above.
+    return os.path.normpath(os.path.join(getcwd(), path))
+
+
 def word_split(s):
     ws = re.compile(r"(\W|_)+|(?<=[^A-Z])(?=[A-Z])|(?<=\w)(?=[A-Z][a-z])")
     mo = ws.search(s)

@@ -37,6 +37,7 @@ from fnmatch import fnmatch
 from copy import copy
 from .cmake import ParserContext, argparse as cmake_argparse, CMakeSyntaxError
 from .diagnostics import msg, add_user_defined_msg
+from .util import abspath
 
 ERROR = 0
 WARNING = 1
@@ -668,7 +669,7 @@ class CMakeLinter(object):
                 self._get_overrides(info, config["*"])
             if manifest.name in config:
                 self._get_overrides(info, config[manifest.name])
-        info.path = os.path.abspath(path)
+        info.path = abspath(path)
         info.manifest = manifest
         info.conditionals = []
         info.var = {

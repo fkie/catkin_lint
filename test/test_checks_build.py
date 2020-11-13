@@ -105,7 +105,11 @@ class ChecksBuildTest(unittest.TestCase):
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg, "link_directories(in_package)", checks=cc.link_directories)
         self.assertEqual(["LINK_DIRECTORY"], result)
+        result = mock_lint(env, pkg, "target_link_directories(target in_package)", checks=cc.link_directories)
+        self.assertEqual(["LINK_DIRECTORY"], result)
         result = mock_lint(env, pkg, "link_directories(/not/in/package)", checks=cc.link_directories)
+        self.assertEqual(["EXTERNAL_LINK_DIRECTORY"], result)
+        result = mock_lint(env, pkg, "target_link_directories(target /not/in/package)", checks=cc.link_directories)
         self.assertEqual(["EXTERNAL_LINK_DIRECTORY"], result)
 
     @posix_and_nt
@@ -617,7 +621,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["REDUNDANT_LIB_PREFIX"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/package-path/mock/bin/script", "/package-path/mock/bin/script.in", "/package-path/mock/share/file", "/package-path/mock/src/source.cpp", "/some/external/script", "/some/external/file"]])
+    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/package-path/mock/bin/script", "/package-path/mock/bin/script.in", "/package-path/mock/share/file", "/package-path/mock/src/source.cpp", "/package-path/mock/include/source.h", "/some/external/script", "/some/external/file"]])
     @patch("os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/package-path/mock/include", "/some/external/dir"]])
     def test_installs(self):
         """Test installation checks"""
@@ -787,6 +791,26 @@ class ChecksBuildTest(unittest.TestCase):
             """,
                            checks=cc.installs)
         self.assertEqual(["UNUSED_INCLUDE_PATH", "UNINSTALLED_INCLUDE_PATH"], result)
+
+        result = mock_lint(env, pkg,
+                           """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package(INCLUDE_DIRS include)
+            install(FILES include/source.h DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+            """,
+                           checks=cc.installs)
+        self.assertEqual([], result)
+
+        result = mock_lint(env, pkg,
+                           """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package(INCLUDE_DIRS include)
+            install(FILES include/source.h DESTINATION ${CATKIN_GLOBAL_INCLUDE_DESTINATION})
+            """,
+                           checks=cc.installs)
+        self.assertEqual(["HEADER_OUTSIDE_PACKAGE_INCLUDE_PATH"], result)
 
         result = mock_lint(env, pkg,
                            """
