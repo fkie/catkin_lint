@@ -26,7 +26,6 @@ export PYBUILD_INSTALL_ARGS = --install-lib=/usr/share/catkin-lint
 
 execute_after_dh_auto_install:
 	mv debian/catkin-lint/usr/bin/catkin_lint debian/catkin-lint/usr/share/catkin-lint/run
-	rm -r debian/catkin-lint/usr/share/catkin-lint/*.egg-info
 
 execute_before_dh_installman: debian/catkin_lint.1
 	true
