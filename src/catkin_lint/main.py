@@ -31,10 +31,7 @@
 import os
 import sys
 import argparse
-try:
-    from backports import configparser
-except ImportError:
-    import configparser
+import configparser
 import importlib
 from . import __version__ as catkin_lint_version
 from .linter import CMakeLinter, ERROR, WARNING, NOTICE
