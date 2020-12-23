@@ -31,7 +31,10 @@
 import os
 import sys
 import argparse
-import configparser
+try:
+    from backports import configparser
+except ImportError:
+    import configparser
 import importlib
 from . import __version__ as catkin_lint_version
 from .linter import CMakeLinter, ERROR, WARNING, NOTICE
@@ -157,7 +160,7 @@ def run_linter(args):
         from .environment import _dump_cache
         _dump_cache()
         return 0
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(strict=True)
     config.optionxform = lambda option: option.lower().replace("-", "_")
     # Initialize configuration from command line arguments
     config["*"] = {}
