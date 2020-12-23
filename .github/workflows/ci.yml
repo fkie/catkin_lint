@@ -35,4 +35,16 @@ jobs:
                   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
               run: |
                   codecov || true
-
+    xenial-compat:
+        runs-on: ubuntu-16.04
+        steps:
+            - uses: actions/checkout@v2
+            - name: Install dependencies
+              run: |
+                  sudo apt install python-lxml python-mock python-nose python-catkin-pkg python-rosdep2 python-rosdistro python-configparser
+            - name: Install problematic python-futures
+              run:
+                  sudo apt install python-futures
+            - name: Run tests
+              run: |
+                  nosetests
