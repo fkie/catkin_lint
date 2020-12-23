@@ -157,7 +157,7 @@ def run_linter(args):
         from .environment import _dump_cache
         _dump_cache()
         return 0
-    config = configparser.ConfigParser(strict=True)
+    config = configparser.ConfigParser()
     config.optionxform = lambda option: option.lower().replace("-", "_")
     # Initialize configuration from command line arguments
     config["*"] = {}
