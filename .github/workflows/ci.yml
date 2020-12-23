@@ -43,9 +43,9 @@ jobs:
               run: |
                   sudo apt update -qq
                   sudo apt install python-lxml python-mock python-nose python-catkin-pkg python-rosdep python-rosdistro python-configparser
-            - name: Install problematic python-futures
+            - name: Install problematic python-future
               run:
-                  sudo apt install python-futures
+                  sudo apt install python-future
             - name: Run tests
               run: |
                   nosetests
