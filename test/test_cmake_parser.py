@@ -62,6 +62,10 @@ class CMakeParserTest(unittest.TestCase):
             self.parse_all("command($<0:ignore_me>)"),
             [("command", [])]
         )
+        self.assertEqual(
+            self.parse_all("command($<BUILD_INTERFACE:use_me>)"),
+            [("command", ["use_me"])]
+        )
 
     def test_command(self):
         """Test CMake parser command parsing"""

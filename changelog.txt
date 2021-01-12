@@ -1,3 +1,7 @@
+Version 1.6.12
+  * Evaluate $<BUILD_INTERFACE:...> expressions
+  * Check test depends for test launch files
+
 Version 1.6.11
   * PyPy is officially supported now
   * Add support for target_link_directories()

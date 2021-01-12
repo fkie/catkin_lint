@@ -142,6 +142,7 @@ class ChecksManifestTest(unittest.TestCase):
 
     @posix_and_nt
     @patch("os.walk", lambda x, topdown: iter([(os.path.normpath("/package-path/mock"), [], ["mock.launch"])]))
+    @patch("os.path.isfile", lambda x: "missing" not in x)
     def test_launch_depends(self):
         """Test check for package dependencies which are used in launch files"""
         env = create_env()
@@ -174,6 +175,12 @@ class ChecksManifestTest(unittest.TestCase):
         with patch(open_func, mock_open(read_data=b'<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["LAUNCH_DEPEND"], result)
+        with patch(open_func, mock_open(read_data=b'<launch><test test-name="mytest" pkg="other_catkin" type="testnode"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package() add_rostest(${PROJECT_NAME}.launch)", checks=cc.launch_depends)
+            self.assertEqual(["LAUNCH_DEPEND"], result)
+        with patch(open_func, mock_open(read_data=b'<launch></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package() add_rostest(missing.launch)", checks=cc.launch_depends)
+            self.assertEqual(["MISSING_FILE"], result)
 
     def test_export_targets(self):
         """Test check for valid exported targets"""
