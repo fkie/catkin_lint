@@ -73,28 +73,47 @@ def launch_depends(linter):
     # not litter the log with warnings about missing exec_depends if these are used in launch files
     essential_packages = set(["rosbag", "rosnode", "rosservice", "rostopic"])
 
+    def on_init(info):
+        info.test_launch_files = set()
+
+    def on_add_rostest(info, cmd, args):
+        launch_file = args[0 if cmd == "add_rostest" else 1]
+        if not info.is_existing_path(launch_file, check=os.path.isfile):
+            info.report(ERROR, "MISSING_FILE", cmd=cmd, file=launch_file)
+        info.test_launch_files.add(info.source_relative_path(launch_file))
+
     def on_final(info):
         for dirpath, filename in enumerate_package_files(info.path):
             if filename.lower().endswith(".launch"):
                 full_filename = os.path.join(dirpath, filename)
                 src_filename = os.path.relpath(full_filename, info.path)
+                exec_dep_type = "exec" if info.manifest.package_format > 1 else "run"
+                is_test_launch_file = src_filename in info.test_launch_files
                 with open(full_filename, "rb") as f:
                     content = f.read()
                     try:
                         root = ET.fromstring(content)
                         for node in root.getiterator():
                             if node.tag is not ET.Comment:
+                                relevant_deps = info.exec_dep
+                                dep_type = exec_dep_type
+                                if node.tag == "test" or is_test_launch_file:
+                                    relevant_deps |= info.test_dep
+                                    dep_type = "test"
                                 pkg = node.get("pkg")
-                                if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in info.exec_dep and pkg not in essential_packages:
-                                    info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
+                                if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in relevant_deps and pkg not in essential_packages:
+                                    info.report(WARNING, "LAUNCH_DEPEND", type=dep_type, pkg=pkg, file_location=(src_filename, node.sourceline or 0))
                                 for mo in re.finditer(r"\$\(find\s+([^<>)]+)\)", "<>".join(node.values() + [node.text or "", node.tail or ""])):
                                     pkg = mo.group(1)
-                                    if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in info.exec_dep and pkg not in essential_packages:
-                                        info.report(WARNING, "LAUNCH_DEPEND", type="exec" if info.manifest.package_format > 1 else "run", pkg=pkg, file_location=(src_filename, node.sourceline or 0))
+                                    if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in relevant_deps and pkg not in essential_packages:
+                                        info.report(WARNING, "LAUNCH_DEPEND", type=dep_type, pkg=pkg, file_location=(src_filename, node.sourceline or 0))
                     except (ET.Error, ValueError) as err:
                         info.report(WARNING, "PARSE_ERROR", msg=str(err), file_location=(src_filename, 0))
 
     linter.require(depends)
+    linter.add_init_hook(on_init)
+    linter.add_command_hook("add_rostest", on_add_rostest)
+    linter.add_command_hook("add_rostest_gtest", on_add_rostest)
     linter.add_final_hook(on_final)
 
 
