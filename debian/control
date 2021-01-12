@@ -18,7 +18,7 @@ Architecture: all
 Depends: ${python:Depends}, python-configparser, ${misc:Depends}
 Provides: ${python:Provides}
 Recommends: python-rospkg, python-rosdep, python-rosdistro
-Conflicts: python3-catkin-lint
+Conflicts: python3-catkin-lint, python-future (<< 0.15.2-2~)
 Description: Check Robot OS catkin packages for common errors
  This package is part of Robot OS (ROS). catkin_lint checks package
  configurations for the catkin build system of ROS. It runs a static analysis
