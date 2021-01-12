@@ -75,12 +75,16 @@ def _resolve_vars(s, var, env_var):
 _find_genexp = re.compile(r'(?<!\\)\$<([a-z_0-9]+)(?::([^<>]+))>', re.IGNORECASE).search
 
 
-# TODO We just replace all generator expressions by empty strings.
+# TODO We just replace most generator expressions by empty strings.
 #      This may or may not be a smart thing to do in this context
 def _resolve_generator_expressions(s):
     mo = _find_genexp(s)
     while mo is not None:
-        s = s[:mo.start(0)] + s[mo.end(0):]
+        if mo.group(1) == "BUILD_INTERFACE":
+            value = mo.group(2)
+        else:
+            value = ""
+        s = s[:mo.start(0)] + value + s[mo.end(0):]
         mo = _find_genexp(s)
     return s
 
