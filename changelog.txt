@@ -1,3 +1,6 @@
+Version 1.6.13
+  * Honor <!-- catkin_lint: --> pragmas in launch files
+
 Version 1.6.12
   * Evaluate $<BUILD_INTERFACE:...> expressions
   * Check test depends for test launch files

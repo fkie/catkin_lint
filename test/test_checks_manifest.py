@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2020 Fraunhofer FKIE
+# Copyright (c) 2013-2021 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -170,6 +170,18 @@ class ChecksManifestTest(unittest.TestCase):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual([], result)
         with patch(open_func, mock_open(read_data=b'<launch><node pkg="other_catkin"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["LAUNCH_DEPEND"], result)
+        with patch(open_func, mock_open(read_data=b'<launch><node pkg="other_catkin"/><node pkg="other_catkin"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["LAUNCH_DEPEND", "LAUNCH_DEPEND"], result)
+        with patch(open_func, mock_open(read_data=b'<launch><!-- catkin_lint: ignore launch_depend --><node pkg="other_catkin"/><node pkg="other_catkin"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual([], result)
+        with patch(open_func, mock_open(read_data=b'<launch><!-- catkin_lint: ignore launch_depend --><node pkg="other_catkin"/><!-- catkin_lint: report launch_depend --><node pkg="other_catkin"/></launch>')):
+            result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
+            self.assertEqual(["LAUNCH_DEPEND"], result)
+        with patch(open_func, mock_open(read_data=b'<launch><!-- catkin_lint: ignore_once launch_depend --><node pkg="other_catkin"/><node pkg="other_catkin"/></launch>')):
             result = mock_lint(env, pkg, "project(mock) find_package(catkin REQUIRED) catkin_package()", checks=cc.launch_depends)
             self.assertEqual(["LAUNCH_DEPEND"], result)
         with patch(open_func, mock_open(read_data=b'<launch><include file="$(find other_catkin)/path/to/other.launch"/></launch>')):

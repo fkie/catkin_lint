@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2020 Fraunhofer FKIE
+# Copyright (c) 2013-2021 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -94,7 +94,17 @@ def launch_depends(linter):
                     try:
                         root = ET.fromstring(content)
                         for node in root.getiterator():
-                            if node.tag is not ET.Comment:
+                            if node.tag is ET.Comment:
+                                args = (node.text or "").split()
+                                if args[0] == "catkin_lint:" and args[1] in ["ignore_once", "ignore", "report"]:
+                                    msg_ids = set([a.upper() for a in args[2:]])
+                                    if args[1] == "ignore":
+                                        info.ignore_message_ids |= msg_ids
+                                    if args[1] == "report":
+                                        info.ignore_message_ids -= msg_ids
+                                    if args[1] == "ignore_once":
+                                        info.ignore_message_ids_once |= msg_ids
+                            else:
                                 relevant_deps = info.exec_dep
                                 dep_type = exec_dep_type
                                 if node.tag == "test" or is_test_launch_file:
@@ -107,6 +117,7 @@ def launch_depends(linter):
                                     pkg = mo.group(1)
                                     if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in relevant_deps and pkg not in essential_packages:
                                         info.report(WARNING, "LAUNCH_DEPEND", type=dep_type, pkg=pkg, file_location=(src_filename, node.sourceline or 0))
+                                info.ignore_message_ids_once.clear()
                     except (ET.Error, ValueError) as err:
                         info.report(WARNING, "PARSE_ERROR", msg=str(err), file_location=(src_filename, 0))
 
