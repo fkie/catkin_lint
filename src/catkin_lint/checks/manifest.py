@@ -89,12 +89,25 @@ def launch_depends(linter):
                 src_filename = os.path.relpath(full_filename, info.path)
                 exec_dep_type = "exec" if info.manifest.package_format > 1 else "run"
                 is_test_launch_file = src_filename in info.test_launch_files
+                ignore_all = False
+                ignore_once = False
                 with open(full_filename, "rb") as f:
                     content = f.read()
                     try:
                         root = ET.fromstring(content)
                         for node in root.getiterator():
-                            if node.tag is not ET.Comment:
+                            if node.tag is ET.Comment:
+                                mo = re.search(r"(?i)\bcatkin_lint: *(ignore_once|ignore|report) +launch_depend\b", node.text or "")
+                                if mo:
+                                    pragma = mo.group(1).lower()
+                                    if pragma == "ignore_once":
+                                        ignore_once = True
+                                    if pragma == "ignore":
+                                        ignore_all = True
+                                    if pragma == "report":
+                                        ignore_all = False
+                                continue
+                            if not ignore_all and not ignore_once:
                                 relevant_deps = info.exec_dep
                                 dep_type = exec_dep_type
                                 if node.tag == "test" or is_test_launch_file:
@@ -107,6 +120,7 @@ def launch_depends(linter):
                                     pkg = mo.group(1)
                                     if pkg is not None and pkg != info.manifest.name and info.env.get_package_type(pkg) == PackageType.CATKIN and pkg not in relevant_deps and pkg not in essential_packages:
                                         info.report(WARNING, "LAUNCH_DEPEND", type=dep_type, pkg=pkg, file_location=(src_filename, node.sourceline or 0))
+                            ignore_once = False
                     except (ET.Error, ValueError) as err:
                         info.report(WARNING, "PARSE_ERROR", msg=str(err), file_location=(src_filename, 0))
 
