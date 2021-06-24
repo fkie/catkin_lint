@@ -1,7 +1,7 @@
 # coding=utf-8
 #
 # catkin_lint
-# Copyright (c) 2013-2020 Fraunhofer FKIE
+# Copyright (c) 2013-2021 Fraunhofer FKIE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -29,7 +29,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 __author__ = "Timo Röhling <timo.roehling@fkie.fraunhofer.de>"
-__copyright__ = "Copyright (c) 2013-2020 Fraunhofer FKIE"
+__copyright__ = "Copyright (c) 2013-2021 Fraunhofer FKIE"
 __license__ = "BSD"
 __all__ = ["cmake", "diagnostics", "linter", "environment", "main", "output", "ros", "util"]
 
