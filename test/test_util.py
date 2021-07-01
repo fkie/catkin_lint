@@ -81,11 +81,11 @@ class UtilTest(unittest.TestCase):
     def test_is_active_depend(self):
         """Test is_active_depend() utility function"""
         m = Object()
-        self.assertTrue(util.is_active_depend(m))
+        self.assertTrue(util.is_active(m))
         setattr(m, "evaluated_condition", False)
-        self.assertFalse(util.is_active_depend(m))
+        self.assertFalse(util.is_active(m))
         setattr(m, "evaluated_condition", True)
-        self.assertTrue(util.is_active_depend(m))
+        self.assertTrue(util.is_active(m))
 
     def test_write_atomic(self):
         """Test write_atomic() utility function"""

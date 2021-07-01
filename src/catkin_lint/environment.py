@@ -39,7 +39,7 @@ except ImportError:
 from catkin_pkg.package import parse_package, PACKAGE_MANIFEST_FILENAME
 from catkin_pkg.packages import find_package_paths
 from .ros import get_rosdep, get_rosdistro
-from .util import iteritems, write_atomic
+from .util import iteritems, is_active, write_atomic
 
 DOWNLOAD_CACHE_EXPIRY = 2592000  # 30 days
 CACHE_VERSION = 1
@@ -104,7 +104,7 @@ def is_catkin_package(manifest):
     if manifest is None:
         return False
     for e in manifest.exports:
-        if e.tagname == "build_type" and e.content != "catkin":
+        if is_active(e) and e.tagname == "build_type" and e.content != "catkin":
             return False
     return True
 
