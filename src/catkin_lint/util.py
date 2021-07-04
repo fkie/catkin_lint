@@ -99,8 +99,10 @@ def is_sorted(lst, key=lambda x, y: x < y):
     return True
 
 
-def is_active_depend(d):
+def is_active(d):
     if hasattr(d, "evaluated_condition"):
+        if d.evaluated_condition is None:
+            return d.evaluate_condition(os.environ)
         return d.evaluated_condition
     return True
 
