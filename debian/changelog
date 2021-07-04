@@ -1,3 +1,9 @@
+catkin-lint (1.6.14-1~20.04) focal; urgency=medium
+
+  * New release.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Sun, 04 Jul 2021 23:36:37 +0200
+
 catkin-lint (1.6.13-1~20.04) focal; urgency=medium
 
   * New release.
