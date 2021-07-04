@@ -1,8 +1,14 @@
+catkin-lint (1.6.14-1) unstable; urgency=medium
+
+  * New release.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Sun, 04 Jul 2021 23:34:10 +0200
+
 catkin-lint (1.6.13-1) unstable; urgency=medium
 
   * New release.
 
- -- Timo Röhling <roehling@debian.org>  Thu, 24 Jun 2021 19:29:14 +0200
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Thu, 24 Jun 2021 19:29:14 +0200
 
 catkin-lint (1.6.12-1) unstable; urgency=medium
 
