@@ -1,3 +1,6 @@
+Version 1.6.14
+  * Honor conditional build_type tags
+
 Version 1.6.13
   * Honor <!-- catkin_lint: --> pragmas in launch files
 
