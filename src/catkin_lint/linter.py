@@ -467,9 +467,12 @@ class CMakeLinter(object):
     def _handle_if(self, info, cmd, args, arg_tokens):
         def is_string_comparison_op(x):
             return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
-        # TODO(lucasw) what to do with elseif?  Probably want most of the this if() logic
-        # but also have to set info.conditionals[-1].value = False for the if above it?
         if cmd in ["if", "elseif"]:
+            if cmd == "elseif":
+                # TODO(lucasw) maybe treating the elseif as if it were a new if(), closes
+                # out the true if() works good enough?
+                if len(info.conditionals) > 0:
+                    info.conditionals.pop()
             info.conditionals.append(IfCondition(" ".join(args), True))
             if len(arg_tokens) == 1 and arg_tokens[0][0] == "WORD" and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1], re.IGNORECASE):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
