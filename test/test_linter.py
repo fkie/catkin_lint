@@ -166,6 +166,16 @@ class LinterTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            if(true)
+            elseif (${var} STREQUAL "foo")
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["UNQUOTED_STRING_OP"], result)
+        result = mock_lint(env, pkg,
+                           """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             if ("foo" STREQUAL ${var})
             endif()
             """, checks=cc.all)
@@ -212,6 +222,17 @@ class LinterTest(unittest.TestCase):
             endif()
             """, checks=cc.all)
         self.assertEqual(["AMBIGUOUS_CONDITION"], result)
+        result = mock_lint(env, pkg,
+                           """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            if(true)
+            elseif (${varname})
+            endif()
+            """, checks=cc.all)
+        self.assertEqual(["AMBIGUOUS_CONDITION"], result)
+
         result = mock_lint(env, pkg,
                            """
             project(mock)

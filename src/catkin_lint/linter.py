@@ -467,7 +467,9 @@ class CMakeLinter(object):
     def _handle_if(self, info, cmd, args, arg_tokens):
         def is_string_comparison_op(x):
             return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
-        if cmd == "if":
+        # TODO(lucasw) what to do with elseif?  Probably want most of the this if() logic
+        # but also have to set info.conditionals[-1].value = False for the if above it?
+        if cmd in ["if", "elseif"]:
             info.conditionals.append(IfCondition(" ".join(args), True))
             if len(arg_tokens) == 1 and arg_tokens[0][0] == "WORD" and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1], re.IGNORECASE):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
@@ -615,6 +617,12 @@ class CMakeLinter(object):
                     if column != cur_col[-1][-2]:
                         info.report(NOTICE, "INDENTATION")
                     cur_col[-1][-1] = None
+                elif cmd == "elseif":
+                    if len(cur_col[-1]) < 2:
+                        raise CMakeSyntaxError("%s(%d): elseif() without if()" % (info.file, info.line))
+                    if column != cur_col[-1][-2]:
+                        info.report(NOTICE, "INDENTATION")
+                    cur_col[-1][-1] = None
                 elif cmd in ["endif", "endforeach"]:
                     cur_col[-1].pop(-1)
                     if len(cur_col[-1]) == 0:
@@ -630,7 +638,7 @@ class CMakeLinter(object):
                         info.report(NOTICE, "INDENTATION")
                 if cmd in ["if", "foreach"]:
                     cur_col[-1].append(None)
-                if cmd in ["if", "else", "endif"]:
+                if cmd in ["if", "else", "elseif", "endif"]:
                     self._handle_if(info, cmd, args, arg_tokens)
                 if cmd == "project" and info.subdir:
                     info.report(WARNING, "SUBPROJECT", subdir=info.subdir)

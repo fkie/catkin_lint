@@ -142,7 +142,7 @@ class IndentationTest(unittest.TestCase):
             """, checks=None, indentation=True)
 
     def test_if(self):
-        """Test indentation check for if()/else()/endif() blocks"""
+        """Test indentation check for if()/elseif()/else()/endif() blocks"""
         env = create_env()
         pkg = create_manifest("mock")
         result = mock_lint(env, pkg,
@@ -150,6 +150,7 @@ class IndentationTest(unittest.TestCase):
                 cmd()
                 if()
                     cmd()
+                elseif()
                     cmd()
                 else()
                     cmd()
@@ -162,6 +163,7 @@ class IndentationTest(unittest.TestCase):
         result = mock_lint(env, pkg,
                            """
                 if()
+                elseif()
                 else()
                 endif()
             """, checks=None, indentation=True)
@@ -170,6 +172,9 @@ class IndentationTest(unittest.TestCase):
         result = mock_lint(env, pkg,
                            """
                 if()
+                    if()
+                    endif()
+                elseif()
                     if()
                     endif()
                 else()
@@ -194,6 +199,16 @@ class IndentationTest(unittest.TestCase):
                     cmd()
                     cmd()
                     endif()
+            """, checks=None, indentation=True)
+        self.assertEqual(["INDENTATION"], result)
+
+        result = mock_lint(env, pkg,
+                           """
+                if()
+                    cmd()
+                    elseif()
+                    cmd()
+                endif()
             """, checks=None, indentation=True)
         self.assertEqual(["INDENTATION"], result)
 
