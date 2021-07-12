@@ -190,6 +190,8 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(["UNQUOTED_STRING_OP"], result)
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "else()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "endif()")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "elseif(TRUE)")
+        self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(FALSE) elseif(STREQUAL) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(A STREQUAL) endif()")
         self.assertRaises(CMakeSyntaxError, mock_lint, env, pkg, "if(STREQUAL A) endif()")
