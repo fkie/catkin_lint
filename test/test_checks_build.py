@@ -468,6 +468,10 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["MISSING_FILE"], result)
         result = mock_lint(env, pkg, "if(EXISTS \"missing.in\") configure_file(missing.in missing) endif()", checks=cc.generated_files)
         self.assertEqual([], result)
+        result = mock_lint(env, pkg, "if(NOT EXISTS \"missing.in\") else() configure_file(missing.in missing) endif()", checks=cc.generated_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg, "if(NOT EXISTS \"missing1.in\") elseif(NOT EXISTS \"missing2.in\") else() configure_file(missing1.in missing1) configure_file(missing2.in missing2) endif()", checks=cc.generated_files)
+        self.assertEqual([], result)
         result = mock_lint(env, pkg,
                            """
             project(mock)

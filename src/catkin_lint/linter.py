@@ -247,8 +247,11 @@ class LintInfo(object):
         return self.is_catkin_install_destination(path, "bin") or self.is_catkin_install_destination(path, "lib/%s" % self.manifest.name)
 
     def condition_is_checked(self, expr):
+        not_expr = "NOT " + expr if expr[:4] != "NOT " else expr[4:]
         for c in self.conditionals:
             if expr in c.expr and c.value:
+                return True
+            if not_expr in c.expr and not c.value:
                 return True
         return False
 
@@ -257,6 +260,7 @@ class IfCondition(object):
     def __init__(self, expr, value):
         self.expr = expr
         self.value = value
+        self.depth = 1
 
 
 class CMakeLinter(object):
@@ -467,8 +471,12 @@ class CMakeLinter(object):
     def _handle_if(self, info, cmd, args, arg_tokens):
         def is_string_comparison_op(x):
             return x in ["MATCHES", "IS_NEWER_THAN", "STRLESS", "STRGREATER", "STREQUAL", "STRLESS_EQUAL", "STRGREATER_EQUAL", "VERSION_LESS", "VERSION_GREATER", "VERSION_EQUAL", "VERSION_LESS_EQUAL", "VERSION_GREATER_EQUAL"]
-        if cmd == "if":
+        if cmd == "if" or cmd == "elseif":
             info.conditionals.append(IfCondition(" ".join(args), True))
+            if cmd == "elseif" and len(info.conditionals) > 1:
+                # Keep track of the number of conditions that go out of scope with the endif()
+                info.conditionals[-1].depth += info.conditionals[-2].depth
+                info.conditionals[-2].value = False
             if len(arg_tokens) == 1 and arg_tokens[0][0] == "WORD" and re.match(r"\${[a-z_0-9]+}$", arg_tokens[0][1], re.IGNORECASE):
                 info.report(WARNING, "AMBIGUOUS_CONDITION", cond=arg_tokens[0][1])
             for i, tok in enumerate(arg_tokens):
@@ -488,8 +496,9 @@ class CMakeLinter(object):
             if len(info.conditionals) > 0:
                 info.conditionals[-1].value = False
         if cmd == "endif":
-            if len(info.conditionals) > 0:
-                info.conditionals.pop()
+            depth = min(info.conditionals[-1].depth, len(info.conditionals))
+            if depth > 0:
+                del info.conditionals[-depth:]
 
     def _handle_find_package(self, module, info):
         SPECIAL_CASES = {"yaml-cpp": "YAML_CPP"}
@@ -609,9 +618,9 @@ class CMakeLinter(object):
                 if depth < cur_depth:
                     del cur_col[depth + 1:]
                     cur_depth = depth
-                if cmd == "else":
+                if cmd == "else" or cmd == "elseif":
                     if len(cur_col[-1]) < 2:
-                        raise CMakeSyntaxError("%s(%d): else() without if()" % (info.file, info.line))
+                        raise CMakeSyntaxError("%s(%d): %s() without if()" % (info.file, info.line, cmd))
                     if column != cur_col[-1][-2]:
                         info.report(NOTICE, "INDENTATION")
                     cur_col[-1][-1] = None
@@ -630,7 +639,7 @@ class CMakeLinter(object):
                         info.report(NOTICE, "INDENTATION")
                 if cmd in ["if", "foreach"]:
                     cur_col[-1].append(None)
-                if cmd in ["if", "else", "endif"]:
+                if cmd in ["if", "else", "elseif", "endif"]:
                     self._handle_if(info, cmd, args, arg_tokens)
                 if cmd == "project" and info.subdir:
                     info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
