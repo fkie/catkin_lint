@@ -10,7 +10,7 @@ Build-Depends: debhelper-compat (= 12), dh-python, help2man,
                python3-rosdep, python3-lxml, perl
 Homepage: https://github.com/fkie/catkin_lint
 Testsuite: autopkgtest-pkg-python
-Standards-Version: 4.5.0
+Standards-Version: 4.5.1
 
 Package: catkin-lint
 Architecture: all
