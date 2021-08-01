@@ -69,6 +69,9 @@ setup(
     version=versioneer.get_version(),
     cmdclass=cmdclass,
     install_requires=["catkin_pkg", "lxml", "configparser<5;python_version<\"3\""],
+    extras_require={
+        "ros": ["rosdistro", "rosdep"],
+    },
     tests_require=["nose", "coverage", "mock"],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
