@@ -96,7 +96,7 @@ def launch_depends(linter):
                         for node in root.getiterator():
                             if node.tag is ET.Comment:
                                 args = (node.text or "").split()
-                                if args[0] == "catkin_lint:" and args[1] in ["ignore_once", "ignore", "report"]:
+                                if args and args[0] == "catkin_lint:" and args[1] in ["ignore_once", "ignore", "report"]:
                                     msg_ids = set([a.upper() for a in args[2:]])
                                     if args[1] == "ignore":
                                         info.ignore_message_ids |= msg_ids
