@@ -120,6 +120,8 @@ def targets(linter):
     linter.add_command_hook("set_target_properties", on_set_target_properties)
     linter.add_command_hook("add_executable", on_add_target)
     linter.add_command_hook("add_library", on_add_target)
+    linter.add_command_hook("pybind_add_module", on_add_target)
+    linter.add_command_hook("pybind11_add_module", on_add_target)
     linter.add_command_hook("target_link_libraries", on_target_link_libraries)
     linter.add_final_hook(on_final)
 
