@@ -24,11 +24,11 @@ jobs:
               run: |
                   sudo apt install libxml2-dev libxslt-dev
                   python -m pip install --upgrade pip
-                  pip install codecov coverage mock nose
+                  pip install codecov coverage mock nose2
                   pip install -r requirements.txt
             - name: Run tests
               run: |
-                  nosetests
+                  nose2
             - name: Upload code coverage
               if: github.event_name == 'push'
               env:

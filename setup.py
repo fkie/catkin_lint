@@ -72,7 +72,8 @@ setup(
     extras_require={
         "ros": ["rosdistro", "rosdep"],
     },
-    tests_require=["nose", "coverage", "mock"],
+    tests_require=["nose2", "coverage", "mock"],
+    test_suite="nose2.collector.collector",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
