@@ -31,6 +31,7 @@
 import sys
 import textwrap
 import json
+import os
 from .linter import ERROR, WARNING, NOTICE
 from . import __version__
 
@@ -59,7 +60,7 @@ class TextOutput(object):
         pass
 
     def message(self, msg, fd=sys.stdout):
-        use_color = self.color == Color.Always or (self.color == Color.Auto and isatty(fd))
+        use_color = self.color == Color.Always or (self.color == Color.Auto and isatty(fd) and not "NO_COLOR" in os.environ)
         loc = msg.package
         if msg.file:
             if msg.line:
