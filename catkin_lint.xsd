@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- Copyright 2013-2022 Fraunhofer FKIE
+     SPDX-License-Identifier: BSD-3-Clause -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
     <xs:group name="file_location">
         <xs:sequence>
