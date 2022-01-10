@@ -1,4 +1,6 @@
 # *-* mode: shell-script;-*-
+# Copyright 2013-2022 Fraunhofer FKIE
+# SPDX-License-Identifier: BSD-3-Clause
 
 if type catkin_lint &> /dev/null; then
 
