@@ -3,7 +3,7 @@ Upstream-Name: catkin_lint
 Source: https://github.com/fkie/catkin_lint
 
 Files: *
-Copyright: 2013-2018 Fraunhofer FKIE
+Copyright: 2013-2022 Fraunhofer FKIE
 License: BSD-3-clause
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
