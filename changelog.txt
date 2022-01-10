@@ -1,3 +1,9 @@
+Version 1.6.16
+  * Handle empty XML comments correctly
+  * Recognize Pybind11 CMake macros
+  * Add support for NO_COLOR environment variable
+  * Migrate to nose2 for unit testing
+
 Version 1.6.15
   * Add support for elseif()
 
