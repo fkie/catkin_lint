@@ -24,28 +24,14 @@ jobs:
               run: |
                   sudo apt install libxml2-dev libxslt-dev
                   python -m pip install --upgrade pip
-                  pip install codecov coverage mock nose
+                  pip install codecov coverage mock nose2
                   pip install -r requirements.txt
             - name: Run tests
               run: |
-                  nosetests
+                  nose2
             - name: Upload code coverage
               if: github.event_name == 'push'
               env:
                   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
               run: |
                   codecov || true
-    xenial-compat:
-        runs-on: ubuntu-16.04
-        steps:
-            - uses: actions/checkout@v2
-            - name: Install dependencies
-              run: |
-                  sudo apt update -qq
-                  sudo apt install python-lxml python-mock python-nose python-catkin-pkg python-rosdep python-rosdistro python-configparser
-            - name: Install problematic python-future
-              run:
-                  sudo apt install python-future
-            - name: Run tests
-              run: |
-                  nosetests || echo "PYTHON-FUTURE IS STILL BROKEN"
