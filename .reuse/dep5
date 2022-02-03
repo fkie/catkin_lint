@@ -1,0 +1,9 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: catkin_lint
+Upstream-Contact: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
+Source: https://github.com/fkie/catkin_lint
+
+Files: *
+Copyright: 2013-2022 Fraunhofer FKIE
+License: BSD-3-Clause
+
