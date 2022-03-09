@@ -293,6 +293,8 @@ def depends(linter):
         if not is_sorted(this_components):
             info.report(NOTICE, "UNSORTED_LIST", name="COMPONENTS")
         for pkg in this_components:
+            if pkg == "genmsg":
+                info.var["GENMSG_LANGS_DESTINATION"] = "etc/ros/genmsg"
             info.var["%s_INCLUDE_DIRS" % pkg] = info.find_package_path(pkg, "include")
             info.var["%s_LIBRARIES" % pkg] = posixpath.join(info.find_package_path(pkg, "lib"), "library.so")
             info.var["%s_PACKAGE_PATH" % pkg] = posixpath.normpath(info.find_package_path(pkg, ""))
