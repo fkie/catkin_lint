@@ -488,6 +488,24 @@ class ChecksBuildTest(unittest.TestCase):
             project(mock)
             find_package(catkin REQUIRED)
             catkin_package()
+            file(GENERATE OUTPUT ${PROJECT_SOURCE_DIR}/generated/file.cpp CONTENT "content")
+            add_executable(${PROJECT_NAME} generated/file.cpp)
+            """, checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+                           """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
+            file(WRITE ${PROJECT_SOURCE_DIR}/generated/file.cpp "content")
+            add_executable(${PROJECT_NAME} generated/file.cpp)
+            """, checks=cc.source_files)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+                           """
+            project(mock)
+            find_package(catkin REQUIRED)
+            catkin_package()
             configure_file(file.in /some/generated/file.cpp)
             add_executable(${PROJECT_NAME} /some/generated/file.cpp)
             """, checks=cc.source_files)
