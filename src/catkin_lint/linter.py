@@ -708,7 +708,8 @@ class CMakeLinter(object):
             "CATKIN_GLOBAL_PYTHON_DESTINATION": "lib/python/packages",
             "CATKIN_GLOBAL_SHARE_DESTINATION": "share",
             "PYTHON_INSTALL_DIR": "lib/python/packages",
-            "CATKIN_ENABLE_TESTING": "CATKIN_ENABLE_TESTING"
+            "CATKIN_ENABLE_TESTING": "CATKIN_ENABLE_TESTING",
+            "GENMSG_LANGS_DESTINATION": "etc/ros/genmsg",
         }
         try:
             if os.path.basename(info.path) != manifest.name:

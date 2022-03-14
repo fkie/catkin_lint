@@ -1,0 +1,6 @@
+[report]
+show_missing = True
+omit = 
+    src/catkin_lint/_version.py
+    setup.py
+    versioneer.py

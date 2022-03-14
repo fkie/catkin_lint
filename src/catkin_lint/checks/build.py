@@ -141,6 +141,15 @@ def generated_files(linter):
         for f in opts["OUTPUT"] + opts["BYPRODUCTS"]:
             info.generated_files.add(info.binary_relative_path(f))
 
+    def on_file(info, cmd, args):
+        if args[0] in ["WRITE", "APPEND", "TOUCH"] and len(args) >= 2:
+            info.generated_files.add(info.binary_relative_path(args[1]))
+        elif args[0] in ["GENERATE", "CONFIGURE"]:
+            opts, args = cmake_argparse(args, {"OUTPUT": "?"})
+            if opts["OUTPUT"]:
+                f = opts["OUTPUT"]
+                info.generated_files.add(info.binary_relative_path(f))
+
     def on_generate_export_header(info, cmd, args):
         opts, args = cmake_argparse(args, {"BASE_NAME": "?", "EXPORT_FILE_NAME": "?"})
         f = args[0] + "_export.h"
@@ -178,6 +187,7 @@ def generated_files(linter):
     linter.add_command_hook("add_custom_command", on_add_custom_command)
     linter.add_command_hook("xacro_add_xacro_file", on_xacro_add_xacro_file)
     linter.add_command_hook("xacro_add_files", on_xacro_add_files)
+    linter.add_command_hook("file", on_file)
 
 
 def source_files(linter):
