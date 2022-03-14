@@ -1,3 +1,9 @@
+Version 1.6.17
+  * Recognize files created with file() command
+  * Add support for genmsg
+  * Update coverage configuration for nose 2
+  * Make catkin_lint REUSE 3.0 compliant
+
 Version 1.6.16
   * Handle empty XML comments correctly
   * Recognize Pybind11 CMake macros
