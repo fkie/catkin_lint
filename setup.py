@@ -49,6 +49,7 @@ class NoseTestCommand(TestCommand):
 
     def run_tests(self):
         import nose
+
         nose.run_exit(argv=["nosetests"])
 
 
@@ -66,11 +67,14 @@ setup(
     keywords=["catkin", "ROS"],
     packages=["catkin_lint", "catkin_lint.checks"],
     package_dir={"": "src"},
-    data_files=[("share/bash-completion/completions", ["bash/catkin_lint"])],
+    data_files=[
+        ("share/bash-completion/completions", ["shell/bash/catkin_lint"]),
+        ("share/fish/vendor_completions.d", ["shell/catkin_lint.fish"]),
+    ],
     scripts=["bin/catkin_lint"],
     version=versioneer.get_version(),
     cmdclass=cmdclass,
-    install_requires=["catkin_pkg", "lxml", "configparser<5;python_version<\"3\""],
+    install_requires=["catkin_pkg", "lxml", 'configparser<5;python_version<"3"'],
     extras_require={
         "ros": ["rosdistro", "rosdep"],
     },
@@ -84,7 +88,7 @@ setup(
         "Environment :: Console",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3"
+        "Programming Language :: Python :: 3",
     ],
     entry_points={
         "catkin_tools.commands.catkin.verbs": [
