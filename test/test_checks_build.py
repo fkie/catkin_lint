@@ -42,7 +42,7 @@ import stat
 class ChecksBuildTest(unittest.TestCase):
 
     @posix_and_nt
-    @patch("os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/package-path/mock/include", "/some/hardcoded/path"]])
+    @patch("catkin_lint.checks.build.os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/package-path/mock/include", "/some/hardcoded/path"]])
     def test_includes(self):
         """Test include_directories()"""
         env = create_env()
@@ -71,7 +71,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["EXTERNAL_DIRECTORY"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/package-path/mock/src/a.cpp", "/package-path/mock/src/b.cpp", "/some/external/file.cpp"]])
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/package-path/mock/src/a.cpp", "/package-path/mock/src/b.cpp", "/some/external/file.cpp"]])
     def test_source_files(self):
         """Test add_executable() and add_library()"""
         env = create_env()
@@ -369,7 +369,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["SHADOWED_FIND"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
     def test_targets(self):
         """Test checks catkin packages with declared targets"""
         env = create_env()
@@ -459,7 +459,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["INVALID_META_COMMAND"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/some/external/file.in", "/package-path/mock/file.in", "/package-path/mock/generated.cpp.xacro"]])
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/some/external/file.in", "/package-path/mock/file.in", "/package-path/mock/generated.cpp.xacro"]])
     def test_generated_files(self):
         """Test checks for generated files"""
         env = create_env()
@@ -618,7 +618,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
     def test_name_check(self):
         """Test checks for invalid names"""
         env = create_env()
@@ -645,8 +645,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["REDUNDANT_LIB_PREFIX"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/package-path/mock/bin/script", "/package-path/mock/bin/script.in", "/package-path/mock/share/file", "/package-path/mock/src/source.cpp", "/package-path/mock/include/source.h", "/some/external/script", "/some/external/file"]])
-    @patch("os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/package-path/mock/include", "/some/external/dir"]])
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x in [os.path.normpath(f) for f in ["/package-path/mock/bin/script", "/package-path/mock/bin/script.in", "/package-path/mock/share/file", "/package-path/mock/src/source.cpp", "/package-path/mock/include/source.h", "/some/external/script", "/some/external/file"]])
+    @patch("catkin_lint.checks.build.os.path.isdir", lambda x: x in [os.path.normpath(d) for d in ["/package-path/mock/include", "/some/external/dir"]])
     def test_installs(self):
         """Test installation checks"""
         env = create_env()
@@ -986,8 +986,8 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["MISSING_DEPEND"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
-    @patch("os.path.isdir", lambda x: x in [os.path.normpath("/package-path/mock/include"), os.path.normpath("/package-path/mock/include/mock")])
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/src/source.cpp"))
+    @patch("catkin_lint.checks.build.os.path.isdir", lambda x: x in [os.path.normpath("/package-path/mock/include"), os.path.normpath("/package-path/mock/include/mock")])
     def test_exports(self):
         """Test checks for exported libraries"""
         env = create_env()
@@ -1252,7 +1252,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual([], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/config.xml"))
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/config.xml"))
     def test_plugins(self):
         """Test checks for exported plugins"""
         from catkin_pkg.package import Export
@@ -1299,7 +1299,7 @@ class ChecksBuildTest(unittest.TestCase):
         self.assertEqual(["MISSING_PLUGIN"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: "exist" in x)
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: "exist" in x)
     @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR if "script" in x else 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     def test_dynamic_reconfigure(self):
         """Test checks for dynamic reconfigure scripts"""
@@ -1349,8 +1349,8 @@ class ChecksBuildTest(unittest.TestCase):
 
     @posix_and_nt
     @patch("os.walk", lambda x, topdown: iter([(os.path.normpath("/package-path/mock/bin"), [], ["script"])]))
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/bin/script"))
-    @patch("os.path.isdir", lambda x: x == os.path.normpath("/package-path/mock/bin"))
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/bin/script"))
+    @patch("catkin_lint.checks.build.os.path.isdir", lambda x: x == os.path.normpath("/package-path/mock/bin"))
     @patch("os.stat", lambda x: os.stat_result((stat.S_IXUSR, 0, 0, 0, 0, 0, 0, 0, 0, 0)))
     def test_scripts(self):
         """Test checks for executable scripts"""
