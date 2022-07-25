@@ -161,7 +161,7 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual(["ENDBLOCK_ARGS"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/FindLocal.cmake"))
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/mock/FindLocal.cmake"))
     def test_cmake_includes(self):
         """Test CMake includes"""
         env = create_env()

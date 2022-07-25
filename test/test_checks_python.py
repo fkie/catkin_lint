@@ -51,7 +51,7 @@ class ChecksPythonTest(unittest.TestCase):
         self.assertEqual(["MISSING_FILE"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath("/package-path/mock/setup.py"), os.path.normpath("/package-path/catkin/setup.py")])
+    @patch("catkin_lint.checks.python.os.path.isfile", lambda x: x in [os.path.normpath("/package-path/mock/setup.py"), os.path.normpath("/package-path/catkin/setup.py")])
     def test_setup_with_setup_py(self):
         """Test proper placement and handling of catkin_python_setup()"""
         env = create_env()
