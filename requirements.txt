@@ -2,4 +2,5 @@ catkin_pkg
 lxml
 rosdep
 rosdistro
+setuptools_scm
 configparser<5;python_version<"3"

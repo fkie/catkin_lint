@@ -35,6 +35,7 @@ __copyright__ = "Copyright 2013-2022 Fraunhofer FKIE"
 __license__ = "BSD"
 __all__ = ["cmake", "diagnostics", "linter", "environment", "main", "output", "ros", "util"]
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
+try:
+    from ._version import version as __version__
+except ImportError:
+    __version__ = "unknown"
