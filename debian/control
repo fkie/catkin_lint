@@ -2,10 +2,11 @@ Source: catkin-lint
 Section: python
 Priority: optional
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
-Build-Depends: debhelper (>= 9), dh-python, help2man,
+Build-Depends: debhelper (>= 10), dh-python, help2man,
                python-all, python3-all,
                python-nose, python-mock, python3-nose, python3-mock,
                python-setuptools, python3-setuptools,
+	       python-setuptools-scm, python3-setuptools-scm,
                python-catkin-pkg, python-rosdistro,
                python-rosdep, python-lxml, python3-lxml,
                python-configparser, perl
