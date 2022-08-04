@@ -40,7 +40,7 @@ import os
 class ChecksCudaTest(unittest.TestCase):
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath("/package-path/mock/src/a.cpp"), os.path.normpath("/package-path/mock/src/b.cpp")])
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x in [os.path.normpath("/package-path/mock/src/a.cpp"), os.path.normpath("/package-path/mock/src/b.cpp")])
     def test_targets(self):
         """Test CUDA checks"""
         env = create_env()

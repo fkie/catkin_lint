@@ -1,3 +1,8 @@
+Version 1.6.18
+  * Migrate from versioneer to setuptools_scm
+  * Fix unit tests for Python 3.11
+  * Add fish shell completions
+
 Version 1.6.17
   * Recognize files created with file() command
   * Add support for genmsg

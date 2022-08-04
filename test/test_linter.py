@@ -363,7 +363,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(["ENV_VAR"], result)
 
     @posix_and_nt
-    @patch("os.path.isfile", lambda x: x == os.path.normpath("/package-path/catkin/broken.cmake"))
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x == os.path.normpath("/package-path/catkin/broken.cmake"))
     def test_blacklist(self):
         """Test CMake inclusion blacklist"""
         env = create_env()
@@ -377,7 +377,7 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
 
     @posix_and_nt
-    @patch("os.path.isdir", lambda x: x == "/" or x == "\\")
+    @patch("catkin_lint.checks.build.os.path.isdir", lambda x: x == "/" or x == "\\")
     @patch("os.path.realpath", lambda x: x)
     def test_environment(self):
         """Test catkin environment"""
@@ -420,8 +420,8 @@ class LinterTest(unittest.TestCase):
         self.assertFalse(catkin_lint.environment.is_catkin_package(None))
 
     @posix_and_nt
-    @patch("os.path.isdir", lambda x: x in [os.path.normpath(p) for p in ["/package-path/mock/src", "/package-path/mock/src/2ndlevel", "/package-path/mock/include"]])
-    @patch("os.path.isfile", lambda x: x in [os.path.normpath(p) for p in ["/other-path/CMakeLists.txt", "/package-path/mock/src/CMakeLists.txt", "/package-path/mock/src/2ndlevel/CMakeLists.txt", "/package-path/mock/src/source.cpp", "/package-path/mock/src/2ndlevel/source2.cpp"]])
+    @patch("catkin_lint.checks.build.os.path.isdir", lambda x: x in [os.path.normpath(p) for p in ["/package-path/mock/src", "/package-path/mock/src/2ndlevel", "/package-path/mock/include"]])
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: x in [os.path.normpath(p) for p in ["/other-path/CMakeLists.txt", "/package-path/mock/src/CMakeLists.txt", "/package-path/mock/src/2ndlevel/CMakeLists.txt", "/package-path/mock/src/source.cpp", "/package-path/mock/src/2ndlevel/source2.cpp"]])
     def test_subdir(self):
         """Test add_subdirectory()"""
         env = create_env()
