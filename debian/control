@@ -5,7 +5,7 @@ Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
 Build-Depends: debhelper-compat (= 12), dh-python, help2man,
                python3-all,
                python3-nose, python3-mock,
-               python3-setuptools,
+               python3-setuptools, python3-setuptools-scm,
                python3-catkin-pkg, python3-rosdistro,
                python3-rosdep, python3-lxml, perl
 Homepage: https://github.com/fkie/catkin_lint
@@ -33,6 +33,6 @@ Multi-Arch: foreign
 Section: oldlibs
 Depends: catkin-lint, ${misc:Depends}
 Description: Check Robot OS catkin packages for common errors (transitional package)
- This is a transitional package to ease upgrades to catkin-lint.
+ This is a transitional dummy package to ease upgrades to catkin-lint.
  It can be safely removed.
 
