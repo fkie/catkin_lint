@@ -144,7 +144,7 @@ class ChecksManifestTest(unittest.TestCase):
 
     @posix_and_nt
     @patch("os.walk", lambda x, topdown: iter([(os.path.normpath("/package-path/mock"), [], ["mock.launch"])]))
-    @patch("os.path.isfile", lambda x: "missing" not in x)
+    @patch("catkin_lint.checks.build.os.path.isfile", lambda x: "missing" not in x)
     def test_launch_depends(self):
         """Test check for package dependencies which are used in launch files"""
         env = create_env()

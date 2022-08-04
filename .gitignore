@@ -6,7 +6,7 @@
 /build
 /coverage.xml
 /dist
-/MANIFEST
+/src/catkin_lint/_version.py
 *.pyc
 __pycache__/
 *.egg-info/

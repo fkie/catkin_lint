@@ -32,28 +32,12 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from setuptools import setup
-from setuptools.command.test import test as TestCommand
-import versioneer
 import os
 
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-
-class NoseTestCommand(TestCommand):
-    def finalize_options(self):
-        TestCommand.finalize_options(self)
-        self.test_args = []
-        self.test_suite = True
-
-    def run_tests(self):
-        import nose
-        nose.run_exit(argv=["nosetests"])
-
-
-cmdclass = versioneer.get_cmdclass()
-cmdclass["test"] = NoseTestCommand
 
 setup(
     name="catkin_lint",
@@ -66,11 +50,14 @@ setup(
     keywords=["catkin", "ROS"],
     packages=["catkin_lint", "catkin_lint.checks"],
     package_dir={"": "src"},
-    data_files=[("share/bash-completion/completions", ["bash/catkin_lint"])],
+    data_files=[
+        ("share/bash-completion/completions", ["shell/bash/catkin_lint"]),
+        ("share/fish/vendor_completions.d", ["shell/catkin_lint.fish"]),
+    ],
     scripts=["bin/catkin_lint"],
-    version=versioneer.get_version(),
-    cmdclass=cmdclass,
-    install_requires=["catkin_pkg", "lxml", "configparser<5;python_version<\"3\""],
+    use_scm_version={"write_to": "src/catkin_lint/_version.py"},
+    setup_requires=["setuptools_scm"],
+    install_requires=["catkin_pkg", "lxml", 'configparser<5;python_version<"3"'],
     extras_require={
         "ros": ["rosdistro", "rosdep"],
     },
@@ -84,7 +71,7 @@ setup(
         "Environment :: Console",
         "Operating System :: OS Independent",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3"
+        "Programming Language :: Python :: 3",
     ],
     entry_points={
         "catkin_tools.commands.catkin.verbs": [
