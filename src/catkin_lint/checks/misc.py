@@ -138,7 +138,6 @@ def global_vars(linter):
 def singleton_commands(linter):
     # Singleton commands may not appear more than once
     singleton_cmds = frozenset([
-        "cmake_minimum_required",
         "project",
         "generate_messages",
         "catkin_package",
