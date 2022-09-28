@@ -136,6 +136,10 @@ class ChecksMiscTest(unittest.TestCase):
         self.assertEqual([], result)
         result = mock_lint(env, pkg, "project(mock) cmake_minimum_required(VERSION 2.8.12)", checks=cc.minimum_version)
         self.assertEqual(["ORDER_VIOLATION"], result)
+        result = mock_lint(env, pkg, "cmake_minimum_required(VERSION 2.4)", checks=cc.minimum_version)
+        self.assertEqual(["CMAKE_ANCIENT"], result)
+        result = mock_lint(env, pkg, "cmake_minimum_required(VERSION 3.12) add_link_options(-foo)", checks=cc.minimum_version)
+        self.assertEqual(["CMAKE_OLD"], result)
 
     def test_endblock(self):
         """Test proper style for CMake code blocks"""
