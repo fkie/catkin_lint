@@ -1,3 +1,7 @@
+Version 1.6.19
+  * Allow multiple cmake_minimum_required() commands
+  * Add checks for minimum required CMake version of newer commands
+
 Version 1.6.18
   * Migrate from versioneer to setuptools_scm
   * Fix unit tests for Python 3.11

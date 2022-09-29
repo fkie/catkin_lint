@@ -663,6 +663,20 @@ message_list = {
         between different packages. The variable ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
         will point to the correct location.
         """),
+    "CMAKE_ANCIENT":
+    ("support for CMake versions older than 2.8.12 is deprecated",
+        """\
+        Starting with CMake 3.19, compatibility with ancient CMake versions has been
+        deprecated and triggers a developer warning. Most likely, you are not actually
+        depending on ancient CMake behavior and can bump the minimum required version
+        without ill effects.
+        """),
+    "CMAKE_OLD":
+    ("%(feature)s requires at least CMake %(version)s",
+        """\
+        You are using a CMake feature which is supported only by CMake %(version)s or
+        newer. You should set your cmake_minimum_required() declaration accordingly.
+        """),
 }
 
 

@@ -138,7 +138,6 @@ def global_vars(linter):
 def singleton_commands(linter):
     # Singleton commands may not appear more than once
     singleton_cmds = frozenset([
-        "cmake_minimum_required",
         "project",
         "generate_messages",
         "catkin_package",
@@ -218,17 +217,42 @@ def cmake_modules(linter):
 
 def minimum_version(linter):
 
+    introduced_commands = {
+        "add_compile_definitions": Version("3.12"),
+        "add_link_options": Version("3.13"),
+        "cmake_language": Version("3.18"),
+        "cmake_path": Version("3.20"),
+        "continue": Version("3.2"),
+        "include_guard": Version("3.10"),
+        "target_compile_features": Version("3.1"),
+        "target_link_directories": Version("3.13"),
+        "target_link_options": Version("3.13"),
+        "target_precompile_headers": Version("3.16"),
+        "target_sources": Version("3.1"),
+    }
+
     def on_init(info):
-        info.minimum_version = Version("0.0.0")
+        info.minimum_version = Version("2.4")
 
     def on_cmake_minimum_required(info, cmd, args):
         if info.commands and "cmake_minimum_required" not in info.commands:
             info.report(ERROR, "ORDER_VIOLATION", first_cmd=list(info.commands)[0], second_cmd=cmd)
         opts, args = cmake_argparse(args, {"VERSION": "!"})
-        info.minimum_version = Version(opts["VERSION"])
+        minimum_version = Version(opts["VERSION"])
+        if minimum_version < Version("2.8.12"):
+            info.report(WARNING, "CMAKE_ANCIENT")
+        info.minimum_version = max(info.minimum_version, minimum_version)
+
+    def on_introduced_command(info, cmd, args):
+        version = introduced_commands.get(cmd, Version("0.0"))
+        if version > info.minimum_version:
+            info.report(WARNING, "CMAKE_OLD", feature="%s()" % cmd, version=str(version))
 
     linter.add_init_hook(on_init)
     linter.add_command_hook("cmake_minimum_required", on_cmake_minimum_required)
+
+    for cmd in introduced_commands:
+        linter.add_command_hook(cmd, on_introduced_command)
 
 
 def all(linter):
