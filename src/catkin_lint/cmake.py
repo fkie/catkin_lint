@@ -74,7 +74,7 @@ def _resolve_vars(s, var, env_var):
     return s
 
 
-_find_genexp = re.compile(r'(?<!\\)\$<([a-z_0-9]+)(?::([^<>]+))>', re.IGNORECASE).search
+_find_genexp = re.compile(r'(?<!\\)\$<([a-z_0-9]*)(?::([^<>]+))>', re.IGNORECASE).search
 
 
 # TODO We just replace most generator expressions by empty strings.
