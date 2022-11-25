@@ -88,6 +88,7 @@ class LintInfo(object):
         self.path = None
         self.subdir = ""
         self.subdirs = set()
+        self.skipped_subdirs = []
         self.manifest = None
         self.file = ""
         self.line = 0
@@ -645,6 +646,7 @@ class CMakeLinter(object):
                     self._handle_if(info, cmd, args, arg_tokens)
                 if cmd == "project" and info.subdir:
                     info.report(WARNING, "SUBPROJECT", subdir=info.subdir)
+                    info.skipped_subdirs.append(info.subdir)
                     return
                 self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)

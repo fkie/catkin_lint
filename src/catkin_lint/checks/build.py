@@ -663,6 +663,8 @@ def scripts(linter):
         for dirpath, filename in enumerate_package_files(info.path):
             full_filename = os.path.join(dirpath, filename)
             pkg_filename = info.source_relative_path(full_filename[len(info.path) + 1:])
+            if any(pkg_filename.startswith(s + "/") for s in info.skipped_subdirs):
+                continue
             mode = os.stat(full_filename).st_mode
             if mode & stat.S_IXUSR and not is_installed(info, pkg_filename):
                 info.report(WARNING, "UNINSTALLED_SCRIPT", script=pkg_filename)
