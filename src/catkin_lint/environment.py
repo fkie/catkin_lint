@@ -136,6 +136,8 @@ class CatkinEnvironment(object):
             try:
                 gc.disable()
                 self.rosdep = get_rosdep(quiet=self.quiet)
+                if len(self.rosdep.view.keys()) == 0:
+                    raise Exception("empty view, please call 'rosdep update' first")
             except Exception as err:
                 if not self.quiet:
                     sys.stderr.write("catkin_lint: cannot load rosdep database: %s\n" % str(err))
