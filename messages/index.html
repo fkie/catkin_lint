@@ -1,304 +1,279 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  
-  <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>Messages - catkin_lint</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
-
-  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="../css/highlight.css">
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "Messages";
-    var mkdocs_page_input_path = "messages.md";
-    var mkdocs_page_url = "/messages/";
-  </script>
-  
-  <script src="../js/jquery-2.1.1.min.js"></script>
-  <script src="../js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
-  
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Messages - catkin_lint</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Messages";
+        var mkdocs_page_input_path = "messages.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href=".." class="icon icon-home"> catkin_lint</a>
-        <div role="search">
+          <a href=".." class="icon icon-home"> catkin_lint
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="..">Overview</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../install/">Installation</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../usage/">Usage</a>
-	    </li>
-          
-            <li class="toctree-l1 current">
-		
-    <a class="current" href="./">Messages</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l2"><a href="#catkin_lint-diagnostic-messages">catkin_lint diagnostic messages</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#pkg-in-find_packagecatkin-is-not-a-catkin-package">'pkg' in find_package(catkin) is not a catkin package</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-exports-external-scope-path-directory">cmd() exports external scope path 'directory'</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-is-called-before-find_packagecatkin">cmd() is called before find_package(catkin)</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-is-not-allowed-in-meta-packages">cmd() is not allowed in meta packages</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-needs-missing-directory-directory">cmd() needs missing directory 'directory'</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-needs-missing-file-file">cmd() needs missing file 'file'</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-should-be-all-lower-case">cmd() should be all lower-case</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-used-without-ifcatkin_enable_testing">cmd() used without if(CATKIN_ENABLE_TESTING)</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-uses-directory-directory-which-is-not-in-package">cmd() uses directory 'directory' which is not in package</a></li>
-        
-            <li><a class="toctree-l3" href="#cmd-uses-file-file-which-is-not-in-package">cmd() uses file 'file' which is not in package</a></li>
-        
-            <li><a class="toctree-l3" href="#export-plugin-file-file-is-not-installed-to-catkin_package_share_destination">export plugin file 'file' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}</a></li>
-        
-            <li><a class="toctree-l3" href="#export-plugin-file-reference-must-start-with-prefix">export plugin file reference must start with '${prefix}/'</a></li>
-        
-            <li><a class="toctree-l3" href="#export-plugin-refers-to-missing-file-file">export plugin refers to missing file 'file'</a></li>
-        
-            <li><a class="toctree-l3" href="#first_cmd-is-called-before-second_cmd">first_cmd() is called before second_cmd()</a></li>
-        
-            <li><a class="toctree-l3" href="#old_cmd-is-deprecated-use-new_cmd-instead">old_cmd() is deprecated, use new_cmd() instead</a></li>
-        
-            <li><a class="toctree-l3" href="#wrong_type_depend-pkg-should-be-a-right_type_depend">wrong_type_depend 'pkg' should be a right_type_depend</a></li>
-        
-            <li><a class="toctree-l3" href="#cmake-module-old_module-is-deprecated-use-new_module-instead">CMake module 'old_module' is deprecated, use 'new_module' instead</a></li>
-        
-            <li><a class="toctree-l3" href="#os-error-msg">OS error: msg</a></li>
-        
-            <li><a class="toctree-l3" href="#call-to-find_packagepkg-shadows-previously-selected-components">call to find_package(pkg) shadows previously selected components</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-dependency-pkg-belongs-in-catkin_depends">catkin_package() dependency 'pkg' belongs in CATKIN_DEPENDS</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-dependency-pkg-belongs-in-depends">catkin_package() dependency 'pkg' belongs in DEPENDS</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-dependency-pkg-is-not-configured-properly">catkin_package() dependency 'pkg' is not configured properly</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-exports-non-package-include-path">catkin_package() exports non-package include path</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-exports-package-include-path-that-is-not-installed">catkin_package() exports package include path that is not installed</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-exports-pkg-config-module-pkg">catkin_package() exports pkg-config module 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#catkin_package-in-meta-package">catkin_package() in meta package</a></li>
-        
-            <li><a class="toctree-l3" href="#condition-cond-is-ambiguous">condition 'cond' is ambiguous</a></li>
-        
-            <li><a class="toctree-l3" href="#duplicate-cmd">duplicate cmd()</a></li>
-        
-            <li><a class="toctree-l3" href="#duplicate-find_packagepkg">duplicate find_package(pkg)</a></li>
-        
-            <li><a class="toctree-l3" href="#duplicate-include-path-pkg_include_dirs">duplicate include path ${pkg_INCLUDE_DIRS}</a></li>
-        
-            <li><a class="toctree-l3" href="#environment-variables-should-not-be-used">environment variables should not be used</a></li>
-        
-            <li><a class="toctree-l3" href="#executable-file-is-not-installed-to-bin-destination">executable file is not installed to bin destination</a></li>
-        
-            <li><a class="toctree-l3" href="#exported-include-path-path-does-not-exist">exported include path 'path' does not exist</a></li>
-        
-            <li><a class="toctree-l3" href="#exported-library-target-cannot-have-different-output-name">exported library 'target' cannot have different output name</a></li>
-        
-            <li><a class="toctree-l3" href="#exported-library-target-is-not-a-library">exported library 'target' is not a library</a></li>
-        
-            <li><a class="toctree-l3" href="#exported-library-target-is-not-installed">exported library 'target' is not installed</a></li>
-        
-            <li><a class="toctree-l3" href="#exported-package-include-path-but-no-exported-library">exported package include path but no exported library</a></li>
-        
-            <li><a class="toctree-l3" href="#extra-arguments-in-cmd">extra arguments in cmd()</a></li>
-        
-            <li><a class="toctree-l3" href="#file-script-is-executable-but-not-installed">file 'script' is executable but not installed</a></li>
-        
-            <li><a class="toctree-l3" href="#file-setuppy-found-but-no-catkin_python_setup-call">file setup.py found but no catkin_python_setup() call</a></li>
-        
-            <li><a class="toctree-l3" href="#find_packagepkg-before-find_packagecmake_modules">find_package(pkg) before find_package(cmake_modules)</a></li>
-        
-            <li><a class="toctree-l3" href="#find_packagepkg-has-no-required-option">find_package(pkg) has no REQUIRED option</a></li>
-        
-            <li><a class="toctree-l3" href="#generate_messages-called-but-no-message-declared">generate_messages() called but no message declared</a></li>
-        
-            <li><a class="toctree-l3" href="#global-variable-var-should-contain-project-name">global variable 'var' should contain project name</a></li>
-        
-            <li><a class="toctree-l3" href="#header-file-file-is-not-installed-to-package-specific-include-path">header file 'file' is not installed to package-specific include path</a></li>
-        
-            <li><a class="toctree-l3" href="#include-path-path-is-exported-but-not-used-for-the-build">include path 'path' is exported but not used for the build</a></li>
-        
-            <li><a class="toctree-l3" href="#include-paths-path-and-parent_path-are-ambiguous">include paths 'path' and 'parent_path' are ambiguous</a></li>
-        
-            <li><a class="toctree-l3" href="#installtype-dest-does-not-install-to-catkin_install_prefix">install(type ... dest) does not install to ${CATKIN_INSTALL_PREFIX}</a></li>
-        
-            <li><a class="toctree-l3" href="#launch-configuration-needs-type_depend-on-pkg">launch configuration needs type_depend on 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#library-output-name-output-has-redundant-lib-prefix">library output name 'output' has redundant 'lib' prefix</a></li>
-        
-            <li><a class="toctree-l3" href="#line-is-not-indented-properly">line is not indented properly</a></li>
-        
-            <li><a class="toctree-l3" href="#link_directories-must-not-be-used-for-system-depends">link_directories() must not be used for system depends</a></li>
-        
-            <li><a class="toctree-l3" href="#list-name-should-be-sorted">list name should be sorted</a></li>
-        
-            <li><a class="toctree-l3" href="#malformed-argument-list-msg">malformed argument list: msg</a></li>
-        
-            <li><a class="toctree-l3" href="#meaningless-package-description-text">meaningless package description 'text'</a></li>
-        
-            <li><a class="toctree-l3" href="#meta-packages-must-not-have-type_depends">meta packages must not have type_depends</a></li>
-        
-            <li><a class="toctree-l3" href="#misconfigured-catkin-package-pkg">misconfigured catkin package 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#missing-cmd">missing cmd()</a></li>
-        
-            <li><a class="toctree-l3" href="#missing-type_depend-on-pkg">missing type_depend on 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#missing-components-keyword-before-pkg">missing COMPONENTS keyword before 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#missing-find_packagepkg">missing find_package(pkg)</a></li>
-        
-            <li><a class="toctree-l3" href="#missing-generate_messages">missing generate_messages()</a></li>
-        
-            <li><a class="toctree-l3" href="#missing-include_directoriescatkin_include_dirs">missing include_directories(${catkin_INCLUDE_DIRS})</a></li>
-        
-            <li><a class="toctree-l3" href="#operands-for-operator-op-should-be-quoted-strings">operands for operator op should be quoted strings</a></li>
-        
-            <li><a class="toctree-l3" href="#package-pkg-must-be-in-catkin_depends-in-catkin_package">package 'pkg' must be in CATKIN_DEPENDS in catkin_package()</a></li>
-        
-            <li><a class="toctree-l3" href="#package-description-starts-with-boilerplate-text">package description starts with boilerplate 'text'</a></li>
-        
-            <li><a class="toctree-l3" href="#package-exports-export-plugin-but-does-not-type_depend-on-pkg">package exports export plugin but does not type_depend on 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#package-path-name-path-differs-from-package-name">package path name 'path' differs from package name</a></li>
-        
-            <li><a class="toctree-l3" href="#parse-error-msg">parse error: msg</a></li>
-        
-            <li><a class="toctree-l3" href="#project-name-name-differs-from-package-name">project name 'name' differs from package name</a></li>
-        
-            <li><a class="toctree-l3" href="#referenced-target-target-is-not-defined">referenced target 'target' is not defined</a></li>
-        
-            <li><a class="toctree-l3" href="#script-file-has-no-interpreter-shebang-line">script 'file' has no interpreter shebang line</a></li>
-        
-            <li><a class="toctree-l3" href="#script-script-must-be-executable">script 'script' must be executable</a></li>
-        
-            <li><a class="toctree-l3" href="#subdirectory-subdir-contains-a-subproject">subdirectory 'subdir' contains a subproject</a></li>
-        
-            <li><a class="toctree-l3" href="#subdirectory-subdir-is-added-a-second-time">subdirectory 'subdir' is added a second time</a></li>
-        
-            <li><a class="toctree-l3" href="#subdirectory-subdir-is-missing">subdirectory 'subdir' is missing</a></li>
-        
-            <li><a class="toctree-l3" href="#subdirectory-subdir-is-not-in-package">subdirectory subdir is not in package</a></li>
-        
-            <li><a class="toctree-l3" href="#target-export_target-depends-on-target-target-which-is-not-installed">target 'export_target' depends on target 'target' which is not installed</a></li>
-        
-            <li><a class="toctree-l3" href="#target-target-has-invalid-characters-in-its-output-file-name">target 'target' has invalid characters in its output file name</a></li>
-        
-            <li><a class="toctree-l3" href="#target-target-is-not-installed">target 'target' is not installed</a></li>
-        
-            <li><a class="toctree-l3" href="#test_depend-pkg-used-without-ifcatkin_enable_testing">test_depend 'pkg' used without if(CATKIN_ENABLE_TESTING)</a></li>
-        
-            <li><a class="toctree-l3" href="#unconfigured-build_depend-on-pkg">unconfigured build_depend on 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#unconfigured-message-dependency-pkg">unconfigured message dependency 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#unknown-package-pkg">unknown package 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#unused-type_depend-on-pkg">unused type_depend on 'pkg'</a></li>
-        
-            <li><a class="toctree-l3" href="#use-project_name-instead-of-name">use ${PROJECT_NAME} instead of 'name'</a></li>
-        
-            <li><a class="toctree-l3" href="#use-find_packagepkg-instead-of-includefindpkgcmake">use find_package(pkg) instead of include(Findpkg.cmake)</a></li>
-        
-            <li><a class="toctree-l3" href="#use-of-link_directories-is-strongly-discouraged">use of link_directories() is strongly discouraged</a></li>
-        
-            <li><a class="toctree-l3" href="#variable-var-is-modified">variable var is modified</a></li>
-        
-            <li><a class="toctree-l3" href="#variable-var-is-modified_1">variable var is modified</a></li>
-        
-            <li><a class="toctree-l3" href="#variable-var-is-overwritten">variable var is overwritten</a></li>
-        
-            <li><a class="toctree-l3" href="#variable-cmake_build_type-is-overwritten-unconditionally">variable CMAKE_BUILD_TYPE is overwritten unconditionally</a></li>
-        
-        </ul>
-    
-
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Overview</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../install/">Installation</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../usage/">Usage</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">Messages</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#pkg-in-find_packagecatkin-is-not-a-catkin-package">'pkg' in find_package(catkin) is not a catkin package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-exports-external-scope-path-directory">cmd() exports external scope path 'directory'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-is-called-before-find_packagecatkin">cmd() is called before find_package(catkin)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-is-not-allowed-in-meta-packages">cmd() is not allowed in meta packages</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-needs-missing-directory-directory">cmd() needs missing directory 'directory'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-needs-missing-file-file">cmd() needs missing file 'file'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-should-be-all-lower-case">cmd() should be all lower-case</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-used-without-ifcatkin_enable_testing">cmd() used without if(CATKIN_ENABLE_TESTING)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-uses-directory-directory-which-is-not-in-package">cmd() uses directory 'directory' which is not in package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmd-uses-file-file-which-is-not-in-package">cmd() uses file 'file' which is not in package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#export-plugin-file-file-is-not-installed-to-catkin_package_share_destination">export plugin file 'file' is not installed to ${CATKIN_PACKAGE_SHARE_DESTINATION}</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#export-plugin-file-reference-must-start-with-prefix">export plugin file reference must start with '${prefix}/'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#export-plugin-refers-to-missing-file-file">export plugin refers to missing file 'file'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#feature-requires-at-least-cmake-version">feature requires at least CMake version</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#first_cmd-is-called-before-second_cmd">first_cmd() is called before second_cmd()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#old_cmd-is-deprecated-use-new_cmd-instead">old_cmd() is deprecated, use new_cmd() instead</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#wrong_type_depend-pkg-should-be-a-right_type_depend">wrong_type_depend 'pkg' should be a right_type_depend</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#cmake-module-old_module-is-deprecated-use-new_module-instead">CMake module 'old_module' is deprecated, use 'new_module' instead</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#os-error-msg">OS error: msg</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#call-to-find_packagepkg-shadows-previously-selected-components">call to find_package(pkg) shadows previously selected components</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_metapackage-in-regular-package">catkin_metapackage() in regular package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-dependency-pkg-belongs-in-catkin_depends">catkin_package() dependency 'pkg' belongs in CATKIN_DEPENDS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-dependency-pkg-belongs-in-depends">catkin_package() dependency 'pkg' belongs in DEPENDS</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-dependency-pkg-is-not-configured-properly">catkin_package() dependency 'pkg' is not configured properly</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-exports-non-package-include-path">catkin_package() exports non-package include path</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-exports-package-include-path-that-is-not-installed">catkin_package() exports package include path that is not installed</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-exports-pkg-config-module-pkg">catkin_package() exports pkg-config module 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#catkin_package-in-meta-package">catkin_package() in meta package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#condition-cond-is-ambiguous">condition 'cond' is ambiguous</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#duplicate-cmd">duplicate cmd()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#duplicate-find_packagepkg">duplicate find_package(pkg)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#duplicate-include-path-pkg_include_dirs">duplicate include path ${pkg_INCLUDE_DIRS}</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#environment-variables-should-not-be-used">environment variables should not be used</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#executable-file-is-not-installed-to-bin-destination">executable file is not installed to bin destination</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exported-include-path-path-does-not-exist">exported include path 'path' does not exist</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exported-library-target-cannot-have-different-output-name">exported library 'target' cannot have different output name</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exported-library-target-is-not-a-library">exported library 'target' is not a library</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exported-library-target-is-not-installed">exported library 'target' is not installed</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#exported-package-include-path-but-no-exported-library">exported package include path but no exported library</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#extra-arguments-in-cmd">extra arguments in cmd()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#file-script-is-executable-but-not-installed">file 'script' is executable but not installed</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#file-setuppy-found-but-no-catkin_python_setup-call">file setup.py found but no catkin_python_setup() call</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#find_packagepkg-before-find_packagecmake_modules">find_package(pkg) before find_package(cmake_modules)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#find_packagepkg-has-no-required-option">find_package(pkg) has no REQUIRED option</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#generate_messages-called-but-no-message-declared">generate_messages() called but no message declared</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#global-variable-var-should-contain-project-name">global variable 'var' should contain project name</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#header-file-file-is-not-installed-to-package-specific-include-path">header file 'file' is not installed to package-specific include path</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#include-path-path-is-exported-but-not-used-for-the-build">include path 'path' is exported but not used for the build</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#include-paths-path-and-parent_path-are-ambiguous">include paths 'path' and 'parent_path' are ambiguous</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#installtype-dest-does-not-install-to-catkin_install_prefix">install(type ... dest) does not install to ${CATKIN_INSTALL_PREFIX}</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#launch-configuration-needs-type_depend-on-pkg">launch configuration needs type_depend on 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#library-output-name-output-has-redundant-lib-prefix">library output name 'output' has redundant 'lib' prefix</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#line-is-not-indented-properly">line is not indented properly</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#link_directories-must-not-be-used-for-system-depends">link_directories() must not be used for system depends</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#list-name-should-be-sorted">list name should be sorted</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#malformed-argument-list-msg">malformed argument list: msg</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#meaningless-package-description-text">meaningless package description 'text'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#meta-packages-must-not-have-type_depends">meta packages must not have type_depends</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#misconfigured-catkin-package-pkg">misconfigured catkin package 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#missing-cmd">missing cmd()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#missing-type_depend-on-pkg">missing type_depend on 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#missing-components-keyword-before-pkg">missing COMPONENTS keyword before 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#missing-find_packagepkg">missing find_package(pkg)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#missing-generate_messages">missing generate_messages()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#missing-include_directoriescatkin_include_dirs">missing include_directories(${catkin_INCLUDE_DIRS})</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#operands-for-operator-op-should-be-quoted-strings">operands for operator op should be quoted strings</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#package-pkg-must-be-in-catkin_depends-in-catkin_package">package 'pkg' must be in CATKIN_DEPENDS in catkin_package()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#package-description-starts-with-boilerplate-text">package description starts with boilerplate 'text'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#package-exports-export-plugin-but-does-not-type_depend-on-pkg">package exports export plugin but does not type_depend on 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#package-path-name-path-differs-from-package-name">package path name 'path' differs from package name</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#parse-error-msg">parse error: msg</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#project-name-name-differs-from-package-name">project name 'name' differs from package name</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#referenced-target-target-is-not-defined">referenced target 'target' is not defined</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#script-file-has-no-interpreter-shebang-line">script 'file' has no interpreter shebang line</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#script-script-must-be-executable">script 'script' must be executable</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subdirectory-subdir-contains-a-subproject">subdirectory 'subdir' contains a subproject</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subdirectory-subdir-is-added-a-second-time">subdirectory 'subdir' is added a second time</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subdirectory-subdir-is-missing">subdirectory 'subdir' is missing</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#subdirectory-subdir-is-not-in-package">subdirectory subdir is not in package</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#support-for-cmake-versions-older-than-2812-is-deprecated">support for CMake versions older than 2.8.12 is deprecated</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#target-export_target-depends-on-target-target-which-is-not-installed">target 'export_target' depends on target 'target' which is not installed</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#target-target-has-invalid-characters-in-its-output-file-name">target 'target' has invalid characters in its output file name</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#target-target-is-not-installed">target 'target' is not installed</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#test_depend-pkg-used-without-ifcatkin_enable_testing">test_depend 'pkg' used without if(CATKIN_ENABLE_TESTING)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#unconfigured-build_depend-on-pkg">unconfigured build_depend on 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#unconfigured-message-dependency-pkg">unconfigured message dependency 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#unknown-package-pkg">unknown package 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#unused-type_depend-on-pkg">unused type_depend on 'pkg'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#use-project_name-instead-of-name">use ${PROJECT_NAME} instead of 'name'</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#use-find_packagepkg-instead-of-includefindpkgcmake">use find_package(pkg) instead of include(Findpkg.cmake)</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#use-of-link_directories-is-strongly-discouraged">use of link_directories() is strongly discouraged</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#variable-var-is-modified">variable var is modified</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#variable-var-is-modified_1">variable var is modified</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#variable-var-is-overwritten">variable var is overwritten</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#variable-cmake_build_type-is-overwritten-unconditionally">variable CMAKE_BUILD_TYPE is overwritten unconditionally</a>
+    </li>
     </ul>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../api/">API</a>
-	    </li>
-          
-        </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../api/">API</a>
+                </li>
+              </ul>
       </div>
-      &nbsp;
+    </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="..">catkin_lint</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">catkin_lint</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="..">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>Messages</li>
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>Messages</li>
     <li class="wy-breadcrumbs-aside">
-      
     </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
                 <h1 id="catkin_lint-diagnostic-messages">catkin_lint diagnostic messages</h1>
 <p>This is a list of all messages which might be shown by <strong>catkin_lint</strong>.
@@ -391,6 +366,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>ID</strong>: missing_plugin</li>
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: A plugin declaration file which is listed in your package.xml is missing from the package source folder.</li>
+</ul>
+<h2 id="feature-requires-at-least-cmake-version"><i>feature</i> requires at least CMake <i>version</i></h2>
+<ul>
+<li><strong>ID</strong>: cmake_old</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: You are using a CMake feature which is supported only by CMake <i>version</i> or newer. You should set your <code>cmake_minimum_required()</code> declaration accordingly.</li>
 </ul>
 <h2 id="first_cmd-is-called-before-second_cmd"><i>first_cmd</i>() is called before <i>second_cmd</i>()</h2>
 <ul>
@@ -782,6 +763,12 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 <li><strong>Severity</strong>: error</li>
 <li><strong>Explanation</strong>: You added another subdirectory with <code>add_subdirectory()</code>, but the specified path points outside of the package source directory.</li>
 </ul>
+<h2 id="support-for-cmake-versions-older-than-2812-is-deprecated">support for CMake versions older than 2.8.12 is deprecated</h2>
+<ul>
+<li><strong>ID</strong>: cmake_ancient</li>
+<li><strong>Severity</strong>: warning</li>
+<li><strong>Explanation</strong>: Starting with CMake 3.19, compatibility with ancient CMake versions has been deprecated and triggers a developer warning. Most likely, you are not actually depending on ancient CMake behavior and can bump the minimum required version without ill effects.</li>
+</ul>
 <h2 id="target-export_target-depends-on-target-target-which-is-not-installed">target '<i>export_target</i>' depends on target '<i>target</i>' which is not installed</h2>
 <ul>
 <li><strong>ID</strong>: uninstalled_depend</li>
@@ -874,48 +861,48 @@ the parser to ignore all remaining commands in the block until the <code>else()<
 </ul>
               
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../usage/" class="btn btn-neutral float-left" title="Usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
         <a href="../api/" class="btn btn-neutral float-right" title="API">Next <span class="icon icon-circle-arrow-right"></span></a>
-      
-      
-        <a href="../usage/" class="btn btn-neutral" title="Usage"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
   </div>
 
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-	  
+          
         </div>
       </div>
 
     </section>
-    
+
   </div>
 
-  <div class="rst-versions" role="note" style="cursor: pointer">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-      
-        <span><a href="../usage/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-        <span style="margin-left: 15px"><a href="../api/" style="color: #fcfcfc">Next &raquo;</a></span>
-      
-    </span>
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../usage/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../api/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
 </div>
-    <script src="../js/theme.js"></script>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
 </body>
 </html>

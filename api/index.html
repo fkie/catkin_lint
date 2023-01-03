@@ -1,174 +1,101 @@
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  
-  <link rel="shortcut icon" href="../img/favicon.ico">
-  <title>API - catkin_lint</title>
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
-
-  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
-  <link rel="stylesheet" href="../css/highlight.css">
-  
-  <script>
-    // Current page data
-    var mkdocs_page_name = "API";
-    var mkdocs_page_input_path = "api.md";
-    var mkdocs_page_url = "/api/";
-  </script>
-  
-  <script src="../js/jquery-2.1.1.min.js"></script>
-  <script src="../js/modernizr-2.8.3.min.js"></script>
-  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
-  
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>API - catkin_lint</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "API";
+        var mkdocs_page_input_path = "api.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
 </head>
 
 <body class="wy-body-for-nav" role="document">
 
   <div class="wy-grid-for-nav">
-
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
       <div class="wy-side-nav-search">
-        <a href=".." class="icon icon-home"> catkin_lint</a>
-        <div role="search">
+          <a href=".." class="icon icon-home"> catkin_lint
+        </a><div role="search">
   <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
   </form>
 </div>
       </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-	<ul class="current">
-	  
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="..">Overview</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../install/">Installation</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../usage/">Usage</a>
-	    </li>
-          
-            <li class="toctree-l1">
-		
-    <a class="" href="../messages/">Messages</a>
-	    </li>
-          
-            <li class="toctree-l1 current">
-		
-    <a class="current" href="./">API</a>
-    <ul class="subnav">
-            
-    <li class="toctree-l2"><a href="#register-your-own-checks">Register your own checks</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#require">require()</a></li>
-        
-            <li><a class="toctree-l3" href="#register_message">register_message()</a></li>
-        
-            <li><a class="toctree-l3" href="#add_init_hook">add_init_hook()</a></li>
-        
-            <li><a class="toctree-l3" href="#add_command_hook">add_command_hook()</a></li>
-        
-            <li><a class="toctree-l3" href="#add_final_hook">add_final_hook()</a></li>
-        
-            <li><a class="toctree-l3" href="#execute_hook">execute_hook()</a></li>
-        
-        </ul>
-    
-
-    <li class="toctree-l2"><a href="#info-object">Info Object</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#report">report()</a></li>
-        
-            <li><a class="toctree-l3" href="#location_of">location_of()</a></li>
-        
-            <li><a class="toctree-l3" href="#source_relative_path">source_relative_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#binary_relative_path">binary_relative_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#real_path">real_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#is_internal_path">is_internal_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#path_class">path_class()</a></li>
-        
-            <li><a class="toctree-l3" href="#is_valid_path">is_valid_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#is_existing_path">is_existing_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#report_path">report_path()</a></li>
-        
-            <li><a class="toctree-l3" href="#is_catkin_install_destination">is_catkin_install_destination()</a></li>
-        
-        </ul>
-    
-
-    <li class="toctree-l2"><a href="#catkinenvironment-object">CatkinEnvironment object</a></li>
-    
-        <ul>
-        
-            <li><a class="toctree-l3" href="#get_package_type">get_package_type()</a></li>
-        
-            <li><a class="toctree-l3" href="#is_catkin_pkg">is_catkin_pkg()</a></li>
-        
-            <li><a class="toctree-l3" href="#is_known_pkg">is_known_pkg()</a></li>
-        
-            <li><a class="toctree-l3" href="#ok">ok</a></li>
-        
-        </ul>
-    
-
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Overview</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../install/">Installation</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../usage/">Usage</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../messages/">Messages</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="./">API</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#require">require()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#register_message">register_message()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#add_init_hook">add_init_hook()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#add_command_hook">add_command_hook()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#add_final_hook">add_final_hook()</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#execute_hook">execute_hook()</a>
+    </li>
     </ul>
-	    </li>
-          
-        </ul>
+                </li>
+              </ul>
       </div>
-      &nbsp;
+    </div>
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="..">catkin_lint</a>
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">catkin_lint</a>
+        
       </nav>
-
-      
       <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
-    <li><a href="..">Docs</a> &raquo;</li>
-    
-      
-    
-    <li>API</li>
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>API</li>
     <li class="wy-breadcrumbs-aside">
-      
     </li>
   </ul>
   <hr/>
 </div>
-          <div role="main">
-            <div class="section">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
               
                 <h1 id="register-your-own-checks">Register your own checks</h1>
 <p><strong>catkin_lint</strong> checks are implemented as
@@ -185,9 +112,8 @@ the callbacks for the check. The entry function has a single
 parameter <code>linter</code>. The Linter object provides the following
 methods:</p>
 <h2 id="require">require()</h2>
-<pre><code class="python">linter.require(check_name)
+<pre><code class="language-python">linter.require(check_name)
 </code></pre>
-
 <p>Checks may depend on the results of other checks.
 The <code>require</code> method ensures that <code>check_name</code>
 is called exactly once. Circular dependencies of the
@@ -198,9 +124,8 @@ exception. In particular, tests must not require themselves.</p>
 <p class="admonition-title">Note</p>
 <p>This method was added in version 1.6.6</p>
 </div>
-<pre><code class="python">linter.register_message(msg_id, text, description=None)
+<pre><code class="language-python">linter.register_message(msg_id, text, description=None)
 </code></pre>
-
 <p>Adds a custom message that can be issued with <a href="#report"><code>report()</code></a>.
 Message IDs must be unique. Valid characters are upper-case letters,
 digits, and underscores only. Custom message IDs are also
@@ -212,38 +137,34 @@ or two for a more in-depth explanation. The description will reformat
 line breaks automatically to adjust for different terminal widths.
 Also, you can have placeholders of the form <code>%(keyword)s</code>.</p>
 <h2 id="add_init_hook">add_init_hook()</h2>
-<pre><code class="python">def callback(info):
+<pre><code class="language-python">def callback(info):
     ...
 
 linter.add_init_hook(callback)
 </code></pre>
-
 <p>Registers an initialization hook that is called when
 the lint check for a particular package begins.</p>
 <h2 id="add_command_hook">add_command_hook()</h2>
-<pre><code class="python">def callback(info, cmd, args):
+<pre><code class="language-python">def callback(info, cmd, args):
     ...
 
 linter.add_command_hook(name, callback)
 </code></pre>
-
 <p>Registers a command hook that is called each time the
 CMake parser encounters the command <code>name</code>. The command
 name and a list of its arguments are passed to the callback.
 All command names are converted to lower-case.</p>
 <h2 id="add_final_hook">add_final_hook()</h2>
-<pre><code class="python">def callback(info):
+<pre><code class="language-python">def callback(info):
     ...
 
 linter.add_final_hook(callback)
 </code></pre>
-
 <p>Registers a final hook that is called when the CMake parser
 has finished parsing the <code>CMakeLists.txt</code> file.</p>
 <h2 id="execute_hook">execute_hook()</h2>
-<pre><code class="python">linter.execute_hook(info, cmd, args)
+<pre><code class="language-python">linter.execute_hook(info, cmd, args)
 </code></pre>
-
 <p>Executes all registered command hooks for <code>cmd</code>. This is useful
 for CMake wrapper macros, so you don't have to duplicate all checks
 for the wrapped call. For example, the <code>cuda_add_executable</code>
@@ -289,9 +210,8 @@ uses unique variable names that do not conflict with other checks.</p>
     have mocked values.</li>
 </ul>
 <h2 id="report">report()</h2>
-<pre><code class="python">info.report(level, msg_id, **kwargs)
+<pre><code class="language-python">info.report(level, msg_id, **kwargs)
 </code></pre>
-
 <p>Reports a problem to the user. <code>level</code> must be one of
 <code>catkin_lint.linter.ERROR</code>, <code>catkin_lint.linter.WARNING</code>, or
 <code>catkin_lint.linter.NOTICE</code>. The <code>msg_id</code> refers to one
@@ -309,36 +229,31 @@ file location with the <code>file_location</code> keyword argument.</p>
 <p class="admonition-title">Note</p>
 <p>This method was added in version 1.6.0</p>
 </div>
-<pre><code class="python">info.location_of(cmd)
+<pre><code class="language-python">info.location_of(cmd)
 </code></pre>
-
 <p>Returns the file location of the most recent invocation of the CMake
 command <code>cmd</code>. This is useful if a problem is detected belatedly,
 but should still be attributed to a particular faulty command.</p>
 <h2 id="source_relative_path">source_relative_path()</h2>
-<pre><code class="python">info.source_relative_path(path)
+<pre><code class="language-python">info.source_relative_path(path)
 </code></pre>
-
 <p>Returns a path relative to the package source directory or
 an absolute path if the path is not within the package. Can handle
 <code>${CMAKE_CURRENT_SOURCE_DIR}</code> correctly.</p>
 <h2 id="binary_relative_path">binary_relative_path()</h2>
-<pre><code class="python">info.binary_relative_path(path)
+<pre><code class="language-python">info.binary_relative_path(path)
 </code></pre>
-
 <p>Returns a path relative to the package build directory or
 an absolute path if the path is not inside the build directory. Can handle
 <code>${CMAKE_CURRENT_BINARY_DIR}</code> correctly.</p>
 <h2 id="real_path">real_path()</h2>
-<pre><code class="python">info.real_path(path)
+<pre><code class="language-python">info.real_path(path)
 </code></pre>
-
 <p>Returns the actual file system path for relative package path as
 returned by <code>source_relative_path()</code>.</p>
 <h2 id="is_internal_path">is_internal_path()</h2>
-<pre><code class="python">info.is_internal_path(path)
+<pre><code class="language-python">info.is_internal_path(path)
 </code></pre>
-
 <p>Returns <code>True</code> if the path is either below the package source
 directory or the package build directory.</p>
 <h2 id="path_class">path_class()</h2>
@@ -346,9 +261,8 @@ directory or the package build directory.</p>
 <p class="admonition-title">Note</p>
 <p>This method was added in version 1.5.0</p>
 </div>
-<pre><code class="python">info.path_class(path)
+<pre><code class="language-python">info.path_class(path)
 </code></pre>
-
 <p>Returns a value from the <code>PathClass</code> class, which can be one of
 <code>SOURCE</code>, <code>BINARY</code>, <code>DISCOVERED</code>, or <code>OTHER</code>.</p>
 <h2 id="is_valid_path">is_valid_path()</h2>
@@ -356,9 +270,8 @@ directory or the package build directory.</p>
 <p class="admonition-title">Note</p>
 <p>This method was added in version 1.5.0</p>
 </div>
-<pre><code class="python">info.is_valid_path(path, valid=[PathClass.SOURCE, PathClass.BINARY, PathClass.DISCOVERED])
+<pre><code class="language-python">info.is_valid_path(path, valid=[PathClass.SOURCE, PathClass.BINARY, PathClass.DISCOVERED])
 </code></pre>
-
 <p>Returns <code>True</code> if the path belongs to any of the valid path classes. By default,
 any path is accepted which is either in the source tree, the a built file, or
 a path discovered by the appropriate CMake functions such as <code>find_file()</code>.</p>
@@ -367,9 +280,8 @@ a path discovered by the appropriate CMake functions such as <code>find_file()</
 <p class="admonition-title">Note</p>
 <p>This method was added in version 1.5.0</p>
 </div>
-<pre><code class="python">info.is_existing_path(path, check=os.path.exists, require_source_folder=False, discovered_path_ok=True)
+<pre><code class="language-python">info.is_existing_path(path, check=os.path.exists, require_source_folder=False, discovered_path_ok=True)
 </code></pre>
-
 <p>Returns <code>True</code> if the path is a valid path argument for a catkin command, which
 means it's either an existing file or a file that will be generated by <code>configure_file</code>
 or <code>add_custom_command</code>. If <code>discovered_path_ok</code> is <code>True</code>, then a path 
@@ -377,16 +289,14 @@ discovered by <code>find_package()</code>, <code>find_path()</code>, <code>find_
 will be accepted as well. If <code>require_source_folder</code> is <code>True</code>, then any files
 which are not physically located within the source folder will be rejected.</p>
 <h2 id="report_path">report_path()</h2>
-<pre><code class="python">info.report_path(path)
+<pre><code class="language-python">info.report_path(path)
 </code></pre>
-
 <p>Returns <code>path</code> in a form that is suitable for user consumption, i.e., as argument of
 <code>report()</code>. In particular, this will ensure that mock paths are rewritten in a form
 that is informative for the user.</p>
 <h2 id="is_catkin_install_destination">is_catkin_install_destination()</h2>
-<pre><code class="python">info.is_catkin_install_destination(path, subdir=None)
+<pre><code class="language-python">info.is_catkin_install_destination(path, subdir=None)
 </code></pre>
-
 <p>Returns <code>True</code> if the path points to the install space of
 the catkin workspace. If <code>subdir</code> is not <code>None</code>, it checks
 if the path points to the specified subdirectory in the install
@@ -397,9 +307,8 @@ space.</p>
 <p class="admonition-title">Note</p>
 <p>This method was added in version 1.6.10</p>
 </div>
-<pre><code class="python">env.get_package_type(name)
+<pre><code class="language-python">env.get_package_type(name)
 </code></pre>
-
 <p>Returns one of the following values:</p>
 <ul>
 <li><code>catkin_lint.environment.PackageType.CATKIN</code> if <code>name</code> is a catkin package</li>
@@ -408,9 +317,8 @@ space.</p>
 <li><code>catkin_lint.environment.PackageType.INDETERMINATE</code> if the package type could not be determined</li>
 </ul>
 <h2 id="is_catkin_pkg">is_catkin_pkg()</h2>
-<pre><code class="python">env.is_catkin_pkg(name)
+<pre><code class="language-python">env.is_catkin_pkg(name)
 </code></pre>
-
 <p>Returns <code>True</code> if <code>name</code> is a catkin package. May return
 wrong results if <code>env.ok</code> is not <code>True</code>.</p>
 <div class="admonition warning">
@@ -419,9 +327,8 @@ wrong results if <code>env.ok</code> is not <code>True</code>.</p>
 Please use <code>get_package_type()</code> instead.</p>
 </div>
 <h2 id="is_known_pkg">is_known_pkg()</h2>
-<pre><code class="python">env.is_known_pkg(name)
+<pre><code class="language-python">env.is_known_pkg(name)
 </code></pre>
-
 <p>Returns <code>True</code> if <code>name</code> is a known package. May return
 wrong results if <code>env.ok</code> is not <code>True</code>.</p>
 <div class="admonition warning">
@@ -430,9 +337,8 @@ wrong results if <code>env.ok</code> is not <code>True</code>.</p>
 Please use <code>get_package_type()</code> instead.</p>
 </div>
 <h2 id="ok">ok</h2>
-<pre><code class="python">    env.ok
+<pre><code class="language-python">    env.ok
 </code></pre>
-
 <p>Is <code>True</code> if the list of ROS dependencies was properly
 initialized.</p>
 <div class="admonition warning">
@@ -442,44 +348,45 @@ Please use <code>get_package_type()</code> instead.</p>
 </div>
               
             </div>
-          </div>
-          <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-      
-        <a href="../messages/" class="btn btn-neutral" title="Messages"><span class="icon icon-circle-arrow-left"></span> Previous</a>
-      
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../messages/" class="btn btn-neutral float-left" title="Messages"><span class="icon icon-circle-arrow-left"></span> Previous</a>
     </div>
-  
 
   <hr/>
 
   <div role="contentinfo">
     <!-- Copyright etc -->
-    
   </div>
 
-  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
 </footer>
-	  
+          
         </div>
       </div>
 
     </section>
-    
+
   </div>
 
-  <div class="rst-versions" role="note" style="cursor: pointer">
-    <span class="rst-current-version" data-toggle="rst-current-version">
-      
-      
-        <span><a href="../messages/" style="color: #fcfcfc;">&laquo; Previous</a></span>
-      
-      
-    </span>
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../messages/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+  </span>
 </div>
-    <script src="../js/theme.js"></script>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
 
 </body>
 </html>
