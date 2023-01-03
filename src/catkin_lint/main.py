@@ -78,6 +78,7 @@ def prepare_arguments(parser):
     parser.add_argument("--skip-path", metavar="PATH", action="append", default=[], help="skip testing any package in a path that contains PATH (can be used multiple times)")
     parser.add_argument("--package-path", metavar="PATH", help="additional package path (separate multiple locations with '%s') [*]" % os.pathsep)
     parser.add_argument("--rosdistro", metavar="DISTRO", help="override ROS distribution (default: ROS_DISTRO environment variable) [*]")
+    parser.add_argument("--rosdep-cache-path", metavar="PATH", help="override rosdep sources cache location [*]")
     m = parser.add_mutually_exclusive_group()
     m.add_argument("--resolve-env", action="store_true", default=None, help="resolve $ENV{} references from environment variables [*]")
     m.add_argument("--no-resolve-env", action="store_false", help="override resolve_env=yes option from configuration file")
@@ -166,6 +167,8 @@ def run_linter(args):
     config["catkin_lint"] = {}
     if args.rosdistro:
         config["catkin_lint"]["rosdistro"] = args.rosdistro
+    if args.rosdep_cache_path:
+        config["catkin_lint"]["rosdep_cache_path"] = args.rosdep_cache_path
     if args.package_path:
         config["catkin_lint"]["package_path"] = args.package_path
     if args.color:
@@ -212,6 +215,8 @@ def run_linter(args):
     pkgs_to_check = []
     if "rosdistro" in config["catkin_lint"]:
         os.environ["ROS_DISTRO"] = config["catkin_lint"]["rosdistro"]
+    if "rosdep_cache_path" in config["catkin_lint"]:
+        os.environ["ROSDEP_CACHE_PATH"] = config["catkin_lint"]["rosdep_cache_path"]
     quiet = config["catkin_lint"].getboolean("quiet", False)
     env = CatkinEnvironment(
         os_env=os.environ if config["catkin_lint"].getboolean("resolve_env", False) else None,

@@ -42,6 +42,7 @@ B<catkin_lint> [B<--config> I<FILE>] [B<--quiet> | B<--no-quiet>]
             [B<--pkg> I<PKG>] [B<--skip-pkg> I<PKG>]
             [B<--package-path> I<PATH>] [B<--skip-path> I<MATCH>]
             [B<--rosdistro> I<DISTRO>] [B<--offline>] [B<--no-offline>]
+            [B<--rosdep-cache-path> I<PATH>]
             [B<--resolve-env> | B<--no-resolve-env>]
             [B<--output> I<FORMAT> | B<--text> | B<--explain> | B<--xml> | B<--json>]
             [B<--color> I<MODE>]
@@ -154,6 +155,11 @@ packages which can be found locally through the B<ROS> package search path.
 =item B<--no-offline>
 
 Allow metadata queries to the B<ROS> package index. This is the default.
+
+=item B<--rosdep-cache-path> I<PATH>
+
+Override the default location of the rosdep sources cache. This option has the same
+effect as setting the B<ROSDEP_CACHE_PATH> environment variable.
 
 =item B<--resolve-env>
 
@@ -316,6 +322,11 @@ Assume that all packages are supposed to work with the B<ROS> distribution I<DIS
 By default, this value is taken from the B<ROS_DISTRO> environment variable.
 B<catkin_lint> will use this to query the B<ROS> database for packages which are not
 locally installed.
+
+=item B<rosdep_cache_path> = I<PATH>
+
+Override the default location of the rosdep sources cache. This option has the same
+effect as setting the B<ROSDEP_CACHE_PATH> environment variable.
 
 =item B<severity_level> = B<0> E<verbar> B<1> E<verbar> B<2>
 

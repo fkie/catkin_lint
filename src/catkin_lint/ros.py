@@ -59,7 +59,7 @@ def get_rosdep(quiet):
     from rosdep2.rospkg_loader import DEFAULT_VIEW_KEY
     from rosdep2.sources_list import SourcesListLoader
     dummy = DummyRospkg()
-    sources_loader = SourcesListLoader.create_default()
+    sources_loader = SourcesListLoader.create_default(sources_cache_dir=os.environ.get("ROSDEP_CACHE_PATH", None))
     lookup = RosdepLookup.create_from_rospkg(rospack=dummy, rosstack=dummy, sources_loader=sources_loader)
     return Rosdep(view=lookup.get_rosdep_view(DEFAULT_VIEW_KEY), quiet=quiet)
 
