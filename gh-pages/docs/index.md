@@ -9,7 +9,8 @@ number of common problems.
 ## Running
 
 If **catkin_lint** is invoked with one or more paths as parameters, it
-searches for packages recursively and checks all of them. For a more detailed
+searches for packages recursively and checks all of them. Subfolders which
+contain a `CATKIN_IGNORE` marker file will be skipped. For a more detailed
 list of available command line arguments and configuration options, see
 the [Usage section](usage.md) of this manual.
 
