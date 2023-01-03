@@ -123,6 +123,7 @@ of a script.</p>
             [<strong>--pkg</strong> <em>PKG</em>] [<strong>--skip-pkg</strong> <em>PKG</em>]
             [<strong>--package-path</strong> <em>PATH</em>] [<strong>--skip-path</strong> <em>MATCH</em>]
             [<strong>--rosdistro</strong> <em>DISTRO</em>] [<strong>--offline</strong>] [<strong>--no-offline</strong>]
+            [<strong>--rosdep-cache-path</strong> <em>PATH</em>]
             [<strong>--resolve-env</strong> | <strong>--no-resolve-env</strong>]
             [<strong>--output</strong> <em>FORMAT</em> | <strong>--text</strong> | <strong>--explain</strong> | <strong>--xml</strong> | <strong>--json</strong>]
             [<strong>--color</strong> <em>MODE</em>]
@@ -211,6 +212,11 @@ packages which can be found locally through the <strong>ROS</strong> package sea
 <li>
 <p><strong>--no-offline</strong></p>
 <p>Allow metadata queries to the <strong>ROS</strong> package index. This is the default.</p>
+</li>
+<li>
+<p><strong>--rosdep-cache-path</strong> <em>PATH</em></p>
+<p>Override the default location of the rosdep sources cache. This option has the same
+effect as setting the <strong>ROSDEP_CACHE_PATH</strong> environment variable.</p>
 </li>
 <li>
 <p><strong>--resolve-env</strong></p>
@@ -340,6 +346,11 @@ a CMake command references the environment using <strong>$ENV{}</strong>.</p>
 By default, this value is taken from the <strong>ROS_DISTRO</strong> environment variable.
 <strong>catkin_lint</strong> will use this to query the <strong>ROS</strong> database for packages which are not
 locally installed.</p>
+</li>
+<li>
+<p><strong>rosdep_cache_path</strong> = <em>PATH</em></p>
+<p>Override the default location of the rosdep sources cache. This option has the same
+effect as setting the <strong>ROSDEP_CACHE_PATH</strong> environment variable.</p>
 </li>
 <li>
 <p><strong>severity_level</strong> = <strong>0</strong> | <strong>1</strong> | <strong>2</strong></p>
