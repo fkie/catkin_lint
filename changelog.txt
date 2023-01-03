@@ -1,3 +1,8 @@
+Version 1.6.21
+  * Add override for rosdep sources cache dir 
+  * Detect and warn if the rosdep cache is empty because
+    'rosdep update' was never run
+
 Version 1.6.20
   * Ignore uninstalled executables in subprojects
   * Fix parsing of nested generator expressions
