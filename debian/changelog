@@ -1,3 +1,9 @@
+catkin-lint (1.6.22-1) unstable; urgency=medium
+
+  * New upstream release.
+
+ -- Timo Röhling <timo.roehling@fkie.fraunhofer.de>  Tue, 31 Jan 2023 23:41:45 +0100
+
 catkin-lint (1.6.20-1) unstable; urgency=medium
 
   * New upstream release.
