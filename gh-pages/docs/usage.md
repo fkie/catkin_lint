@@ -13,6 +13,7 @@ of a script.
             \[**--pkg** _PKG_\] \[**--skip-pkg** _PKG_\]
             \[**--package-path** _PATH_\] \[**--skip-path** _MATCH_\]
             \[**--rosdistro** _DISTRO_\] \[**--offline**\] \[**--no-offline**\]
+            \[**--rosdep-cache-path** _PATH_\]
             \[**--resolve-env** | **--no-resolve-env**\]
             \[**--output** _FORMAT_ | **--text** | **--explain** | **--xml** | **--json**\]
             \[**--color** _MODE_\]
@@ -103,6 +104,11 @@ of a script.
 - **--no-offline**
 
     Allow metadata queries to the **ROS** package index. This is the default.
+
+- **--rosdep-cache-path** _PATH_
+
+    Override the default location of the rosdep sources cache. This option has the same
+    effect as setting the **ROSDEP_CACHE_PATH** environment variable.
 
 - **--resolve-env**
 
@@ -235,6 +241,11 @@ The main section is called `[catkin_lint]` and will take the following
     By default, this value is taken from the **ROS\_DISTRO** environment variable.
     **catkin\_lint** will use this to query the **ROS** database for packages which are not
     locally installed.
+
+- **rosdep\_cache\_path** = _PATH_
+
+    Override the default location of the rosdep sources cache. This option has the same
+    effect as setting the **ROSDEP_CACHE_PATH** environment variable.
 
 - **severity\_level** = **0** | **1** | **2**
 
