@@ -93,6 +93,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: A plugin declaration file which is listed in your package.xml is missing from the package source folder.
 
+## <i>feature</i> requires at least CMake <i>version</i>
+
+- **ID**: cmake_old
+- **Severity**: warning
+- **Explanation**: You are using a CMake feature which is supported only by CMake <i>version</i> or newer. You should set your <code>cmake_minimum_required()</code> declaration accordingly.
+
 ## <i>first_cmd</i>() is called before <i>second_cmd</i>()
 
 - **ID**: order_violation
@@ -482,6 +488,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **ID**: external_subdir
 - **Severity**: error
 - **Explanation**: You added another subdirectory with <code>add_subdirectory()</code>, but the specified path points outside of the package source directory.
+
+## support for CMake versions older than 2.8.12 is deprecated
+
+- **ID**: cmake_ancient
+- **Severity**: warning
+- **Explanation**: Starting with CMake 3.19, compatibility with ancient CMake versions has been deprecated and triggers a developer warning. Most likely, you are not actually depending on ancient CMake behavior and can bump the minimum required version without ill effects.
 
 ## target '<i>export_target</i>' depends on target '<i>target</i>' which is not installed
 
