@@ -30,6 +30,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import ntpath
 import os
 import posixpath
 import stat
@@ -394,7 +395,7 @@ def exports(linter):
         if ext_includes:
             info.report(ERROR, "EXTERNAL_INCLUDE_PATH")
         info.export_libs |= set(opts["LIBRARIES"])
-        info.export_includes |= set([d for d in includes if not os.path.isabs(d)])
+        info.export_includes |= set([d for d in includes if not posixpath.isabs(d) and not ntpath.isabs(d)])
         info.export_packages |= set(opts["CATKIN_DEPENDS"])
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
 
