@@ -247,8 +247,8 @@ class LinterTest(unittest.TestCase):
         self.assertEqual(info.source_relative_path("subdir/filename"), "subdir/filename")
         self.assertEqual(info.source_relative_path("subdir/../filename"), "filename")
         self.assertEqual(info.source_relative_path("/filename"), "/filename")
-        self.assertEqual(info.source_relative_path("../../../../filename"), "/filename")
-        self.assertEqual(info.source_relative_path("../../../../subdir/filename"), "/subdir/filename")
+        self.assertEqual(info.source_relative_path("../../../../filename"), "//filename")
+        self.assertEqual(info.source_relative_path("../../../../subdir/filename"), "//subdir/filename")
         info.var = {
             "CMAKE_CURRENT_SOURCE_DIR": "%s/subdir" % PathConstants.PACKAGE_SOURCE,
         }

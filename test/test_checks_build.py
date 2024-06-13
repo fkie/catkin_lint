@@ -1113,7 +1113,7 @@ class ChecksBuildTest(unittest.TestCase):
             find_package(other_catkin REQUIRED)
             catkin_package(
             CATKIN_DEPENDS other_catkin
-            INCLUDE_DIRS /not/in/package
+            INCLUDE_DIRS //not/in/package
             )
             """,
                            checks=cc.exports)
