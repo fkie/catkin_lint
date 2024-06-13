@@ -74,11 +74,11 @@ class PathClass(object):
 
 
 class PathConstants(object):
-    PACKAGE_SOURCE = "/%s" % generate_random_id()
-    PACKAGE_BINARY = "/%s" % generate_random_id()
-    CATKIN_DEVEL = "/%s" % generate_random_id()
-    CATKIN_INSTALL = "/%s" % generate_random_id()
-    DISCOVERED_PATH = "/%s" % generate_random_id()
+    PACKAGE_SOURCE = "//%s" % generate_random_id()
+    PACKAGE_BINARY = "//%s" % generate_random_id()
+    CATKIN_DEVEL = "//%s" % generate_random_id()
+    CATKIN_INSTALL = "//%s" % generate_random_id()
+    DISCOVERED_PATH = "//%s" % generate_random_id()
 
 
 class LintInfo(object):
