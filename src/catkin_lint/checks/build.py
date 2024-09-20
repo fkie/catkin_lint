@@ -394,7 +394,7 @@ def exports(linter):
         if ext_includes:
             info.report(ERROR, "EXTERNAL_INCLUDE_PATH")
         info.export_libs |= set(opts["LIBRARIES"])
-        info.export_includes |= set([d for d in includes if not os.path.isabs(d)])
+        info.export_includes |= set(includes)
         info.export_packages |= set(opts["CATKIN_DEPENDS"])
         info.export_targets |= set(opts["EXPORTED_TARGETS"])
 
@@ -423,8 +423,11 @@ def exports(linter):
             for incl in info.export_includes - info.build_includes:
                 info.report(WARNING, "UNUSED_INCLUDE_PATH", path=incl, file_location=info.location_of("catkin_package"))
         for incl in info.export_includes:
-            if not info.is_existing_path(incl, check=os.path.isdir, require_source_folder=True):
+            pc = info.path_class(incl)
+            if pc == PathClass.SOURCE and not info.is_existing_path(incl, check=os.path.isdir):
                 info.report(ERROR, "MISSING_INCLUDE_PATH", path=incl, file_location=info.location_of("catkin_package"))
+            elif pc == PathClass.BINARY:
+                info.report(ERROR, "BUILD_INCLUDE_PATH", path=incl, file_location=info.location_of("catkin_package"))
         includes = info.build_includes | info.export_includes
         for d1 in includes:
             if not posixpath.isabs(d1):

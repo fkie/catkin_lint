@@ -1023,7 +1023,7 @@ class ChecksBuildTest(unittest.TestCase):
             )
             """,
                            checks=cc.exports)
-        self.assertEqual([], result)
+        self.assertEqual(["BUILD_INCLUDE_PATH"], result)
 
         result = mock_lint(env, pkg,
                            """

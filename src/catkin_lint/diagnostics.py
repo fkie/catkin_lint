@@ -372,6 +372,14 @@ message_list = {
         You have listed an invalid include path in the INCLUDE_DIRS stanza of the
         catkin_package() command.
         """),
+    "BUILD_INCLUDE_PATH":
+    ("catkin_package() exports build include path",
+        """\
+        You listed a build path below ${CMAKE_BINARY_DIR} in the INCLUDE_DIRS stanza
+        of your catkin_package() call. These paths are only available for develspace
+        builds and will be missing for installed packages.
+        """
+    ),
     "EXTERNAL_INCLUDE_PATH":
     ("catkin_package() exports non-package include path",
         """\
