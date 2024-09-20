@@ -69,11 +69,7 @@ def word_split(s):
     return result
 
 
-try:
-    from itertools import zip_longest
-except ImportError:
-    def zip_longest(*args):
-        return map(None, *args)
+from itertools import zip_longest  # noqa
 
 
 def write_atomic(filepath, data):
@@ -123,8 +119,4 @@ def enumerate_package_files(rootdir, catkin_ignore=True, ignore_dot=True, ignore
                 yield dirpath, filename
 
 
-# Python 3 compatibility without sacrificing the speed gain of iteritems in Python 2
-try:
-    iteritems = dict.iteritems
-except AttributeError:
-    iteritems = dict.items
+iteritems = dict.items
