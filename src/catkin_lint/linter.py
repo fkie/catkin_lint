@@ -30,6 +30,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import operator
 import os
 import posixpath
 import re
@@ -37,6 +38,7 @@ import random
 import string
 from fnmatch import fnmatch
 from copy import copy
+from collections import defaultdict
 from .cmake import ParserContext, argparse as cmake_argparse, CMakeSyntaxError
 from .diagnostics import msg, add_user_defined_msg
 from .util import abspath
@@ -44,6 +46,14 @@ from .util import abspath
 ERROR = 0
 WARNING = 1
 NOTICE = 2
+
+
+def re_fullmatch(a, b):
+    return re.fullmatch(a, b)
+
+
+def not_re_fullmatch(a, b):
+    return not re.fullmatch(a, b)
 
 
 class Message(object):
@@ -83,7 +93,7 @@ class PathConstants(object):
 
 class LintInfo(object):
 
-    def __init__(self, env):
+    def __init__(self, env, linter=None):
         self.env = env
         self.path = None
         self.subdir = ""
@@ -92,8 +102,8 @@ class LintInfo(object):
         self.manifest = None
         self.file = ""
         self.line = 0
-        self.ignore_message_ids = set()
-        self.ignore_message_ids_once = set()
+        self.ignore_messages = defaultdict(list)
+        self.ignore_messages_once = defaultdict(list)
         self.command_loc = {}
         self.commands = set()
         self.find_packages = set()
@@ -109,15 +119,54 @@ class LintInfo(object):
         self.ignored_messages = []
         self.generated_files = set([""])
         self.message_level_override = {}
+        self.linter = linter
+
+    def parse_ignore_filter(self, s):
+        results = defaultdict(list)
+        for mo in re.finditer(r"(?P<ID>[a-z0-9_-]+)(:?\[(?P<EXPR>[^\]]*)\])?", s, re.IGNORECASE):
+            msg_id = mo.group("ID").upper()
+            expr = mo.group("EXPR")
+            if expr:
+                clauses = []
+                for clause in expr.split(","):
+                    clause = clause.strip()
+                    if "!=" in clause:
+                        clauses.append((operator.ne, *[s.strip() for s in clause.split("!=", 1)]))
+                    elif "!~" in clause:
+                        clauses.append((not_re_fullmatch, *[s.strip() for s in clause.split("!~", 1)]))
+                    elif "=" in clause:
+                        clauses.append((operator.eq, *[s.strip() for s in clause.split("=", 1)]))
+                    elif "~" in clause:
+                        clauses.append((re_fullmatch, *[s.strip() for s in clause.split("~", 1)]))
+                    else:
+                        clauses.append((lambda x, y: False, None, None))
+                results[msg_id].append(clauses)
+            else:
+                results[msg_id].append(True)
+        return results
 
     def report(self, level, msg_id, **kwargs):
+        def _matches_ignore_filter(expr):
+            if isinstance(expr, bool):
+                return expr
+            for clauses in expr:
+                if isinstance(clauses, bool) and clauses == True:
+                    return True
+                for match in clauses:
+                    if not match[0](match[2], kwargs.get(match[1], None)):
+                        break
+                else:
+                    return True
+            return False
+
         file_name, line = self.file, self.line
         loc = kwargs.get("file_location", None)
         if loc:
             file_name, line = loc
             del kwargs["file_location"]
         msg_id, text, description = msg(msg_id, **kwargs)
-        if msg_id in self.ignore_message_ids or msg_id in self.ignore_message_ids_once:
+
+        if _matches_ignore_filter(self.ignore_messages.get(msg_id, False)) or _matches_ignore_filter(self.ignore_messages_once.get(msg_id, False)):
             self.ignored_messages.append(Message(
                 package=self.manifest.name,
                 file_name=file_name,
@@ -465,11 +514,21 @@ class CMakeLinter(object):
     def _handle_pragma(self, info, args):
         pragma = args.pop(0)
         if pragma == "ignore":
-            info.ignore_message_ids |= set([a.upper() for a in args])
+            msgs = info.parse_ignore_filter(" ".join(args))
+            print(msgs)
+            for key, value in msgs.items():
+                info.ignore_messages[key] += value
         if pragma == "report":
-            info.ignore_message_ids -= set([a.upper() for a in args])
+            msgs = info.parse_ignore_filter(" ".join(args))
+            for key, value in msgs.items():
+                if True in value:
+                    info.ignore_messages[key].clear()
+                else:
+                    info.ignore_messages[key] = [entry for entry in info.ignore_messages[key] if entry not in value]
         if pragma == "ignore_once":
-            info.ignore_message_ids_once |= set([a.upper() for a in args])
+            msgs = info.parse_ignore_filter(" ".join(args))
+            for key, value in msgs.items():
+                info.ignore_messages_once[key] += value
         if pragma == "skip":
             self._ctx.skip_block()
 
@@ -653,11 +712,11 @@ class CMakeLinter(object):
                 self.execute_hook(info, cmd, args)
                 info.commands.add(cmd)
                 info.command_loc[cmd] = info.current_location()
-                info.ignore_message_ids_once.clear()
+                info.ignore_messages_once.clear()
         finally:
             info.file = save_file
             info.line = save_line
-            info.ignore_message_ids_once.clear()
+            info.ignore_messages_once.clear()
             self._ctx = save_ctx
 
     KEYWORD_TO_SEVERITY = {"error": ERROR, "warning": WARNING, "notice": NOTICE}
@@ -667,10 +726,10 @@ class CMakeLinter(object):
             val = section[opt].lower().strip()
             opt = opt.upper()
             if val == "ignore":
-                info.ignore_message_ids.add(opt)
+                info.ignore_messages[opt].append(True)
             elif val == "default":
                 info.message_level_override.pop(opt, None)
-                info.ignore_message_ids.discard(opt)
+                info.ignore_messages[opt].clear()
             else:
                 severity = self.KEYWORD_TO_SEVERITY.get(val, None)
                 if severity is not None:
@@ -678,7 +737,7 @@ class CMakeLinter(object):
 
     def lint(self, path, manifest, info=None, config=None):
         if info is None:
-            info = LintInfo(self.env)
+            info = LintInfo(self.env, linter=self)
         if config is not None:
             if "*" in config:
                 self._get_overrides(info, config["*"])

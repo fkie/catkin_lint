@@ -101,6 +101,54 @@ class LinterTest(unittest.TestCase):
         self.assertEqual([], result)
         result = mock_lint(env, pkg,
                            """
+            #catkin_lint: ignore cmd_case[cmd=CATKIN_PACKAGE]
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+                           """
+            #catkin_lint: ignore cmd_case[cmd!=PROJECT]
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+                           """
+            #catkin_lint: ignore cmd_case[cmd!=CATKIN_PACKAGE]
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+                           """
+            #catkin_lint: ignore cmd_case[cmd~(?i)catkin_package]
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual([], result)
+        result = mock_lint(env, pkg,
+                           """
+            #catkin_lint: ignore cmd_case[cmd!~(?i)catkin_package]
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+                           """
+            #catkin_lint: ignore cmd_case[cmd=PROJECT]
+            project(mock)
+            find_package(catkin REQUIRED)
+            CATKIN_PACKAGE()
+            """, checks=cc.all)
+        self.assertEqual(["CMD_CASE"], result)
+        result = mock_lint(env, pkg,
+                           """
             #catkin_lint: ignore cmd_case
             #catkin_lint: report cmd_case
             PROJECT(mock)
