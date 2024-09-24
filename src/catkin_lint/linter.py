@@ -264,7 +264,6 @@ class LintInfo(object):
         if check(os.path.normpath(os.path.join(self.path, self.subdir, tmp))):
             return True
         tmp = posixpath.normpath(posixpath.join(self.var["CMAKE_CURRENT_SOURCE_DIR"], path.replace(os.path.sep, "/")))
-        print(path, tmp, PathConstants.PACKAGE_BINARY)
         if tmp.startswith(PathConstants.PACKAGE_SOURCE):
             if not require_source_folder and not posixpath.isabs(path) and tmp[len(PathConstants.PACKAGE_SOURCE) + 1:] in self.generated_files:
                 return True
@@ -515,7 +514,6 @@ class CMakeLinter(object):
         pragma = args.pop(0)
         if pragma == "ignore":
             msgs = info.parse_ignore_filter(" ".join(args))
-            print(msgs)
             for key, value in msgs.items():
                 info.ignore_messages[key] += value
         if pragma == "report":
