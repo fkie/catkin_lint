@@ -33,7 +33,7 @@
 import re
 from ..linter import ERROR, WARNING, NOTICE
 from ..cmake import argparse as cmake_argparse
-from distutils.version import LooseVersion as Version
+from ..looseversion import Version
 
 
 def project(linter):

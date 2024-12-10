@@ -39,10 +39,7 @@ from functools import wraps
 from unittest import skip
 
 import os
-try:
-    from unittest.mock import patch, mock_open, DEFAULT  # noqa
-except ImportError:
-    from mock import patch, mock_open, DEFAULT  # noqa
+from unittest.mock import patch, mock_open, DEFAULT  # noqa
 
 import posixpath
 import ntpath
@@ -159,7 +156,7 @@ def mock_lint(env, manifest, cmakelist, checks=all_checks, indentation=False, re
     linter._read_file = get_cmakelist
     if checks is not None:
         linter.require(checks)
-    info = LintInfo(env)
+    info = LintInfo(env, linter=linter)
     linter.lint(os.path.normpath(package_path), manifest, info=info)
     if not indentation:
         linter.messages = [m for m in linter.messages if m.id != "INDENTATION"]

@@ -159,6 +159,12 @@ the parser to ignore all remaining commands in the block until the `else()`, `en
 - **Severity**: error
 - **Explanation**: In order to export a system package as dependency, you must either call <code>find_package(<i>pkg</i>)</code> first or initialize the <i>pkg</i>_INCLUDE_DIRS and <i>pkg</i>_LIBRARIES variables manually.
 
+## catkin_package() exports build include path
+
+- **ID**: build_include_path
+- **Severity**: error
+- **Explanation**: You listed a build path below ${CMAKE_BINARY_DIR} in the INCLUDE_DIRS stanza of your <code>catkin_package()</code> call. These paths are only available for develspace builds and will be missing for installed packages.
+
 ## catkin_package() exports non-package include path
 
 - **ID**: external_include_path
