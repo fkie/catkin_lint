@@ -2,12 +2,20 @@ Source: catkin-lint
 Section: python
 Priority: optional
 Maintainer: Timo Röhling <timo.roehling@fkie.fraunhofer.de>
-Build-Depends: debhelper-compat (= 12), dh-python, help2man,
-               python3-all,
-               python3-nose, python3-mock,
-               python3-setuptools, python3-setuptools-scm,
-               python3-catkin-pkg, python3-rosdistro,
-               python3-rosdep, python3-lxml, perl
+Build-Depends:
+ debhelper-compat (= 12),
+ dh-python,
+ help2man,
+ perl,
+ python3-all,
+ python3-catkin-pkg,
+ python3-lxml,
+ python3-mock,
+ python3-nose,
+ python3-rosdep,
+ python3-rosdistro,
+ python3-setuptools,
+ python3-setuptools-scm,
 Homepage: https://github.com/fkie/catkin_lint
 Testsuite: autopkgtest-pkg-python
 Standards-Version: 4.5.1
@@ -15,12 +23,21 @@ Standards-Version: 4.5.1
 Package: catkin-lint
 Architecture: all
 Multi-Arch: foreign
-Depends: ${python3:Depends}, ${misc:Depends}
-Recommends: python3-rospkg, python3-rosdep, python3-rosdistro
-Breaks: python3-catkin-lint (<< 1.6.5)
-Replaces: python3-catkin-lint (<< 1.6.5)
-Provides: python3-catkin-lint
-Conflicts: python-catkin-lint
+Depends:
+ ${misc:Depends},
+ ${python3:Depends},
+Recommends:
+ python3-rosdep,
+ python3-rosdistro,
+ python3-rospkg,
+Breaks:
+ python3-catkin-lint (<< 1.6.5),
+Replaces:
+ python3-catkin-lint (<< 1.6.5),
+Provides:
+ python3-catkin-lint,
+Conflicts:
+ python-catkin-lint,
 Description: Check Robot OS catkin packages for common errors
  This package is part of Robot OS (ROS). catkin_lint checks package
  configurations for the catkin build system of ROS. It runs a static analysis
@@ -31,8 +48,9 @@ Package: python3-catkin-lint
 Architecture: all
 Multi-Arch: foreign
 Section: oldlibs
-Depends: catkin-lint, ${misc:Depends}
+Depends:
+ catkin-lint,
+ ${misc:Depends},
 Description: Check Robot OS catkin packages for common errors (transitional package)
  This is a transitional dummy package to ease upgrades to catkin-lint.
  It can be safely removed.
-
